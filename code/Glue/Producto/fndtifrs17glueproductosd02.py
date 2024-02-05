@@ -13,12 +13,10 @@ from boto3.dynamodb.conditions import Key
 args = getResolvedOptions(sys.argv, ["JOB_NAME"])
 sc = SparkContext()
 glueContext = GlueContext(sc)
-spark = glueContext.spark_session
 job = Job(glueContext)
 job.init(args["JOB_NAME"], args)
 s3_client = boto3.client('s3')
 s3r = boto3.resource('s3')
-secretSession = boto3.session.Session()
 cliente_dynamodb = boto3.client("dynamodb")
 ssm = boto3.client('ssm', 'us-east-1')
 
@@ -65,14 +63,6 @@ try:
         config = cliente_dynamodb.get_item(TableName=nombre_tabla, Key={'NOMBRE_DOMINIO':{'S':str(dominio)}})
         l_dic_config[config['Item']['NOMBRE_DOMINIO']['S']] = json.loads(config['Item']['ESTRUCTURA']['S'])
          
-    #--------------------------------------#
-    #  CONEXIÓN A LA BASE DE DATOS AURORA
-    #--------------------------------------#
-    structure = execute_script(l_dic_config['GENERAL']['bucket']['artifact'], l_dic_config['GENERAL']['funciones']['secret'])
-
-    #validar secreto para generar la conexion al RDS
-    connection = structure.get_secret(secretSession, env)
-    
     #--------------------------------------------------#
     #    EJECUCIÓN DEL GRUPO DE INFORMACIÓN PRODUCTOS
     #--------------------------------------------------#
@@ -82,7 +72,7 @@ try:
             structure = execute_script(l_dic_config['GENERAL']['bucket']['artifact'], config['script'])
 
             #LLAMAR Y LANZAR LOS PARAMETROS A LA FUNCION getData
-            L_DF_PRODUCTOS = structure.get_data(glueContext, connection, config['tablas'])
+            L_DF_PRODUCTOS = structure.get_data(glueContext, l_dic_config['GENERAL']['bucket']['artifact'] ,config['tablas'])
         
             #Trasformar a bit escrito en formato txt
             L_BUFFER_PRODUCTOS = io.BytesIO()

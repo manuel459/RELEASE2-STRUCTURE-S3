@@ -1,9 +1,4 @@
-def get_data(glue_context, connection, tablas):
-  
-  
-  for table in tablas:
-    DF = spark.read.parquet(table['path'])
-    DF.createOrReplaceTempView(table['vista'])
+def get_data(glue_context, bucket ,tablas):
   
   l_arprsap_insunix_lpg = '''
                         (
@@ -84,9 +79,8 @@ def get_data(glue_context, connection, tablas):
                           ON GC.BRANCH = P.BRANCH  AND GC.PRODUCT  = P.PRODUCT
                         ) AS TMP
                           '''
-  
-  l_df_arprsap_insunix_lpg = glue_context.read.format('jdbc').options(**connection).option("dbtable", l_arprsap_insunix_lpg).load()
-                          
+  #--------------------------------------------------------------------------------------------------------------------------# 
+                        
   l_arprsap_insunix_lpv = '''
                             (
                               SELECT
@@ -165,10 +159,6 @@ def get_data(glue_context, connection, tablas):
                           '''
     #EJECUTAR CONSULTA
   
-  l_df_arprsap_insunix_lpv = glue_context.read.format('jdbc').options(**connection).option("dbtable", l_arprsap_insunix_lpv).load()
-  
-  l_df_arprsap_insunix = l_df_arprsap_insunix_lpg.union(l_df_arprsap_insunix_lpv)
-  
   #--------------------------------------------------------------------------------------------------------------------------#
 
   l_arprsap_vtime_lpg = '''
@@ -203,8 +193,8 @@ def get_data(glue_context, connection, tablas):
                           ) AS TMP
                        '''
     #EJECUTAR CONSULTA
-  
-  l_df_arprsap_vtime_lpg = glue_context.read.format('jdbc').options(**connection).option("dbtable", l_arprsap_vtime_lpg).load()
+   
+  #--------------------------------------------------------------------------------------------------------------------------#
   
   l_arprsap_vtime_lpv= '''
                         (
@@ -238,12 +228,7 @@ def get_data(glue_context, connection, tablas):
                         ) AS TMP
                       '''
     #EJECUTAR CONSULTA
-  
-  l_df_arprsap_vtime_lpv = glue_context.read.format('jdbc').options(**connection).option("dbtable", l_arprsap_vtime_lpv).load()
-  
-  
-  l_df_arprsap_vtime = l_df_arprsap_vtime_lpg.union(l_df_arprsap_vtime_lpv)
-  
+
   #--------------------------------------------------------------------------------------------------------------------------#
     
   l_arprsap_insis = '''
@@ -282,11 +267,27 @@ def get_data(glue_context, connection, tablas):
                     '''
     
     #EJECUTAR CONSULTA
-  
-  l_df_arprsap_insis = glue_context.read.format('jdbc').options(**connection).option("dbtable", l_arprsap_insis).load()
       
   #--------------------------------------------------------------------------------------------------------------------------#
- 
-  l_df_arprsap = l_df_arprsap_insunix.union(l_df_arprsap_vtime).union(l_df_arprsap_insis)
+  spark = glue_context.spark_session
+  l_df_arprsap = spark.createDataFrame([])
+  
+  for tabla in tablas:
+    
+    for item in tabla['lista']:
+      view_name = item["vista"]
+      file_path = item["path"]
+      
+      # Leer datos desde Parquet usando pandas
+      pandas_df = spark.read_parquet('s3://'+bucket+'/'+file_path)
+
+      pandas_df.createOrReplaceTempView(view_name)
+      
+      current_df = spark.sql(tabla['var'])
+      
+    # Ejecutar la consulta final
+    l_df_arprsap = l_df_arprsap.union(current_df)
+  
+  spark.stop()
     
   return l_df_arprsap
