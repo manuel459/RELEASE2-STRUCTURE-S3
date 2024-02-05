@@ -7,8 +7,8 @@
                 [
                     {"var": "l_product", "name" :"tmp/lectura/Productos/product_pig.parquet"},
                     {"var": "l_gen_cover", "name" :"tmp/lectura/Productos/gen_cover_pig.parquet"},
-                    {"var": "l_table10", "name" :"tmp/lectura/Productos/table10_pig.parquet"},
-                    {"var": "l_acc_auto", "name" :"tmp/lectura/Productos/acc_auto_pig.parquet"}
+                    {"var": "l_table10b", "name" :"tmp/lectura/Productos/table10b_pig.parquet"},
+                    {"var": "l_acc_autom2", "name" :"tmp/lectura/Productos/acc_autom2_pig.parquet"}
                 ]
         },
         "PIV": {
@@ -18,8 +18,7 @@
             [
                 {"var": "l_product", "name" :"tmp/lectura/Productos/product_piv.parquet"},
                 {"var": "l_life_cover", "name" :"tmp/lectura/Productos/life_cover_piv.parquet"},
-                {"var": "l_acc_auto", "name" :"tmp/lectura/Productos/acc_auto_piv.parquet"}
-                
+                {"var": "l_acc_autom2", "name" :"tmp/lectura/Productos/acc_autom2_piv.parquet"}
             ]
         },
         "PVG": {
@@ -28,7 +27,7 @@
             "tablas" : 
             [  
               {"var": "l_product", "name" :"tmp/lectura/Productos/product_pvg.parquet"},
-              {"var": "l_prodmaster", "name" : "tmp/lectura/Productos/table10_pvg.parquet"},
+              {"var": "l_prodmaster", "name" : "tmp/lectura/Productos/prodmaster_pvg.parquet"},
               {"var": "l_gen_cover", "name" : "tmp/lectura/Productos/gen_cover_pvg.parquet"}
             ]
           },
@@ -38,7 +37,7 @@
                 "tablas" : 
                 [  
                   {"var": "l_product", "name" :"tmp/lectura/Productos/product_pvv.parquet"},
-                  {"var": "l_prodmaster", "name" : "tmp/lectura/Productos/table10_pvv.parquet"},
+                  {"var": "l_prodmaster", "name" : "tmp/lectura/Productos/prodmaster_pvv.parquet"},
                   {"var": "l_life_cover", "name" : "tmp/lectura/Productos/life_cover_pvv.parquet"}
                 ]
               },
@@ -47,11 +46,11 @@
             "flag" : 1,
             "tablas" : 
             [
-                {"var": "l_cfg_nl_covers", "name" :"tmp/lectura/Productos/covers_pnv.parquet"},
-                {"var": "l_cfg_nl_product", "name" :"tmp/lectura/Productos/product_lpnv.parquet"},
-                {"var": "l_cfg_nl_product_conds", "name" :"tmp/lectura/Productos/product_conds_pnv.parquet"},
-                {"var": "l_cfg_nl_cpr_params", "name" :"tmp/lectura/Productos/params_pnv.parquet"},
-                {"var": "l_cfg_nl_param_value", "name" :"tmp/lectura/Productos/param_value_pnv.parquet"}
+                {"var": "l_cfg_nl_covers", "name" :"tmp/lectura/Productos/cfg_nl_covers_pnv.parquet"},
+                {"var": "l_cfg_nl_product", "name" :"tmp/lectura/Productos/cfg_nl_product_pnv.parquet"},
+                {"var": "l_cfg_nl_product_conds", "name" :"tmp/lectura/Productos/cfg_nl_product_conds_pnv.parquet"},
+                {"var": "l_cpr_params", "name" :"tmp/lectura/Productos/cpr_params_pnv.parquet"},
+                {"var": "l_cprs_param_value", "name" :"tmp/lectura/Productos/cprs_param_value_pnv.parquet"}
             ]
         }                        
   }

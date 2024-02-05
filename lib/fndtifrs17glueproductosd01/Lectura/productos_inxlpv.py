@@ -14,13 +14,24 @@ def generate_product_parquets(bucketName, config_dominio, glue_context, connecti
                 ) AS TMP
                 '''
 
-    l_gen_life = '''
+    l_life_cover = '''
                  (
                     SELECT 
                     LC.branch,
                     LC.product,
                     cast(LC.effecdate as date) effecdate
                     FROM USINSUV01.LIFE_COVER LC
+                 ) AS TMP
+                 '''
+                 
+    l_acc_autom2 = '''
+                 (
+                    SELECT 
+                    AA.BRANCH_PYG,
+                    AA.BRANCH,
+                    AA.PRODUCT,
+                    AA.CONCEPT_FAC
+                    FROM USINSUV01.ACC_AUTOM2 AA
                  ) AS TMP
                  '''
                  

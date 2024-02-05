@@ -23,7 +23,7 @@ def generate_product_parquets(bucketName, config_dominio, glue_context, connecti
                    '''
     #----------------------------------------------------------------------------------------------------------#
 
-    l_gen_cover = '''
+    l_life_cover = '''
                   (
                     SELECT
                     LC."NBRANCH",

@@ -82,7 +82,7 @@ try:
             structure = execute_script(l_dic_config['GENERAL']['bucket']['artifact'], config['script'])
 
             #LLAMAR Y LANZAR LOS PARAMETROS A LA FUNCION getData
-            L_DF_PRODUCTOS = structure.get_data(glueContext, connection)
+            L_DF_PRODUCTOS = structure.get_data(glueContext, connection, config['tablas'])
         
             #Trasformar a bit escrito en formato txt
             L_BUFFER_PRODUCTOS = io.BytesIO()

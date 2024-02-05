@@ -2,32 +2,60 @@
 
 def generate_product_parquets(bucketName, config_dominio, glue_context, connection, s3_client, io):
 
-    #---------------------------------------------INSUNIX VIDA-----------------------------------------------------------#
+    #---------------------------------------------INSIS VIDA-----------------------------------------------------------#
     #TABLAS CORE#
-    l_cfg_nl_product = '''
-                       (
-                           SELECT 
-                           CNP."VALID_FROM",
-                           CNP."PRODUCT_CODE",
-                           CNP."PRODUCT_LOB"
-                           FROM USINSIV01."CFG_NL_PRODUCT" CNP
-                       ) AS TMP
-                       '''
-                       
-
-    #--------------------------------------------------------------------------------------------------------------------#
-
     l_cfg_nl_covers = '''
                       (
                          SELECT 
-                         "PRODUCT_LINK_ID",
-                         "COVER_REP_ID",
-                         "OBJECT_LINK_ID",
-                         "MANDATORY",
-                         "COVER_DESIGNATION",
-                         "VALID_FROM",
-                         "IV_RULE"
-                         FROM USINSIV01."CFG_NL_COVERS"          
+                         CNC."VALID_FROM",
+                         CNC."COVER_REP_ID",
+                         CNC."PRODUCT_LINK_ID",
+                         CNC."COVER_DESIGNATION",
+                         CNC."MANDATORY",
+                         CNC."IV_RULE"
+                         FROM USINSIV01."CFG_NL_COVERS" CNC
+                      ) AS TMP
+                      '''
+    #--------------------------------------------------------------------------------------------------------------------#
+    l_cfg_nl_product = '''
+                       (
+                           SELECT 
+                           C_NL_PROD."PRODUCT_CODE",
+                           C_NL_PROD."PRODUCT_LINK_ID",
+                           C_NL_PROD."VALID_FROM",
+                           C_NL_PROD."PRODUCT_LOB"
+                           FROM USINSIV01."CFG_NL_PRODUCT" C_NL_PROD 
+                       ) AS TMP
+                       '''
+    #--------------------------------------------------------------------------------------------------------------------#
+
+    l_cfg_nl_product_conds = '''
+                      (
+                         SELECT 
+                         C_NL_PROD_C."PRODUCT_LINK_ID",
+                         C_NL_PROD_C."PARAM_CPR_ID"
+                         FROM USINSIV01."CFG_NL_PRODUCT_CONDS" C_NL_PROD_C
+                      ) AS TMP
+                      '''
+    #--------------------------------------------------------------------------------------------------------------------#
+
+    l_cpr_params = '''
+                      (
+                         SELECT 
+                         C_PARAM."FOLDER",
+                         C_PARAM."PARAM_NAME",
+                         C_PARAM."PARAM_CPR_ID"
+                         FROM USINSIV01."CPR_PARAMS" C_PARAM 
+                      ) AS TMP
+                      '''
+    #--------------------------------------------------------------------------------------------------------------------#
+
+    l_cprs_param_value = '''
+                      (
+                         SELECT 
+                         C_PARAM_V."PARAM_ID",
+                         C_PARAM_V."PARAM_VALUE"
+                         FROM USINSIV01."CPRS_PARAM_VALUE" C_PARAM_V
                       ) AS TMP
                       '''
     

@@ -3,24 +3,52 @@ def generate_product_parquets(bucketName, config_dominio, glue_context, connecti
     l_product = '''
                 (
                     SELECT 
-                    PRO.USERCOMP,
-                    PRO.COMPANY,
-                    PRO.BRANCH,                    
-                    PRO.PRODUCT,
-                    PRO.BRANCHT,
-                    cast(PRO.EFFECDATE as date) EFFECDATE,                    
-                    cast(PRO.NULLDATE as date) NULLDATE,
-                    PRO.SUB_PRODUCT
+                     PRO.EFFECDATE,
+                     PRO.BRANCHT,
+                     PRO.SUB_PRODUCT,
+                     PRO.USERCOMP,
+                     PRO.COMPANY,
+                     PRO.BRANCH,
+                     PRO.PRODUCT,
+                     PRO.NULLDATE
                     FROM USINSUG01.PRODUCT PRO
                 ) AS TMP
                 '''
-
-    l_table10 = '''
+    l_gen_cover = '''
                 (
                     SELECT 
-                    BRANCH,
-                    COMPANY 
-                    FROM USINSUG01.TABLE10B
+                     CAST (GC.EFFECDATE AS DATE) as EFFECDATE,
+                     GC.COVERGEN,
+                     GC.CURRENCY,
+                     GC.ADDSUINI,
+                     GC.ROUCAPIT,
+                     GC.CACALFIX,
+                     GC.CACALCOV,
+                     GC.CACALFRI,
+                     GC.CACALILI,
+                     GC.CACALMAX,
+                     GC.BRANCH,
+                     GC.PRODUCT,
+                     GC.BILL_ITEM
+                    FROM USINSUG01.GEN_COVER GC
+                ) AS TMP
+                '''
+    l_table10b = '''
+                (
+                    SELECT 
+                    TB.BRANCH,
+                    TB.COMPANY 
+                    FROM USINSUG01.TABLE10B TB
+                ) AS TMP
+                '''
+    l_acc_autom2 = '''
+                (
+                    SELECT 
+                    AA.BRANCH_PYG,
+                    AA.BRANCH,
+                    AA.PRODUCT,
+                    AA.CONCEPT_FAC
+                    FROM USINSUG01.ACC_AUTOM2 AA
                 ) AS TMP
                 '''
     # Iterate over tablas
