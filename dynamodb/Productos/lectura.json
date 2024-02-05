@@ -1,0 +1,58 @@
+{          
+   "PRODUCTOS" : {
+        "PIG": {
+                "path" :"lib/fndtifrs17glueproductosd01/lectura/productos_inxlpg.py",
+                "flag" : 1,
+                "tablas" : 
+                [
+                    {"var": "l_product", "name" :"tmp/lectura/Productos/product_pig.parquet"},
+                    {"var": "l_gen_cover", "name" :"tmp/lectura/Productos/gen_cover_pig.parquet"},
+                    {"var": "l_table10", "name" :"tmp/lectura/Productos/table10_pig.parquet"},
+                    {"var": "l_acc_auto", "name" :"tmp/lectura/Productos/acc_auto_pig.parquet"}
+                ]
+        },
+        "PIV": {
+            "path" :"lib/fndtifrs17glueproductosd01/lectura/productos_inxlpv.py",
+            "flag" : 1,
+            "tablas" : 
+            [
+                {"var": "l_product", "name" :"tmp/lectura/Productos/product_piv.parquet"},
+                {"var": "l_life_cover", "name" :"tmp/lectura/Productos/life_cover_piv.parquet"},
+                {"var": "l_acc_auto", "name" :"tmp/lectura/Productos/acc_auto_piv.parquet"}
+                
+            ]
+        },
+        "PVG": {
+            "path" :"lib/fndtifrs17glueproductosd01/lectura/productos_vtimelpg.py",
+            "flag" : 1,
+            "tablas" : 
+            [  
+              {"var": "l_product", "name" :"tmp/lectura/Productos/product_pvg.parquet"},
+              {"var": "l_prodmaster", "name" : "tmp/lectura/Productos/table10_pvg.parquet"},
+              {"var": "l_gen_cover", "name" : "tmp/lectura/Productos/gen_cover_pvg.parquet"}
+            ]
+          },
+        "PVV": {
+                "path" :"lib/fndtifrs17glueproductosd01/lectura/productos_vtimelpv.py",
+                "flag" : 1,
+                "tablas" : 
+                [  
+                  {"var": "l_product", "name" :"tmp/lectura/Productos/product_pvv.parquet"},
+                  {"var": "l_prodmaster", "name" : "tmp/lectura/Productos/table10_pvv.parquet"},
+                  {"var": "l_life_cover", "name" : "tmp/lectura/Productos/life_cover_pvv.parquet"}
+                ]
+              },
+        "PNV": {
+            "path" :"lib/fndtifrs17glueproductosd01/lectura/productos_insislpv.py",
+            "flag" : 1,
+            "tablas" : 
+            [
+                {"var": "l_cfg_nl_covers", "name" :"tmp/lectura/Productos/covers_pnv.parquet"},
+                {"var": "l_cfg_nl_product", "name" :"tmp/lectura/Productos/product_lpnv.parquet"},
+                {"var": "l_cfg_nl_product_conds", "name" :"tmp/lectura/Productos/product_conds_pnv.parquet"},
+                {"var": "l_cfg_nl_cpr_params", "name" :"tmp/lectura/Productos/params_pnv.parquet"},
+                {"var": "l_cfg_nl_param_value", "name" :"tmp/lectura/Productos/param_value_pnv.parquet"}
+            ]
+        }                        
+  }
+}

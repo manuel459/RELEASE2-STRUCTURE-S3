@@ -1,0 +1,25 @@
+{
+    "path_origen":"tmp/Productos",
+    "path_file_txt":[
+       {
+          "sistema_origen":"PIG",
+          "path":"Dimensiones/Actual/Productos/D_ISXPPE-R-PRD-PRODUTO"
+       },
+       {
+          "sistema_origen":"PIV",
+          "path":"Dimensiones/Actual/Productos/D_ISXPPE-V-PRD-PRODUTO"
+       },
+       {
+          "sistema_origen":"PNV",
+          "path":"Dimensiones/Actual/Productos/D_INSPPE-V-PRD-PRODUTO"
+       },
+       {
+          "sistema_origen":"PVG",
+          "path":"Dimensiones/Actual/Productos/D_VTMPPE-R-PRD-PRODUTO"
+       },
+       {
+          "sistema_origen":"PVV",
+          "path":"Dimensiones/Actual/Productos/D_VTMPPE-V-PRD-PRODUTO"
+       }
+    ]
+ }

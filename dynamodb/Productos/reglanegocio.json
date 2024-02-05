@@ -1,0 +1,55 @@
+{
+    "path_file_tmp":[
+       {
+          "nombre_tabla":"ARPRSAP",
+          "path":"tmp/Productos/RN-PRODUCT-ARPRSAP.parquet",
+          "script":"lib/fndtifrs17glueproductosd01/ReglaNegocio/fndtifrs17glueproductosd01arprsap.py",
+          "tablas" : [
+            { 
+               "var" : "l_arprsap_insunix" , 
+               "lista": [
+                          { "vista": "usinsug01.product", "path": "tmp/lectura/Productos/product_pig.parquet" },
+                          { "vista": "usinsug01.gen_cover", "path": "tmp/lectura/Productos/gen_cover_pig.parquet" },
+                          { "vista": "usinsuv01.table10", "path": "tmp/lectura/Productos/table10_pig.parquet" },
+                          { "vista": "usinsuv01.acc_auto", "path": "tmp/lectura/Productos/acc_auto_pig.parquet"},
+                          { "vista": "usinsuv01.product", "path": "tmp/lectura/Productos/product_piv.parquet"},
+                          { "vista": "usinsuv01.life_cover", "path": "tmp/lectura/Productos/life_cover_piv.parquet"},
+                          { "vista": "usinsuv01.acc_auto", "path": "tmp/lectura/Productos/acc_auto_piv.parquet"}
+                        ] 
+            },
+            { 
+               "var" : "l_abprcob_vtime" , 
+               "lista": [
+                          { "vista": "USVTIMG01.PRODUCT", "path": "tmp/lectura/Productos/product_pvg.parquet" },
+                          { "vista": "USVTIMG01.TABLE10", "path": "tmp/lectura/Productos/table10_pvg.parquet" },
+                          { "vista": "USVTIMV01.PRODUCT", "path": "tmp/lectura/Productos/product_pvv.parquet" },
+                          { "vista": "USVTIMV01.TABLE10", "path": "tmp/lectura/Productos/table10_pvv.parquet" },
+                          { "vista": "USVTIMV01.LIFE_COVER", "path": "tmp/lectura/Productos/life_cover_pvv.parquet" }
+                        ] 
+            },
+            { 
+               "var" : "l_abprcob_insis" , 
+               "lista": [
+                          { "vista": "usinsuv01.covers", "path": "tmp/lectura/Productos/covers_pnv.parquet" },
+                          { "vista": "usinsuv01.table10", "path": "tmp/lectura/Productos/product_lpnv.parquet" },
+                          { "vista": "usinsuv01.table10", "path": "tmp/lectura/Productos/params_pnv.parquet" },
+                          { "vista": "usinsuv01.table10", "path": "tmp/lectura/Productos/param_value_pnv.parquet" }
+                        ] 
+            }
+          ]
+       },
+       {
+          "nombre_tabla":"ABPRODT",
+          "path":"tmp/Productos/RN-PRODUCT-ABPRODT.parquet",
+          "script":"lib/fndtifrs17glueproductosd01/ReglaNegocio/fndtifrs17glueproductosd01abprodt.py"
+       },
+       {
+          "nombre_tabla":"ABPRCOB",
+          "path":"tmp/Productos/RN-PRODUCT-ABPRCOB.parquet",
+          "script":"lib/fndtifrs17glueproductosd01/ReglaNegocio/fndtifrs17glueproductosd01abprcob.py"
+       }
+    ]
+ }
+
+
+                
