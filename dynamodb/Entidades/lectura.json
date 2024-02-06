@@ -1,0 +1,14 @@
+{          
+   "ENTIDADES" : {
+       "PNV": {
+            "path" :"lib/fndtifrs17glueentidadesd01/lectura/entidades_insislpv.py",
+            "flag" : 1,
+            "tablas" : 
+            [
+                {"var": "l_p_people", "name" :"tmp/lectura/Entidades/p_people_pnv.parquet"},
+                {"var": "l_intrf_lpv_people_ids", "name" :"tmp/lectura/Entidades/intrf_lpv_people_ids_pnv.parquet"},
+                {"var": "l_p_people_changes", "name" :"tmp/lectura/Entidades/p_people_changes_pnv.parquet"}
+            ]
+        }                        
+  }
+}
