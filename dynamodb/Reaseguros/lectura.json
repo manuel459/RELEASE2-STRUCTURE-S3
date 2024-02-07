@@ -1,0 +1,54 @@
+{          
+   "REASEGUROS" : {
+        "PIG": {
+            "path" :"lib/fndtifrs17gluereasegurosd01/lectura/reaseguros_inxlpg.py",
+            "flag" : 1,
+            "tablas" : 
+            [
+                {"var": "l_contr_comp", "name" :"tmp/lectura/Reaseguros/contr_comp_pig.parquet"},
+                {"var": "l_equi_vt_inx", "name" :"tmp/lectura/Reaseguros/equi_vt_inx_pig.parquet"},
+                {"var": "l_company", "name" :"tmp/lectura/Reaseguros/company_pig.parquet"},
+                {"var": "l_contrproc", "name" :"tmp/lectura/Reaseguros/contrproc_pig.parquet"}
+            ]
+        },
+        "PIV": {
+            "path" :"lib/fndtifrs17gluereasegurosd01/lectura/reaseguros_inxlpv.py",
+            "flag" : 1,
+            "tablas" : 
+            [
+                {"var": "l_contr_comp", "name" :"tmp/lectura/Reaseguros/contr_comp_piv.parquet"},
+                {"var": "l_contrproc", "name" :"tmp/lectura/Reaseguros/contrproc_piv.parquet"}
+                
+            ]
+        },
+        "PVG": {
+            "path" :"lib/fndtifrs17gluereasegurosd01/lectura/reaseguros_vtimelpg.py",
+            "flag" : 1,
+            "tablas" : 
+            [  
+              {"var": "l_part_contr", "name" :"tmp/lectura/Reaseguros/part_contr_pvg.parquet"},
+              {"var": "l_company", "name" : "tmp/lectura/Reaseguros/company_pvg.parquet"},
+              {"var": "l_contrproc", "name" : "tmp/lectura/Reaseguros/contrproc_pvg.parquet"}
+            ]
+          },
+        "PVV": {
+            "path" :"lib/fndtifrs17gluereasegurosd01/lectura/reaseguros_vtimelpv.py",
+            "flag" : 1,
+            "tablas" : 
+            [  
+              {"var": "l_part_contr", "name" :"tmp/lectura/Reaseguros/part_contr_pvv.parquet"},
+              {"var": "l_contrproc", "name" : "tmp/lectura/Reaseguros/contrproc_pvv.parquet"}
+            ]
+              },
+        "PNV": {
+            "path" :"lib/fndtifrs17gluereasegurosd01/lectura/reaseguros_insislpv.py",
+            "flag" : 1,
+            "tablas" : 
+            [
+                {"var": "l_ri_treaty_reinsurers", "name" :"tmp/lectura/Reaseguros/ri_treaty_reinsurers_pnv.parquet"},
+                {"var": "l_ri_treaty", "name" :"tmp/lectura/Reaseguros/ri_treaty_pnv.parquet"},
+                {"var": "l_p_insurers", "name" :"tmp/lectura/Reaseguros/p_insurers_pnv.parquet"}
+            ]
+        }                        
+  }
+}

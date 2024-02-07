@@ -1,0 +1,122 @@
+{
+    "path_file_tmp":[
+       {
+          "nombre_tabla":"OBRESSEGURA",
+          "path":"tmp/Productos/RN-PRODUCT-OBRESSEGURA.parquet",
+          "script":"lib/fndtifrs17gluereasegurosd01/ReglaNegocio/fndtifrs17gluereasegurosd01obressegura.py",
+          "tablas" : [
+            { 
+               "var" : "l_arprsap_insunix_lpg" , 
+               "lista": [
+                          { "vista": "usinsug01.contr_comp", "path": "tmp/lectura/Productos/contr_comp_pig.parquet" },
+                          { "vista": "usinsug01.company", "path": "tmp/lectura/Productos/company_pig.parquet" }
+                        ] 
+            },
+            { 
+               "var" : "l_arprsap_insunix_lpv" , 
+               "lista": [
+                          { "vista": "usinsuv01.contr_comp", "path": "tmp/lectura/Productos/contr_comp_piv.parquet"},
+                          { "vista": "usinsug01.company", "path": "tmp/lectura/Productos/company_pig.parquet" }
+                        ] 
+            },
+            { 
+               "var" : "l_arprsap_vtime_lpg" , 
+               "lista": [
+                          { "vista": "usvtimg01.PART_CONTR", "path": "tmp/lectura/Productos/part_contr_pvg.parquet" },
+                          { "vista": "usvtimg01.COMPANY", "path": "tmp/lectura/Productos/company_pvg.parquet" }
+                          
+                        ] 
+            },
+            { 
+               "var" : "l_arprsap_vtime_lpv" , 
+               "lista": [
+                          { "vista": "usvtimv01.PART_CONTR", "path": "tmp/lectura/Productos/part_contr_pvv.parquet" },
+                          { "vista": "usvtimg01.COMPANY", "path": "tmp/lectura/Productos/company_pvg.parquet" }
+                        ] 
+            },
+            { 
+               "var" : "l_arprsap_insis" , 
+               "lista": [
+                          { "vista": "usinsiv01.RI_TREATY_REINSURERS", "path": "tmp/lectura/Productos/ri_treaty_reinsurers_pnv.parquet" }
+                        ] 
+            }
+          ]
+       },
+       {
+          "nombre_tabla":"OBSTRATADOS",
+          "path":"tmp/Productos/RN-PRODUCT-OBSTRATADOS.parquet",
+          "script":"lib/fndtifrs17gluereasegurosd01/ReglaNegocio/fndtifrs17gluereasegurosd01obstratados.py",
+          "tablas" : [
+            { 
+               "var" : "l_abprodt_insunix_lpg" , 
+               "lista": [
+                           { "vista": "usinsug01.contrproc", "path": "tmp/lectura/Productos/contrproc_pig.parquet" }
+                        ] 
+            },
+            { 
+               "var" : "l_abprodt_insunix_lpv" , 
+               "lista": [
+                           { "vista": "usinsuv01.contrproc", "path": "tmp/lectura/Productos/contrproc_piv.parquet" }
+                        ] 
+            },
+            { 
+               "var" : "l_abprodt_vtime_lpg" , 
+               "lista": [
+                           { "vista": "usvtimg01.CONTRPROC", "path": "tmp/lectura/Productos/contrproc_pvg.parquet" }
+                        ] 
+            },
+            { 
+               "var" : "l_abprodt_vtime_lpv",
+               "lista": [
+                           { "vista": "usvtimv01.CONTRPROC", "path": "tmp/lectura/Productos/contrproc_pvv.parquet" }
+                        ] 
+            },
+            { 
+               "var" : "l_abprodt_insis_lpv" , 
+               "lista": [
+                           { "vista": "usinsiv01.RI_TREATY", "path": "tmp/lectura/Productos/ri_treaty_pnv.parquet" }
+                        ] 
+            }
+          ]
+       },
+       {
+          "nombre_tabla":"OCCDRESS",
+          "path":"tmp/Productos/RN-PRODUCT-OCCDRESS.parquet",
+          "script":"lib/fndtifrs17gluereasegurosd01/ReglaNegocio/fndtifrs17gluereasegurosd01occdress.py",
+          "tablas" : [
+            { 
+               "var" : "l_abprcob_insunix_lpg" , 
+               "lista": [
+                           { "vista": "usinsug01.company", "path": "tmp/lectura/Productos/company_pig.parquet" },
+                           { "vista": "usinsug01.equi_vt_inx", "path": "tmp/lectura/Productos/equi_vt_inx_pig.parquet"}
+                        ] 
+            },
+            { 
+               "var" : "l_abprcob_insunix_lpv" , 
+               "lista": [
+                           { "vista": "usinsug01.company", "path": "tmp/lectura/Productos/company_pig.parquet" },
+                           { "vista": "usinsug01.equi_vt_inx", "path": "tmp/lectura/Productos/equi_vt_inx_pig.parquet"}
+                        ] 
+            },
+            { 
+               "var" : "l_abprcob_vtime_lpg" , 
+               "lista": [
+                           { "vista": "usvtimg01.COMPANY", "path": "tmp/lectura/Productos/company_pvg.parquet" }
+                        ] 
+            },
+            { 
+               "var" : "l_abprcob_vtime_lpv" , 
+               "lista": [
+                           { "vista": "usvtimg01.COMPANY", "path": "tmp/lectura/Productos/company_pvg.parquet" }
+                        ] 
+            },
+            { 
+               "var" : "l_abprcob_insis" , 
+               "lista": [
+                           { "vista": "usinsiv01.P_INSURERS", "path": "tmp/lectura/Productos/p_insurers_pvv.parquet" }
+                        ] 
+            }
+          ]
+       }
+    ]
+ }

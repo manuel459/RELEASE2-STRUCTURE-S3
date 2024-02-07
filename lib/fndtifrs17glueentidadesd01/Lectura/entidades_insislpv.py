@@ -1,39 +1,38 @@
 
-def generate_reaseguro_parquets(bucketName, config_dominio, glue_context, connection, s3_client, io):
+def generate_entidad_parquets(bucketName, config_dominio, glue_context, connection, s3_client, io):
 
-    #---------------------------------------------INSUNIX VIDA-----------------------------------------------------------#
+    #---------------------------------------------INSIS VIDA-----------------------------------------------------------#
     #TABLAS CORE#
-    l_contr_comp = '''
+    l_p_people = '''
                 (
                     SELECT 
-                    CC.EFFECDATE,
-                    CC.BRANCH,
-                    cc."number",
-                    cc."type",
-                    CC.YEAR_CONTR,
-                    CC.CURRENCY,
-                    CC.SUPERVIS,
-                    CC.COMPANYC,
-                    CC.COMPDATE
-                    FROM USINSUV01.CONTR_COMP CC
+                    CAST(PP."REGISTRATION_DATE" AS DATE),
+                    CAST(PP."BIRTH_DATE" AS DATE) ,
+                    PP."COMP_TYPE",
+                    PP."SEX",
+                    PP."MAN_ID"
+                    FROM USINSIV01."P_PEOPLE" PP0
                 ) AS TMP
                 '''
     #--------------------------------------------------------------------------------------------------------------------#
-    l_contrproc = '''
+    l_intrf_lpv_people_ids = '''
                 (
                     SELECT 
-                    CT.EFFECDATE,
-                    CT.NUMBER,
-                    CT.BRANCH,
-                    CT.STARTDAT,
-                    CT.EXPIRDAT,
-                    CT.YEAR_CONTR,
-                    CT.TYPE,
-                    CT.COMPDATE
-                    FROM USINSUV01.CONTRPROC CT
+                    ILPI."LEGACY_ID",
+                    ILPI."MAN_ID"
+                    FROM USINSIV01."INTRF_LPV_PEOPLE_IDS" ILPI
                 ) AS TMP
                 '''
-
+    #--------------------------------------------------------------------------------------------------------------------#
+    l_p_people_changes = '''
+                (
+                    SELECT 
+                    CAST(PPC."VALID_TO" AS DATE),
+                    PPC."MAN_ID",
+                    CAST(PPC."VALID_FROM" AS DATE)
+                    FROM USINSIV01."P_PEOPLE_CHANGES" PPC 
+                ) AS TMP
+                '''
     # Iterate over tablas
     for tabla in config_dominio:
                 
