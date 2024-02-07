@@ -7,7 +7,7 @@ def generate_product_parquets(bucketName, config_dominio, glue_context, connecti
     l_cfg_nl_covers = '''
                       (
                          SELECT 
-                         CNC."VALID_FROM",
+                         CAST(CAST(CNC."VALID_FROM" AS DATE) AS VARCHAR),
                          CNC."COVER_REP_ID",
                          CNC."PRODUCT_LINK_ID",
                          CNC."COVER_DESIGNATION",
@@ -22,7 +22,7 @@ def generate_product_parquets(bucketName, config_dominio, glue_context, connecti
                            SELECT 
                            C_NL_PROD."PRODUCT_CODE",
                            C_NL_PROD."PRODUCT_LINK_ID",
-                           C_NL_PROD."VALID_FROM",
+                           CAST(CAST(C_NL_PROD."VALID_FROM" AS DATE) AS VARCHAR) "VALID_FROM",
                            C_NL_PROD."PRODUCT_LOB"
                            FROM USINSIV01."CFG_NL_PRODUCT" C_NL_PROD 
                        ) AS TMP

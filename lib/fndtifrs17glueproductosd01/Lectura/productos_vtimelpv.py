@@ -5,8 +5,8 @@ def generate_product_parquets(bucketName, config_dominio, glue_context, connecti
                     SELECT                    
                       PRO."NBRANCH",
                       PRO."NPRODUCT",
-                      PRO."DEFFECDATE",
-                      PRO."DNULLDATE" 
+                      cast(cast(PRO."DEFFECDATE" as date) as varchar) "DEFFECDATE",
+                      CAST(CAST(PRO."DNULLDATE" AS DATE) AS VARCHAR) "DNULLDATE" 
                       from USVTIMV01."PRODUCT" PRO
                 ) AS TMP
                 '''
@@ -28,7 +28,7 @@ def generate_product_parquets(bucketName, config_dominio, glue_context, connecti
                     SELECT
                     LC."NBRANCH",
                     LC."NPRODUCT",
-                    cast(LC."DEFFECDATE" as date) "DEFFECDATE",
+                    cast(cast(LC."DEFFECDATE" as date) as varchar) "DEFFECDATE",
                     LC."NCOVERGEN",
                     LC."NBRANCH_LED",
                     LC."NMODULEC"

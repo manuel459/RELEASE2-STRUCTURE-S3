@@ -6,8 +6,8 @@ def generate_product_parquets(bucketName, config_dominio, glue_context, connecti
                 SELECT                
                 "NBRANCH",
                 "NPRODUCT",
-                "DEFFECDATE",
-                "DNULLDATE"
+                CAST(CAST("DEFFECDATE" AS DATE) AS VARCHAR) "DEFFECDATE",
+                CAST(CAST("DNULLDATE" AS DATE) AS VARCHAR) "DNULLDATE"
                 FROM USVTIMG01."PRODUCT"
             ) AS TMP
             '''
@@ -29,6 +29,9 @@ def generate_product_parquets(bucketName, config_dominio, glue_context, connecti
     l_gen_cover =  '''
                (
                  SELECT
+                  "NBRANCH",
+                  "NPRODUCT",
+                  "NBRANCH_LED",
                   cast("DEFFECDATE" as date) "DEFFECDATE",
                   "NCOVERGEN",
                   "SADDSUINI",

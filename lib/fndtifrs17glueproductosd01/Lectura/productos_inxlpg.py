@@ -3,14 +3,14 @@ def generate_product_parquets(bucketName, config_dominio, glue_context, connecti
     l_product = '''
                 (
                     SELECT 
-                     PRO.EFFECDATE,
+                     CAST(CAST(PRO.EFFECDATE AS DATE) AS VARCHAR) EFFECDATE,
                      PRO.BRANCHT,
                      PRO.SUB_PRODUCT,
                      PRO.USERCOMP,
                      PRO.COMPANY,
                      PRO.BRANCH,
                      PRO.PRODUCT,
-                     PRO.NULLDATE,
+                     CAST(CAST(PRO.NULLDATE AS DATE) AS VARCHAR) NULLDATE,
                      PRO.id_replicacion_positiva
                     FROM USINSUG01.PRODUCT PRO
                 ) AS TMP
@@ -18,7 +18,7 @@ def generate_product_parquets(bucketName, config_dominio, glue_context, connecti
     l_gen_cover = '''
                 (
                     SELECT 
-                     CAST (GC.EFFECDATE AS DATE) as EFFECDATE,
+                     CAST(CAST(GC.EFFECDATE AS DATE) AS VARCHAR) EFFECDATE,
                      GC.COVERGEN,
                      GC.CURRENCY,
                      GC.ADDSUINI,

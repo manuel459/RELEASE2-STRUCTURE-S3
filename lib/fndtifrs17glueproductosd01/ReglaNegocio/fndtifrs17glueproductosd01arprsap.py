@@ -164,27 +164,27 @@ def get_data(glue_context, bucket ,tablas):
                             '' AS PK,
                             '' AS DTPREG,
                             '' AS TIOCPROC,
-                            GC."DEFFECDATE" as TIOCFRM,
+                            CAST(GC.DEFFECDATE AS STRING) TIOCFRM,
                             '' AS TIOCTO,
                             'PVG' AS KGIORIGM,
                             'LPG' AS DCOMPA,
                             '' AS DMARCA,
-                            COALESCE(PM."NBRANCH", 0) || '-' || COALESCE(PM."NPRODUCT", 0) AS KABPRODT,
-                            COALESCE(GC."NCOVERGEN", 0) AS KGCTPCBT,
+                            COALESCE(PM.NBRANCH, 0) || '-' || COALESCE(PM.NPRODUCT, 0) AS KABPRODT,
+                            COALESCE(GC.NCOVERGEN, 0) AS KGCTPCBT,
                             '' AS KACCDFDO,
                             '' AS KACFUNAU,
-                            COALESCE(CAST(GC."NBRANCH_LED" AS STRING), '')  AS KGCRAMO_SAP,
+                            COALESCE(CAST(GC.NBRANCH_LED AS STRING), '')  AS KGCRAMO_SAP,
                             '' AS DMASTER,
                             '' AS KACTPSPR, 
                             '' AS KACPARES,
-                            PM."SBRANCHT"  AS KACCLAPD, 
+                            PM.SBRANCHT  AS KACCLAPD, 
                             '' AS KACSCLAPD,
                             '' AS DRAMOSAP,
                             '' AS DPRODSAP,
                             '' AS KACCDFDO_PR/*,
-                            GC."NMODULEC" AS MODULO*/
-                            FROM "GEN_COVER" GC 
-                            LEFT JOIN "PRODMASTER" PM  ON GC."NBRANCH" = PM."NBRANCH"  AND GC."NPRODUCT"  = PM."NPRODUCT"
+                            GC.NMODULEC AS MODULO*/
+                            FROM GEN_COVER GC 
+                            LEFT JOIN PRODMASTER PM  ON GC.NBRANCH = PM.NBRANCH  AND GC.NPRODUCT = PM.NPRODUCT
                        '''
     #EJECUTAR CONSULTA
    
@@ -197,27 +197,27 @@ def get_data(glue_context, bucket ,tablas):
                           '' AS PK,
                           '' AS DTPREG,
                           '' AS TIOCPROC,
-                          LC."DEFFECDATE" as TIOCFRM,
+                          CAST(LC.DEFFECDATE AS STRING) as TIOCFRM,
                           '' AS TIOCTO,
                           'PVV' AS KGIORIGM,
                           'LPV' AS DCOMPA,
                           '' AS DMARCA,
-                          COALESCE(PM."NBRANCH", 0) || '-' || COALESCE(PM."NPRODUCT", 0) AS KABPRODT,
-                          COALESCE(LC."NCOVERGEN", 0) AS KGCTPCBT,
+                          COALESCE(PM.NBRANCH, 0) || '-' || COALESCE(PM.NPRODUCT, 0) AS KABPRODT,
+                          COALESCE(LC.NCOVERGEN, 0) AS KGCTPCBT,
                           '' AS KACCDFDO,
                           '' AS KACFUNAU,
-                          COALESCE(CAST(LC."NBRANCH_LED" AS STRING), '')  AS KGCRAMO_SAP,
+                          COALESCE(CAST(LC.NBRANCH_LED AS STRING), '')  AS KGCRAMO_SAP,
                           '' AS DMASTER,
                           '' AS KACTPSPR,
                           '' AS KACPARES,
-                          PM."SBRANCHT"  AS KACCLAPD,
+                          PM.SBRANCHT AS KACCLAPD,
                           '' AS KACSCLAPD,
                           '' AS DRAMOSAP,
                           '' AS DPRODSAP,
                           '' AS KACCDFDO_PR/*,
-                          LC."NMODULEC" AS MODULO*/                          
-                          FROM "LIFE_COVER" LC
-                          LEFT JOIN "PRODMASTER" PM ON LC."NBRANCH" = PM."NBRANCH" AND LC."NPRODUCT" = PM."NPRODUCT"
+                          LC.NMODULEC AS MODULO*/                          
+                          FROM LIFE_COVER LC
+                          LEFT JOIN PRODMASTER PM ON LC.NBRANCH = PM.NBRANCH AND LC.NPRODUCT = PM.NPRODUCT
                       '''
     #EJECUTAR CONSULTA
 
@@ -230,13 +230,13 @@ def get_data(glue_context, bucket ,tablas):
                       '' AS PK,
                       '' AS DTPREG,
                       '' AS TIOCPROC,
-                      CAST(C_NL_COV."VALID_FROM" AS DATE) AS TIOCFRM,
+                      CAST(C_NL_COV.VALID_FROM AS DATE) AS TIOCFRM,
                       '' AS TIOCTO,
                       'PNV' AS KGIORIGM,
                       'LPV' AS DCOMPA,
                       '' AS DMARCA,
-                      CAST(C_NL_PROD."PRODUCT_CODE" AS STRING) || '-' || C_PARAM_V."PARAM_VALUE" AS KABPRODT,
-                      SUBSTRING(CAST(CAST(C_NL_COV."COVER_REP_ID" as BIGINT) AS STRING), 5, 10) AS KGCTPCBT,
+                      CAST(C_NL_PROD.PRODUCT_CODE AS STRING) || '-' || C_PARAM_V.PARAM_VALUE AS KABPRODT,
+                      SUBSTRING(CAST(CAST(C_NL_COV.COVER_REP_ID as BIGINT) AS STRING), 5, 10) AS KGCTPCBT,
                       '' AS KACCDFDO,
                       '' AS KACFUNAU,
                       '' AS KGCRAMO_SAP,
@@ -248,19 +248,19 @@ def get_data(glue_context, bucket ,tablas):
                       '' AS DRAMOSAP,
                       '' AS DPRODSAP,
                       '' AS KACCDFDO_PR/*,                        
-                      C_NL_COV."OBJECT_LINK_ID" AS MODULO*/
-                      FROM "CFG_NL_COVERS" C_NL_COV 
-                      LEFT JOIN "CFG_NL_PRODUCT" C_NL_PROD ON C_NL_COV."PRODUCT_LINK_ID" = C_NL_PROD."PRODUCT_LINK_ID"
-                      INNER JOIN "CFG_NL_PRODUCT_CONDS" C_NL_PROD_C ON C_NL_PROD."PRODUCT_LINK_ID" = C_NL_PROD_C."PRODUCT_LINK_ID"
-                      INNER JOIN "CPR_PARAMS" C_PARAM ON C_NL_PROD_C."PARAM_CPR_ID" = C_PARAM."PARAM_CPR_ID" AND C_PARAM."FOLDER" = 'LPV' AND C_PARAM."PARAM_NAME" LIKE 'AS_IS%'
-                      JOIN "CPRS_PARAM_VALUE" C_PARAM_V ON C_PARAM."PARAM_CPR_ID" = C_PARAM_V."PARAM_ID"
+                      C_NL_COV.OBJECT_LINK_ID AS MODULO*/
+                      FROM CFG_NL_COVERS C_NL_COV 
+                      LEFT JOIN CFG_NL_PRODUCT C_NL_PROD ON C_NL_COV.PRODUCT_LINK_ID = C_NL_PROD.PRODUCT_LINK_ID
+                      INNER JOIN CFG_NL_PRODUCT_CONDS C_NL_PROD_C ON C_NL_PROD.PRODUCT_LINK_ID = C_NL_PROD_C.PRODUCT_LINK_ID
+                      INNER JOIN CPR_PARAMS C_PARAM ON C_NL_PROD_C.PARAM_CPR_ID = C_PARAM.PARAM_CPR_ID AND C_PARAM.FOLDER = 'LPV' AND C_PARAM.PARAM_NAME LIKE 'AS_IS%'
+                      JOIN CPRS_PARAM_VALUE C_PARAM_V ON C_PARAM.PARAM_CPR_ID = C_PARAM_V.PARAM_ID
                     '''
     
     #EJECUTAR CONSULTA
       
   #--------------------------------------------------------------------------------------------------------------------------#
   spark = glue_context.spark_session
-  #l_df_arprsap = spark.createDataFrame([])
+  l_df_arprsap = None
   
   print(tablas)
   
@@ -268,11 +268,11 @@ def get_data(glue_context, bucket ,tablas):
     print('Aqui esta la lista de tablas:',tabla['lista'])
     
     for item in tabla['lista']:
-      view_name = item["vista"]
-      file_path = item["path"]
+      view_name = item['vista']
+      file_path = item['path']
       
-      print("la vista : ", view_name)
-      print("el path origen: ",file_path)
+      print('la vista : ', view_name)
+      print('el path origen: ',file_path)
       
       # Leer datos desde Parquet usando pandas
       pandas_df = spark.read.parquet('s3://'+bucket+'/'+file_path)
@@ -281,11 +281,16 @@ def get_data(glue_context, bucket ,tablas):
       
     current_df = spark.sql(locals()[tabla['var']])
     print('la variable a ejecutar', tabla['var'])
-      
-    # Ejecutar la consulta final
-    #l_df_arprsap = l_df_arprsap.union(current_df)
+    
+    if l_df_arprsap is None:
+      l_df_arprsap = current_df
+    else: 
+      # Ejecutar la consulta final
+      l_df_arprsap = l_df_arprsap.union(current_df)
     current_df.show()
   
+  print('Proceso Final')
+  l_df_arprsap.show()
   spark.stop()
     
-  return 'true'
+  return l_df_arprsap
