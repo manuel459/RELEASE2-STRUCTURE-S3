@@ -37,6 +37,18 @@ def get_ssm():
                 WithDecryption=True  # Descifra el valor si es un SecureString
             )
         return response['Parameter']['Value']
+    
+#EXTRACCION DE LAS CONFIGURACIONES Y RETORNARLAS EN UN DICCIONARIO DE DATOS        
+def extract_config(l_configuraciones, nombre_tabla):
+    #CREAR UN DICCIONARIO PARA ESTABLECER LAS CONFIGURACIONES
+    l_dic_config = {}
+    
+    #Extraer las CONFIGURACIONES NECESARIAS segun la lista
+    for dominio in l_configuraciones:
+        config = cliente_dynamodb.get_item(TableName=nombre_tabla, Key={'NOMBRE_DOMINIO': {'S': str(dominio['DOMINIO'])}})
+        l_dic_config[config['Item']['NOMBRE_DOMINIO']['S']] = json.loads(config['Item'][dominio['COLUMNA']]['S'])
+       
+    return l_dic_config
 
 try:
     #-------------------------------------#
@@ -49,20 +61,20 @@ try:
     #-------------------------------------#
     
     #CREAR UNA LISTA CON TODAS LAS CONFIGURACIONES NECESARIAS SEGUN EL DOMINIO
-    l_configuraciones = ["PRODUCTOS","GENERAL"]
+    l_configuraciones = [{ "DOMINIO": "GENERAL" , "COLUMNA": "ESTRUCTURA" }, { "DOMINIO": "PRODUCTOS" , "COLUMNA": "NEGOCIO" }]
     
     #NOMBRE DE LA TABLA DE CONFIGURACIONES
     
-    nombre_tabla = f'fndtifrs17dydb{env}01'
+    nombre_tabla = f'TablaTestIFRS17'
     
     #CREAR UN DICCIONARIO PARA ESTABLECER LAS CONFIGURACIONES
     l_dic_config = {}
 
-    #Extraer las CONFIGURACIONES NECESARIAS segun la lista
-    for dominio in l_configuraciones:
-        config = cliente_dynamodb.get_item(TableName=nombre_tabla, Key={'NOMBRE_DOMINIO':{'S':str(dominio)}})
-        l_dic_config[config['Item']['NOMBRE_DOMINIO']['S']] = json.loads(config['Item']['ESTRUCTURA']['S'])
-         
+    #EXTRAER CONFIGURACIONES
+    l_dic_config = extract_config(l_configuraciones, nombre_tabla)
+    
+    print(l_dic_config)
+                 
     #--------------------------------------------------#
     #    EJECUCIÓN DEL GRUPO DE INFORMACIÓN PRODUCTOS
     #--------------------------------------------------#

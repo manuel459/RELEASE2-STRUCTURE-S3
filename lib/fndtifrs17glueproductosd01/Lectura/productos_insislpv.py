@@ -62,12 +62,10 @@ def generate_product_parquets(bucketName, config_dominio, glue_context, connecti
     # Iterate over tablas
     for tabla in config_dominio:
                 
-        df_result = glue_context.read.format('jdbc').options(**connection).option("dbtable", locals()[tabla['var']]).load() # read.execute_query(glue_context, connection, locals()[tabla['var']])
+        df_result = glue_context.read.format('jdbc').options(**connection).option("fetchsize", 10000).option("dbtable", locals()[tabla['var']]).load()
      
-        # Verificar si el DataFrame está en caché antes de cachearlo
-        if not df_result.is_cached:
-            df_result.cache()
-            print(f"El DataFrame {tabla['name']} está en caché.")
+        # Repartir el DataFrame manualmente
+        df_result = df_result.repartition(10)
             
         #Trasformar a bit escrito en formato parquet
         L_BUFFER = io.BytesIO()
@@ -80,10 +78,6 @@ def generate_product_parquets(bucketName, config_dominio, glue_context, connecti
             Key = tabla['name'], 
             Body=L_BUFFER.read()
         )
-        
-        # Liberar la caché después de procesar la tabla
-        df_result.unpersist()
-        print(f"La caché del DataFrame {tabla['name']} ha sido liberada.")
         
 
 

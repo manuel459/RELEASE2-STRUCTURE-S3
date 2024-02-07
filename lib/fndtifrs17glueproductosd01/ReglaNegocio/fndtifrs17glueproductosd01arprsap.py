@@ -1,14 +1,13 @@
 def get_data(glue_context, bucket ,tablas):
   
   l_arprsap_insunix_lpg = '''
-                        (
                          SELECT
                           'D' INDDETREC,
                           'ARPRSAP' TABLAIFRS17,
                           '' AS PK,
                           '' AS DTPREG,
                           '' AS TIOCPROC,
-                          COALESCE(CAST(GC.EFFECDATE AS VARCHAR), '')  AS TIOCFRM,
+                          COALESCE(CAST(GC.EFFECDATE AS STRING), '')  AS TIOCFRM,
                           '' AS TIOCTO,
                           'PIG' AS KGIORIGM,
                           'LPG' AS DCOMPA,
@@ -19,18 +18,18 @@ def get_data(glue_context, bucket ,tablas):
                           '' AS KACFUNAU,
                           COALESCE(
                                     COALESCE(
-                                              (SELECT CAST(AA.BRANCH_PYG AS VARCHAR)
-                                               FROM USINSUG01.ACC_AUTOM2 AA 
+                                              (SELECT CAST(MAX(AA.BRANCH_PYG) AS STRING)
+                                               FROM ACC_AUTOM2 AA 
                                                WHERE GC.BRANCH = AA.BRANCH  
                                                AND   GC.PRODUCT = AA.PRODUCT 
-                                               AND   GC.BILL_ITEM = AA.CONCEPT_FAC LIMIT 1), 
-                                              (SELECT CAST(AA.BRANCH_PYG AS VARCHAR)
-                                               FROM USINSUG01.ACC_AUTOM2 AA 
+                                               AND   GC.BILL_ITEM = AA.CONCEPT_FAC), 
+                                              (SELECT CAST(MAX(AA.BRANCH_PYG) AS STRING)
+                                               FROM ACC_AUTOM2 AA 
                                                WHERE GC.BRANCH = AA.BRANCH  
-                                               AND   GC.PRODUCT = AA.PRODUCT LIMIT 1)), 
-                                              (SELECT CAST(AA.BRANCH_PYG AS VARCHAR)
-                                               FROM USINSUG01.ACC_AUTOM2 AA 
-                                               WHERE GC.BRANCH = AA.BRANCH LIMIT 1)
+                                               AND   GC.PRODUCT = AA.PRODUCT)), 
+                                              (SELECT CAST(MAX(AA.BRANCH_PYG) AS STRING)
+                                               FROM ACC_AUTOM2 AA 
+                                               WHERE GC.BRANCH = AA.BRANCH)
                           )  AS KGCRAMO_SAP,
                           '' AS DMASTER,
                           '' AS KACTPSPR, 
@@ -41,7 +40,7 @@ def get_data(glue_context, bucket ,tablas):
                           '' AS DPRODSAP,
                           '' AS KACCDFDO_PR/*,
                           GC.MODULEC AS MODULO*/
-                          FROM USINSUG01.GEN_COVER GC 
+                          FROM GEN_COVER GC 
                           LEFT JOIN
                           (
                           	SELECT	
@@ -53,43 +52,41 @@ def get_data(glue_context, bucket ,tablas):
                             FROM (	
                                   SELECT	PRO.*,
                                   CASE	
-                                  WHEN PRO.NULLDATE IS NULL THEN	PRO.CTID
+                                  WHEN PRO.NULLDATE IS NULL THEN	PRO.id_replicacion_positiva
                           		 	  ELSE	CASE	
-                                        WHEN EXISTS (	SELECT	1
-                          		 				              	FROM	USINSUG01.PRODUCT PR1
+                                        WHEN (	SELECT	count(*)
+                          		 				              	FROM	PRODUCT PR1
                           		 				              	WHERE PR1.USERCOMP = PRO.USERCOMP
                           		 				              	AND 	PR1.COMPANY = PRO.COMPANY
                           		 				              	AND 	PR1.BRANCH = PRO.BRANCH
                           		 				              	AND 	PR1.PRODUCT = PRO.PRODUCT
-                          		 				              	AND		PR1.NULLDATE IS NULL) THEN 	NULL
+                          		 				              	AND		PR1.NULLDATE IS NULL) > 0 THEN 	NULL
                           		 		      ELSE  CASE	
                                               WHEN PRO.NULLDATE = (	SELECT	MAX(PR1.NULLDATE)
-                          		 				 						                  FROM	USINSUG01.PRODUCT PR1
+                          		 				 						                  FROM	PRODUCT PR1
                           		 				 						                  WHERE 	PR1.USERCOMP = PRO.USERCOMP
                           		 				 						                  AND 	PR1.COMPANY = PRO.COMPANY
                           		 				 						                  AND 	PR1.BRANCH = PRO.BRANCH
-                          		 				 						                  AND 	PR1.PRODUCT = PRO.PRODUCT) THEN PRO.CTID
+                          		 				 						                  AND 	PR1.PRODUCT = PRO.PRODUCT) THEN PRO.id_replicacion_positiva
                           		 			          ELSE NULL 
                                               END 
                                         END 
                                   END PRO_ID
-                          		    FROM	USINSUG01.PRODUCT PRO
-                          		    WHERE	BRANCH IN (SELECT BRANCH FROM USINSUG01.TABLE10B WHERE COMPANY = 1)) PR0, USINSUG01.PRODUCT PRO
-                          	WHERE PRO.CTID = PR0.PRO_ID) P 
+                          		    FROM	PRODUCT PRO
+                          		    WHERE	BRANCH IN (SELECT BRANCH FROM TABLE10B WHERE COMPANY = 1)) PR0, PRODUCT PRO
+                          	WHERE PRO.id_replicacion_positiva = PR0.PRO_ID) P 
                           ON GC.BRANCH = P.BRANCH  AND GC.PRODUCT  = P.PRODUCT
-                        ) AS TMP
                           '''
   #--------------------------------------------------------------------------------------------------------------------------# 
                         
   l_arprsap_insunix_lpv = '''
-                            (
                               SELECT
                               'D' INDDETREC,
                               'ARPRSAP' TABLAIFRS17,
                               '' AS PK,
                               '' AS DTPREG,
                               '' AS TIOCPROC,
-                              COALESCE(CAST(LC.EFFECDATE AS VARCHAR), '')  AS TIOCFRM,
+                              COALESCE(CAST(LC.EFFECDATE AS STRING), '')  AS TIOCFRM,
                               '' AS TIOCTO,
                               'PIV' AS KGIORIGM,
                               'LPV' AS DCOMPA,
@@ -99,18 +96,18 @@ def get_data(glue_context, bucket ,tablas):
                               '' AS KACCDFDO,
                               '' AS KACFUNAU,
                               COALESCE(
-                                        COALESCE( (SELECT CAST(AA.BRANCH_PYG AS VARCHAR)
-                                                  FROM USINSUV01.ACC_AUTOM2 AA 
+                                        COALESCE( (SELECT CAST(MAX(AA.BRANCH_PYG) AS STRING)
+                                                  FROM ACC_AUTOM2 AA 
                                                   WHERE LC.BRANCH = AA.BRANCH  
                                                   AND   LC.PRODUCT = AA.PRODUCT 
-                                                  AND   LC.BILL_ITEM = AA.CONCEPT_FAC LIMIT 1), 
-                                                  (SELECT CAST(AA.BRANCH_PYG AS VARCHAR)
-                                                  FROM USINSUV01.ACC_AUTOM2 AA 
+                                                  AND   LC.BILL_ITEM = AA.CONCEPT_FAC), 
+                                                  (SELECT CAST(MAX(AA.BRANCH_PYG) AS STRING)
+                                                  FROM ACC_AUTOM2 AA 
                                                   WHERE LC.BRANCH = AA.BRANCH  
-                                                  AND   LC.PRODUCT = AA.PRODUCT LIMIT 1)), 
-                                                  (SELECT CAST(AA.BRANCH_PYG AS VARCHAR)
-                                                  FROM USINSUV01.ACC_AUTOM2 AA 
-                                                  WHERE LC.BRANCH = AA.BRANCH LIMIT 1)) AS KGCRAMO_SAP,
+                                                  AND   LC.PRODUCT = AA.PRODUCT)), 
+                                                  (SELECT CAST(MAX(AA.BRANCH_PYG) AS STRING)
+                                                  FROM ACC_AUTOM2 AA 
+                                                  WHERE LC.BRANCH = AA.BRANCH)) AS KGCRAMO_SAP,
                               '' AS DMASTER,
                               '' AS KACTPSPR, 
                               '' AS KACPARES, 
@@ -120,7 +117,7 @@ def get_data(glue_context, bucket ,tablas):
                               '' AS DPRODSAP,
                               '' AS KACCDFDO_PR/*,
                               0  AS MODULO*/
-                              FROM USINSUV01.LIFE_COVER LC 
+                              FROM LIFE_COVER LC 
                               LEFT JOIN
                               (
                                 SELECT	
@@ -131,45 +128,43 @@ def get_data(glue_context, bucket ,tablas):
                                 FROM (	
                                       SELECT	PRO.*,
                                       CASE	
-                                      WHEN PRO.NULLDATE IS NULL THEN	PRO.CTID
+                                      WHEN PRO.NULLDATE IS NULL THEN	PRO.id_replicacion_positiva
                                       ELSE	CASE	
-                                            WHEN EXISTS (	SELECT	1
-                                                          FROM	USINSUV01.PRODUCT PR1
+                                            WHEN (	SELECT	count(*)
+                                                          FROM	PRODUCT PR1
                                                           WHERE 	PR1.USERCOMP = PRO.USERCOMP
                                                           AND 	PR1.COMPANY = PRO.COMPANY
                                                           AND 	PR1.BRANCH = PRO.BRANCH
                                                           AND 	PR1.PRODUCT = PRO.PRODUCT
-                                                          AND		PR1.NULLDATE IS NULL) THEN 	NULL
+                                                          AND		PR1.NULLDATE IS NULL) > 0 THEN 	NULL
                                             ELSE  CASE	
                                                   WHEN PRO.NULLDATE = (	SELECT	MAX(PR1.NULLDATE)
-                                                                        FROM	USINSUV01.PRODUCT PR1
+                                                                        FROM	PRODUCT PR1
                                                                         WHERE 	PR1.USERCOMP = PRO.USERCOMP
                                                                         AND 	PR1.COMPANY = PRO.COMPANY
                                                                         AND 	PR1.BRANCH = PRO.BRANCH
-                                                                        AND 	PR1.PRODUCT = PRO.PRODUCT) THEN PRO.CTID
+                                                                        AND 	PR1.PRODUCT = PRO.PRODUCT) THEN PRO.id_replicacion_positiva
                                                   ELSE NULL 
                                                   END 
                                             END 
                                       END PRO_ID
-                                      FROM	USINSUV01.PRODUCT PRO
-                                      WHERE	BRANCH IN (SELECT BRANCH FROM USINSUG01.TABLE10B WHERE COMPANY = 2)) PR0, USINSUV01.PRODUCT PRO
-                                WHERE PRO.CTID = PR0.PRO_ID) P
+                                      FROM	PRODUCT PRO
+                                      WHERE	BRANCH IN (SELECT BRANCH FROM TABLE10B WHERE COMPANY = 2)) PR0, PRODUCT PRO
+                                WHERE PRO.id_replicacion_positiva = PR0.PRO_ID) P
                               ON LC.BRANCH = P.BRANCH  AND LC.PRODUCT  = P.PRODUCT
-                            ) as TMP
                           '''
     #EJECUTAR CONSULTA
   
   #--------------------------------------------------------------------------------------------------------------------------#
 
   l_arprsap_vtime_lpg = '''
-                          (
                            SELECT 
                             'D' INDDETREC,
                             'ARPRSAP' TABLAIFRS17,
                             '' AS PK,
                             '' AS DTPREG,
                             '' AS TIOCPROC,
-                            CAST(CAST(GC."DEFFECDATE" AS DATE) AS VARCHAR)  AS TIOCFRM,
+                            GC."DEFFECDATE" as TIOCFRM,
                             '' AS TIOCTO,
                             'PVG' AS KGIORIGM,
                             'LPG' AS DCOMPA,
@@ -178,7 +173,7 @@ def get_data(glue_context, bucket ,tablas):
                             COALESCE(GC."NCOVERGEN", 0) AS KGCTPCBT,
                             '' AS KACCDFDO,
                             '' AS KACFUNAU,
-                            COALESCE(CAST(GC."NBRANCH_LED" AS VARCHAR), '')  AS KGCRAMO_SAP,
+                            COALESCE(CAST(GC."NBRANCH_LED" AS STRING), '')  AS KGCRAMO_SAP,
                             '' AS DMASTER,
                             '' AS KACTPSPR, 
                             '' AS KACPARES,
@@ -188,23 +183,21 @@ def get_data(glue_context, bucket ,tablas):
                             '' AS DPRODSAP,
                             '' AS KACCDFDO_PR/*,
                             GC."NMODULEC" AS MODULO*/
-                            FROM USVTIMG01."GEN_COVER" GC 
-                            LEFT JOIN USVTIMG01."PRODMASTER" PM  ON GC."NBRANCH" = PM."NBRANCH"  AND GC."NPRODUCT"  = PM."NPRODUCT"
-                          ) AS TMP
+                            FROM "GEN_COVER" GC 
+                            LEFT JOIN "PRODMASTER" PM  ON GC."NBRANCH" = PM."NBRANCH"  AND GC."NPRODUCT"  = PM."NPRODUCT"
                        '''
     #EJECUTAR CONSULTA
    
   #--------------------------------------------------------------------------------------------------------------------------#
   
   l_arprsap_vtime_lpv= '''
-                        (
                           SELECT
                           'D' INDDETREC,
                           'ARPRSAP' TABLAIFRS17,
                           '' AS PK,
                           '' AS DTPREG,
                           '' AS TIOCPROC,
-                          CAST(CAST(LC."DEFFECDATE" AS DATE) AS VARCHAR)  AS TIOCFRM,
+                          LC."DEFFECDATE" as TIOCFRM,
                           '' AS TIOCTO,
                           'PVV' AS KGIORIGM,
                           'LPV' AS DCOMPA,
@@ -213,7 +206,7 @@ def get_data(glue_context, bucket ,tablas):
                           COALESCE(LC."NCOVERGEN", 0) AS KGCTPCBT,
                           '' AS KACCDFDO,
                           '' AS KACFUNAU,
-                          COALESCE(CAST(LC."NBRANCH_LED" AS VARCHAR), '')  AS KGCRAMO_SAP,
+                          COALESCE(CAST(LC."NBRANCH_LED" AS STRING), '')  AS KGCRAMO_SAP,
                           '' AS DMASTER,
                           '' AS KACTPSPR,
                           '' AS KACPARES,
@@ -223,16 +216,14 @@ def get_data(glue_context, bucket ,tablas):
                           '' AS DPRODSAP,
                           '' AS KACCDFDO_PR/*,
                           LC."NMODULEC" AS MODULO*/                          
-                          FROM USVTIMV01."LIFE_COVER" LC
-                          LEFT JOIN USVTIMV01."PRODMASTER" PM ON LC."NBRANCH" = PM."NBRANCH" AND LC."NPRODUCT" = PM."NPRODUCT"
-                        ) AS TMP
+                          FROM "LIFE_COVER" LC
+                          LEFT JOIN "PRODMASTER" PM ON LC."NBRANCH" = PM."NBRANCH" AND LC."NPRODUCT" = PM."NPRODUCT"
                       '''
     #EJECUTAR CONSULTA
 
   #--------------------------------------------------------------------------------------------------------------------------#
     
   l_arprsap_insis = '''
-                    (
                       SELECT 
                       'D' INDDETREC,
                       'ARPRSAP' TABLAIFRS17,
@@ -244,8 +235,8 @@ def get_data(glue_context, bucket ,tablas):
                       'PNV' AS KGIORIGM,
                       'LPV' AS DCOMPA,
                       '' AS DMARCA,
-                      CAST(C_NL_PROD."PRODUCT_CODE" AS VARCHAR) || '-' || C_PARAM_V."PARAM_VALUE" AS KABPRODT,
-                      SUBSTRING(CAST(CAST(C_NL_COV."COVER_REP_ID" as BIGINT) AS VARCHAR), 5, 10) AS KGCTPCBT,
+                      CAST(C_NL_PROD."PRODUCT_CODE" AS STRING) || '-' || C_PARAM_V."PARAM_VALUE" AS KABPRODT,
+                      SUBSTRING(CAST(CAST(C_NL_COV."COVER_REP_ID" as BIGINT) AS STRING), 5, 10) AS KGCTPCBT,
                       '' AS KACCDFDO,
                       '' AS KACFUNAU,
                       '' AS KGCRAMO_SAP,
@@ -258,36 +249,43 @@ def get_data(glue_context, bucket ,tablas):
                       '' AS DPRODSAP,
                       '' AS KACCDFDO_PR/*,                        
                       C_NL_COV."OBJECT_LINK_ID" AS MODULO*/
-                      FROM USINSIV01."CFG_NL_COVERS" C_NL_COV 
-                      LEFT JOIN USINSIV01."CFG_NL_PRODUCT" C_NL_PROD ON C_NL_COV."PRODUCT_LINK_ID" = C_NL_PROD."PRODUCT_LINK_ID"
-                      INNER JOIN USINSIV01."CFG_NL_PRODUCT_CONDS" C_NL_PROD_C ON C_NL_PROD."PRODUCT_LINK_ID" = C_NL_PROD_C."PRODUCT_LINK_ID"
-                      INNER JOIN USINSIV01."CPR_PARAMS" C_PARAM ON C_NL_PROD_C."PARAM_CPR_ID" = C_PARAM."PARAM_CPR_ID" AND C_PARAM."FOLDER" = 'LPV' AND C_PARAM."PARAM_NAME" LIKE 'AS_IS%'
-                      JOIN USINSIV01."CPRS_PARAM_VALUE" C_PARAM_V ON C_PARAM."PARAM_CPR_ID" = C_PARAM_V."PARAM_ID"
-                    ) AS TMP
+                      FROM "CFG_NL_COVERS" C_NL_COV 
+                      LEFT JOIN "CFG_NL_PRODUCT" C_NL_PROD ON C_NL_COV."PRODUCT_LINK_ID" = C_NL_PROD."PRODUCT_LINK_ID"
+                      INNER JOIN "CFG_NL_PRODUCT_CONDS" C_NL_PROD_C ON C_NL_PROD."PRODUCT_LINK_ID" = C_NL_PROD_C."PRODUCT_LINK_ID"
+                      INNER JOIN "CPR_PARAMS" C_PARAM ON C_NL_PROD_C."PARAM_CPR_ID" = C_PARAM."PARAM_CPR_ID" AND C_PARAM."FOLDER" = 'LPV' AND C_PARAM."PARAM_NAME" LIKE 'AS_IS%'
+                      JOIN "CPRS_PARAM_VALUE" C_PARAM_V ON C_PARAM."PARAM_CPR_ID" = C_PARAM_V."PARAM_ID"
                     '''
     
     #EJECUTAR CONSULTA
       
   #--------------------------------------------------------------------------------------------------------------------------#
   spark = glue_context.spark_session
-  l_df_arprsap = spark.createDataFrame([])
+  #l_df_arprsap = spark.createDataFrame([])
+  
+  print(tablas)
   
   for tabla in tablas:
+    print('Aqui esta la lista de tablas:',tabla['lista'])
     
     for item in tabla['lista']:
       view_name = item["vista"]
       file_path = item["path"]
       
+      print("la vista : ", view_name)
+      print("el path origen: ",file_path)
+      
       # Leer datos desde Parquet usando pandas
-      pandas_df = spark.read_parquet('s3://'+bucket+'/'+file_path)
+      pandas_df = spark.read.parquet('s3://'+bucket+'/'+file_path)
 
       pandas_df.createOrReplaceTempView(view_name)
       
-      current_df = spark.sql(tabla['var'])
+    current_df = spark.sql(locals()[tabla['var']])
+    print('la variable a ejecutar', tabla['var'])
       
     # Ejecutar la consulta final
-    l_df_arprsap = l_df_arprsap.union(current_df)
+    #l_df_arprsap = l_df_arprsap.union(current_df)
+    current_df.show()
   
   spark.stop()
     
-  return l_df_arprsap
+  return 'true'

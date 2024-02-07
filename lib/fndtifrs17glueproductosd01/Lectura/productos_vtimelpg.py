@@ -49,7 +49,7 @@ def generate_product_parquets(bucketName, config_dominio, glue_context, connecti
         df_result = glue_context.read.format('jdbc').options(**connection).option("fetchsize", 10000).option("dbtable", locals()[tabla['var']]).load()
      
         # Repartir el DataFrame manualmente
-        df = df.repartition(10)
+        df_result = df_result.repartition(10)
             
         #Trasformar a bit escrito en formato parquet
         L_BUFFER = io.BytesIO()
