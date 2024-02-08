@@ -1,5 +1,5 @@
 
-def get_data(glue_context, connection):
+def get_data(glue_context, connection, bucket ,tablas):
 
   l_abprodt_insunix_lpg = '''
                           ( SELECT 
@@ -84,8 +84,6 @@ def get_data(glue_context, connection):
                           		    WHERE	BRANCH IN (SELECT BRANCH FROM USINSUG01.TABLE10B WHERE COMPANY = 1)) PR0, USINSUG01.PRODUCT PRO
                           	WHERE PRO.CTID = PR0.PRO_ID) P) AS TMP
                           '''
-
-  df_abprodt_insunix_lpg = glue_context.read.format('jdbc').options(**connection).option("dbtable", l_abprodt_insunix_lpg).load()
 
   l_abprodt_insunix_lpv = '''
                           (                       
@@ -173,10 +171,6 @@ def get_data(glue_context, connection):
                           ) AS TMP
                           '''
   
-  df_abprodt_insunix_lpv = glue_context.read.format('jdbc').options(**connection).option("dbtable", l_abprodt_insunix_lpv).load()
-
-  df_abprodt_insunix = df_abprodt_insunix_lpg.union(df_abprodt_insunix_lpv)
-
   #--------------------------------------------------------------------------------------------------------------------------#
 
   l_abprodt_vtime_lpg = '''
@@ -257,8 +251,6 @@ def get_data(glue_context, connection):
                           LEFT JOIN USVTIMG01."PRODMASTER" PM ON PM."NBRANCH" = P."NBRANCH" AND PM."NPRODUCT" = P."NPRODUCT") AS TMP
                         '''
 
-  l_df_abprodt_vtime_lpg = glue_context.read.format('jdbc').options(**connection).option("dbtable", l_abprodt_vtime_lpg).load()
-
   l_abprodt_vtime_lpv = '''
                           (SELECT
                             'D' AS INDDETREC,
@@ -338,10 +330,6 @@ def get_data(glue_context, connection):
                         ) AS TMP
                        '''
   
-  l_df_abprodt_vtime_lpv = glue_context.read.format('jdbc').options(**connection).option("dbtable", l_abprodt_vtime_lpv).load()
-
-  l_df_abprodt_vtime = l_df_abprodt_vtime_lpg.union(l_df_abprodt_vtime_lpv)
-
   #--------------------------------------------------------------------------------------------------------------------------#
 
   l_abprodt_insis_lpv = ''' 
@@ -408,10 +396,39 @@ def get_data(glue_context, connection):
                       ) AS TMP
                        '''   
   
-  l_df_abprodt_insis = glue_context.read.format('jdbc').options(**connection).option("dbtable", l_abprodt_insis_lpv).load()
-   
+  #--------------------------------------------------------------------------------------------------------------------------#
+  spark = glue_context.spark_session
+  l_df_abprodt = None
   
-  #PERFORM THE UNION OPERATION 
-  l_df_abprodt = df_abprodt_insunix.union(l_df_abprodt_vtime).union(l_df_abprodt_insis)
+  print(tablas)
+  
+  for tabla in tablas:
+    print('Aqui esta la lista de tablas:',tabla['lista'])
+    
+    for item in tabla['lista']:
+      view_name = item['vista']
+      file_path = item['path']
+      
+      print('la vista : ', view_name)
+      print('el path origen: ',file_path)
+      
+      # Leer datos desde Parquet usando pandas
+      pandas_df = spark.read.parquet('s3://'+bucket+'/'+file_path)
 
+      pandas_df.createOrReplaceTempView(view_name)
+      
+    current_df = spark.sql(locals()[tabla['var']])
+    print('la variable a ejecutar', tabla['var'])
+    
+    if l_df_abprodt is None:
+      l_df_abprodt = current_df
+    else: 
+      # Ejecutar la consulta final
+      l_df_abprodt = l_df_abprodt.union(current_df)
+    current_df.show()
+  
+  print('Proceso Final')
+  l_df_abprodt.show()
+  spark.stop()
+    
   return l_df_abprodt

@@ -75,7 +75,7 @@ def get_data(glue_context, bucket ,tablas):
                           		    FROM	PRODUCT PRO
                           		    WHERE	BRANCH IN (SELECT BRANCH FROM TABLE10B WHERE COMPANY = 1)) PR0, PRODUCT PRO
                           	WHERE PRO.id_replicacion_positiva = PR0.PRO_ID) P 
-                          ON GC.BRANCH = P.BRANCH  AND GC.PRODUCT  = P.PRODUCT
+                          ON GC.BRANCH = P.BRANCH  AND GC.PRODUCT  = P.PRODUCT limit 4
                           '''
   #--------------------------------------------------------------------------------------------------------------------------# 
                         
@@ -151,7 +151,7 @@ def get_data(glue_context, bucket ,tablas):
                                       FROM	PRODUCT PRO
                                       WHERE	BRANCH IN (SELECT BRANCH FROM TABLE10B WHERE COMPANY = 2)) PR0, PRODUCT PRO
                                 WHERE PRO.id_replicacion_positiva = PR0.PRO_ID) P
-                              ON LC.BRANCH = P.BRANCH  AND LC.PRODUCT  = P.PRODUCT
+                              ON LC.BRANCH = P.BRANCH  AND LC.PRODUCT  = P.PRODUCT limit 4
                           '''
     #EJECUTAR CONSULTA
   
@@ -184,7 +184,7 @@ def get_data(glue_context, bucket ,tablas):
                             '' AS KACCDFDO_PR/*,
                             GC.NMODULEC AS MODULO*/
                             FROM GEN_COVER GC 
-                            LEFT JOIN PRODMASTER PM  ON GC.NBRANCH = PM.NBRANCH  AND GC.NPRODUCT = PM.NPRODUCT
+                            LEFT JOIN PRODMASTER PM  ON GC.NBRANCH = PM.NBRANCH  AND GC.NPRODUCT = PM.NPRODUCT limit 4
                        '''
     #EJECUTAR CONSULTA
    
@@ -217,7 +217,7 @@ def get_data(glue_context, bucket ,tablas):
                           '' AS KACCDFDO_PR/*,
                           LC.NMODULEC AS MODULO*/                          
                           FROM LIFE_COVER LC
-                          LEFT JOIN PRODMASTER PM ON LC.NBRANCH = PM.NBRANCH AND LC.NPRODUCT = PM.NPRODUCT
+                          LEFT JOIN PRODMASTER PM ON LC.NBRANCH = PM.NBRANCH AND LC.NPRODUCT = PM.NPRODUCT limit 4
                       '''
     #EJECUTAR CONSULTA
 
@@ -253,7 +253,7 @@ def get_data(glue_context, bucket ,tablas):
                       LEFT JOIN CFG_NL_PRODUCT C_NL_PROD ON C_NL_COV.PRODUCT_LINK_ID = C_NL_PROD.PRODUCT_LINK_ID
                       INNER JOIN CFG_NL_PRODUCT_CONDS C_NL_PROD_C ON C_NL_PROD.PRODUCT_LINK_ID = C_NL_PROD_C.PRODUCT_LINK_ID
                       INNER JOIN CPR_PARAMS C_PARAM ON C_NL_PROD_C.PARAM_CPR_ID = C_PARAM.PARAM_CPR_ID AND C_PARAM.FOLDER = 'LPV' AND C_PARAM.PARAM_NAME LIKE 'AS_IS%'
-                      JOIN CPRS_PARAM_VALUE C_PARAM_V ON C_PARAM.PARAM_CPR_ID = C_PARAM_V.PARAM_ID
+                      JOIN CPRS_PARAM_VALUE C_PARAM_V ON C_PARAM.PARAM_CPR_ID = C_PARAM_V.PARAM_ID limit 4
                     '''
     
     #EJECUTAR CONSULTA
@@ -291,6 +291,5 @@ def get_data(glue_context, bucket ,tablas):
   
   print('Proceso Final')
   l_df_arprsap.show()
-  spark.stop()
     
   return l_df_arprsap
