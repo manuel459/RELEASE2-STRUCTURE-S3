@@ -107,3 +107,7 @@ aws dynamodb batch-write-item \
             }
         ]
     }'
+
+aws dynamodb create-backup --table-name TablaTrazabilidadIFRS17 --backup-name TablaTrazabilidadIFRS17bk
+
+aws dynamodb restore-table-from-backup --target-table-name TablaTrazabilidadIFRS17 --backup-arn ARN_DE_LA_COPIA_DE_SEGURIDAD
