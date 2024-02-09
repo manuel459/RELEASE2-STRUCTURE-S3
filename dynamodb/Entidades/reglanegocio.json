@@ -1,0 +1,23 @@
+{
+    "path_file_tmp":[
+       {
+          "nombre_tabla":"EBENTID",
+          "path":"tmp/Entidad/RN-ENTIDAD-EBENTID.parquet",
+          "script":"lib/fndtifrs17glueentidadd01/regla_negocio/fndtifrs17glueentidadesd01ebentid.py",
+          "flag":1,
+          "tablas" : [
+            { 
+               "var" : "l_ebentid_insis" , 
+               "lista": [
+                          { "vista": "p_people", "path": "tmp/lectura/Entidades/p_people_pnv.parquet"},
+                          { "vista": "intrf_lpv_people_ids", "path": "tmp/lectura/Entidades/intrf_lpv_people_ids_pnv.parquet"},
+                          { "vista": "p_people_changes", "path": "tmp/lectura/Entidades/p_people_changes_pnv.parquet"}
+                        ] 
+            }
+          ]
+       }
+    ]
+ }
+
+
+                

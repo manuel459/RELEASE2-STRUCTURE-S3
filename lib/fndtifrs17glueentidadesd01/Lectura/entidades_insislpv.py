@@ -6,12 +6,14 @@ def generate_entidad_parquets(bucketName, config_dominio, glue_context, connecti
     l_p_people = '''
                 (
                     SELECT 
-                    CAST(PP."REGISTRATION_DATE" AS DATE),
-                    CAST(PP."BIRTH_DATE" AS DATE) ,
+                    CAST(CAST(PP."REGISTRATION_DATE" AS DATE ) AS VARCHAR) AS "REGISTRATION_DATE",
+                    CAST(CAST(PP."BIRTH_DATE" AS DATE )AS VARCHAR ) AS "BIRTH_DATE",
                     PP."COMP_TYPE",
                     PP."SEX",
-                    PP."MAN_ID"
-                    FROM USINSIV01."P_PEOPLE" PP0
+                    PP."MAN_ID",
+                    PP."NATIONALITY",
+                    PP."NAME"
+                    FROM USINSIV01."P_PEOPLE" PP
                 ) AS TMP
                 '''
     #--------------------------------------------------------------------------------------------------------------------#
@@ -27,9 +29,9 @@ def generate_entidad_parquets(bucketName, config_dominio, glue_context, connecti
     l_p_people_changes = '''
                 (
                     SELECT 
-                    CAST(PPC."VALID_TO" AS DATE),
+                    CAST(PPC."VALID_TO" AS DATE) AS "VALID_TO",
                     PPC."MAN_ID",
-                    CAST(PPC."VALID_FROM" AS DATE)
+                    CAST(PPC."VALID_FROM" AS DATE) AS "VALID_FROM"
                     FROM USINSIV01."P_PEOPLE_CHANGES" PPC 
                 ) AS TMP
                 '''

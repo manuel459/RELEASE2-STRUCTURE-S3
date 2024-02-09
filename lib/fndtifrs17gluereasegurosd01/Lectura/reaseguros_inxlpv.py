@@ -14,7 +14,8 @@ def generate_reaseguro_parquets(bucketName, config_dominio, glue_context, connec
                     CC.CURRENCY,
                     CC.SUPERVIS,
                     CC.COMPANYC,
-                    CC.COMPDATE
+                    CC.COMPDATE,
+                    CC.SHARE
                     FROM USINSUV01.CONTR_COMP CC
                 ) AS TMP
                 '''

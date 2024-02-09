@@ -1,171 +1,184 @@
 
-def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
+def get_data(glue_context, bucket ,tablas, p_fecha_inicio, p_fecha_fin):
 
-  L_OBRESSEGURA_INSUNIX = f'''
-                            (
-                            (select 
-                             'D' as INDDETREC,
-                             'OBRESSEGURA' as TABLAIFRS17,
-                             '' as PK,
-                             '' as DTPREG,
-                             '' as TIOCPROC,
-                             coalesce(cast(cc.effecdate as varchar) , '')as TIOCFRM,
-                             '' as TIOCTO,
-                             'PIG' as KGIORIGM,
-                             cc."number"  ||'-'|| cc.branch   as DCDINTTRA,
-                             cc.currency ||''|| cc.year_contr  ||''|| cc."type" as KOCSBTRT,
-                             '' as DDESCDSBTRT,
-                             '' as KOCPOOL,
-                             coalesce(cc.companyc,0) as KOCCDRESS,
-                             coalesce(cc.companyc,0) as DCDRESS,
-                             coalesce(cast(cc.supervis as char(4)),'') as DCDCORR,
-                             coalesce((
-                             select evi.scod_vt  from usinsug01.equi_vt_inx evi
-                             left join  usinsug01.company c  
-                             on c.client = evi.scod_inx 
-                             where cc.companyc = c.code 
-                             ),'')  as KEBENTID_RSS,
-                             coalesce(cast(cc.share as numeric(7,4)),0)  as VTXPART,
-                             'LPG' as DCOMPA,
-                             '' as DMARCA
-                             from usinsug01.contr_comp cc 
-                             where cc.compdate between '{p_fecha_inicio}' and '{p_fecha_fin}'
-                            )
+ l_obressegura_insunix_lpg = f'''
+                                  SELECT 
+                                  'D' AS INDDETREC,
+                                  'OBRESSEGURA' AS TABLAIFRS17,
+                                  '' AS PK,
+                                  '' AS DTPREG,
+                                  '' AS TIOCPROC,
+                                  COALESCE(CAST(CC.EFFECDATE AS STRING) , '')AS TIOCFRM,
+                                  '' AS TIOCTO,
+                                  'PIG' AS KGIORIGM,
+                                  CC.NUMBER  ||'-'|| CC.BRANCH   AS DCDINTTRA,
+                                  CC.CURRENCY ||''|| CC.YEAR_CONTR  ||''|| CC.TYPE AS KOCSBTRT,
+                                  '' AS DDESCDSBTRT,
+                                  '' AS KOCPOOL,
+                                  COALESCE(CC.COMPANYC,0) AS KOCCDRESS,
+                                  COALESCE(CC.COMPANYC,0) AS DCDRESS,
+                                  COALESCE(CAST(CC.SUPERVIS AS CHAR(4)),'') AS DCDCORR,
+                                  COALESCE((
+                                            SELECT MAX(EVI.SCOD_VT)
+                                            FROM EQUI_VT_INX EVI
+                                            LEFT JOIN  COMPANY C
+                                            ON C.CLIENT = EVI.SCOD_INX
+                                            WHERE CC.COMPANYC = C.CODE
+                                  ),'')  AS KEBENTID_RSS,
+                                  COALESCE(CAST(CC.SHARE AS NUMERIC(7,4)),0)  AS VTXPART,
+                                  'LPG' AS DCOMPA,
+                                  '' AS DMARCA
+                                  FROM CONTR_COMP CC
+                                  WHERE CC.COMPDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
+                               '''
 
-                            union all 
-                            
-                            --LPV
-                            (select
-                             'D' as INDDETREC,
-                             'OBRESSEGURA' as TABLAIFRS17,
-                             '' as PK,
-                             '' as DTPREG,
-                             '' as TIOCPROC,
-                             cast(cc.effecdate as varchar)as TIOCFRM,
-                             '' as TIOCTO,
-                             'PIV' as KGIORIGM,
-                             cc."number"  ||'-'|| cc.branch   as DCDINTTRA,
-                             cc.currency ||''|| cc.year_contr  ||''|| cc."type" as KOCSBTRT,
-                             '' as DDESCDSBTRT,
-                             '' as KOCPOOL,
-                             coalesce(cc.companyc,0) as KOCCDRESS,
-                             coalesce(cc.companyc,0) as DCDRESS,
-                             coalesce(cast(cc.supervis as char(4)),'') as DCDCORR,
-                             coalesce((
-                             select evi.scod_vt  from usinsug01.equi_vt_inx evi
-                             left join  usinsug01.company c  
-                             on c.client = evi.scod_inx 
-                             where cc.companyc = c.code 
-                             ),'')  as KEBENTID_RSS,
-                             coalesce(cast(cc.share as numeric(7,4)),0)  as VTXPART,
-                             'LPV' as DCOMPA,
-                             '' as DMARCA
-                             from usinsuv01.contr_comp cc --'1999-10-06' '2017-02-22'
-                            where cc.compdate between '{p_fecha_inicio}' and '{p_fecha_fin}'
-                            )
-                            ) AS TMP
-                           '''
+#--------------------------------------------------------------------------------------------------------------------------# 
+ l_obressegura_insunix_lpv = f'''
+                                SELECT
+                                'D' AS INDDETREC,
+                                'OBRESSEGURA' AS TABLAIFRS17,
+                                '' AS PK,
+                                '' AS DTPREG,
+                                '' AS TIOCPROC,
+                                CAST(CC.EFFECDATE AS STRING)AS TIOCFRM,
+                                '' AS TIOCTO,
+                                'PIV' AS KGIORIGM,
+                                CC.NUMBER  ||'-'|| CC.BRANCH   AS DCDINTTRA,
+                                CC.CURRENCY ||''|| CC.YEAR_CONTR  ||''|| CC.TYPE AS KOCSBTRT,
+                                '' AS DDESCDSBTRT,
+                                '' AS KOCPOOL,
+                                COALESCE(CC.COMPANYC,0) AS KOCCDRESS,
+                                COALESCE(CC.COMPANYC,0) AS DCDRESS,
+                                COALESCE(CAST(CC.SUPERVIS AS CHAR(4)),'') AS DCDCORR,
+                                COALESCE((
+                                          SELECT MAX(EVI.SCOD_VT)
+                                          FROM EQUI_VT_INX EVI
+                                          LEFT JOIN  COMPANY C  
+                                          ON C.CLIENT = EVI.SCOD_INX 
+                                          WHERE CC.COMPANYC = C.CODE 
+                                ),'')  AS KEBENTID_RSS,
+                                COALESCE(CAST(CC.SHARE AS NUMERIC(7,4)),0)  AS VTXPART,
+                                'LPV' AS DCOMPA,
+                                '' AS DMARCA
+                                FROM CONTR_COMP CC 
+                                WHERE CC.COMPDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}' --'1999-10-06' '2017-02-22'
+                             '''
+#--------------------------------------------------------------------------------------------------------------------------# 
+ l_obressegura_vtime_lpg = f'''
+                               SELECT
+                               'D' AS INDDETREC,
+                               'OBRESSEGURA' AS TABLAIFRS17,
+                               '' AS PK,
+                               '' AS DTPREG,
+                               '' AS TIOCPROC,
+                               COALESCE(CAST(CAST(PC.DEFFECDATE AS DATE) AS STRING),'') AS TIOCFRM,
+                               '' AS TIOCTO,
+                               'PVG' AS KGIORIGM,
+                               PC.NNUMBER  ||'-'|| PC.NBRANCH  AS DCDINTTRA,
+                               '' AS KOCSBTRT,
+                               '' AS DDESCDSBTRT,
+                               '' AS KOCPOOL,
+                               PC.NCOMPANY   AS KOCCDRESS,
+                               PC.NCOMPANY  AS DCDRESS,
+                               COALESCE(CAST(PC.NCORREDOR AS CHAR(4)),'')  AS DCDCORR,
+                               COALESCE((
+                                         SELECT MAX(C.SCLIENT)
+                                         FROM COMPANY C
+                                         WHERE PC.NCOMPANY = C.NCOMPANY
+                               ),'')  AS KEBENTID_RSS,
+                               COALESCE(CAST(PC.NSHARE AS NUMERIC(7,4)),0)  AS VTXPART,
+                               'LPG' AS DCOMPA,
+                               '' AS DMARCA
+                               FROM PART_CONTR PC
+                               WHERE CAST(PC.DCOMPDATE AS DATE) BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}' --2008-12-05 - 2023-08-31
+                             '''
+#--------------------------------------------------------------------------------------------------------------------------# 
+ l_obressegura_vtime_lpv = f'''
+                               SELECT
+                               'D' AS INDDETREC,
+                               'OBRESSEGURA' AS TABLAIFRS17,
+                               '' AS PK,
+                               '' AS DTPREG,
+                               '' AS TIOCPROC,
+                               CAST(CAST(PC.DEFFECDATE AS DATE) AS STRING) AS TIOCFRM,
+                               '' AS TIOCTO,
+                               'PVV' AS KGIORIGM,
+                               PC.NNUMBER  ||'-'|| PC.NBRANCH  AS DCDINTTRA,
+                               '' AS KOCSBTRT,
+                               '' AS DDESCDSBTRT,
+                               '' AS KOCPOOL,
+                               PC.NCOMPANY  AS KOCCDRESS,
+                               PC.NCOMPANY AS DCDRESS,
+                               COALESCE(CAST(PC.NCORREDOR AS CHAR(4)),'')  AS DCDCORR,
+                               COALESCE((
+                                         SELECT MAX(C.SCLIENT)
+                                         FROM COMPANY C
+                                         WHERE PC.NCOMPANY = C.NCOMPANY 
+                               ),'')  AS KEBENTID_RSS,
+                               COALESCE(CAST(PC.NSHARE AS NUMERIC(7,4)),0)  AS VTXPART,
+                               'LPV' AS DCOMPA,
+                               '' AS DMARCA
+                               FROM PART_CONTR PC 
+                               WHERE CAST(PC.DCOMPDATE AS DATE) BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}' --'2007-11-20'	'2016-04-15' 
+                            '''
+#--------------------------------------------------------------------------------------------------------------------------#
+ l_obressegura_insis_lpv = f'''
+                                SELECT
+                                'D' AS INDDETREC,
+                                'OBRESSEGURA' AS TABLAIFRS17,
+                                '' AS PK,
+                                '' AS DTPREG,
+                                '' AS TIOCPROC,
+                                COALESCE(CAST(CAST(RTR.ACTIVE_FROM AS DATE) AS STRING),'') AS TIOCFRM,
+                                '' AS TIOCTO,
+                                'PNV' AS KGIORIGM,
+                                '' AS DCDINTTRA,
+                                '' AS KOCSBTRT,
+                                '' AS DDESCDSBTRT,
+                                '' AS KOCPOOL,
+                                RTR.REINSURER_ID AS KOCCDRESS,
+                                '' AS DCDRESS,
+                                ''  AS DCDCORR,
+                                RTR.REINSURER_ID  AS KEBENTID_RSS,
+                                CAST(RTR.REINRINSR_SHARE AS NUMERIC(7,4)) AS VTXPART,
+                                'LPV' AS DCOMPA,
+                                '' AS DMARCA
+                                FROM RI_TREATY_REINSURERS RTR
+                                WHERE CAST(RTR.ACTIVE_FROM AS DATE) BETWEEN '{p_fecha_inicio}' and '{p_fecha_fin}'
+                            '''
+  #--------------------------------------------------------------------------------------------------------------------------#
 
-  #EJECUTAR CONSULTA
-  print("1-TERMINO TABLA OBRESSEGURA_INX")
-  L_DF_OBRESSEGURA_INSUNIX = glue_context.read.format('jdbc').options(**connection).option("dbtable",L_OBRESSEGURA_INSUNIX).load()
-  print("2-TERMINO TABLA OBRESSEGURA_INX")
-
-  L_OBRESSEGURA_VTIME = f'''
-                           (
-                            (select
-                             'D' as INDDETREC,
-                             'OBRESSEGURA' as TABLAIFRS17,
-                             '' as PK,
-                             '' as DTPREG,
-                             '' as TIOCPROC,
-                             coalesce(cast(cast(pc."DEFFECDATE" as date) as varchar),'') as TIOCFRM,
-                             '' as TIOCTO,
-                             'PVG' as KGIORIGM,
-                             pc."NNUMBER"  ||'-'|| pc."NBRANCH"  as DCDINTTRA,
-                             '' as KOCSBTRT,
-                             '' as DDESCDSBTRT,
-                             '' as KOCPOOL,
-                             PC."NCOMPANY"   as KOCCDRESS,
-                             PC."NCOMPANY"  as DCDRESS,
-                             coalesce(cast(pc."NCORREDOR" as char(4)),'')  as DCDCORR,
-                             coalesce((
-                             select c."SCLIENT" from usvtimg01."COMPANY" c
-                             where pc."NCOMPANY" = c."NCOMPANY" 
-                             ),'')  as KEBENTID_RSS,
-                             coalesce(cast(pc."NSHARE" as numeric(7,4)),0)  as VTXPART,
-                             'LPG' as DCOMPA,
-                             '' as DMARCA
-                             from usvtimg01."PART_CONTR" pc --2008-12-05 - 2023-08-31
-                            where cast(pc."DCOMPDATE" as date) between '{p_fecha_inicio}' and '{p_fecha_fin}'
-                            )
-                            
-                            union all
-
-                            --LPV
-                            (select
-                            'D' as INDDETREC,
-                            'OBRESSEGURA' as TABLAIFRS17,
-                            '' as PK,
-                            '' as DTPREG,
-                            '' as TIOCPROC,
-                            cast(cast(pc."DEFFECDATE" as date) as varchar) as TIOCFRM,
-                            '' as TIOCTO,
-                            'PVV' as KGIORIGM,
-                            pc."NNUMBER"  ||'-'|| pc."NBRANCH"  as DCDINTTRA,
-                            '' as KOCSBTRT,
-                            '' as DDESCDSBTRT,
-                            '' as KOCPOOL,
-                            PC."NCOMPANY"  as KOCCDRESS,
-                            PC."NCOMPANY" as DCDRESS,
-                            coalesce(cast(pc."NCORREDOR" as char(4)),'')  as DCDCORR,
-                            coalesce((
-                            select c."SCLIENT" from usvtimg01."COMPANY" c
-                            where pc."NCOMPANY" = c."NCOMPANY" 
-                            ),'')  as KEBENTID_RSS,
-                            coalesce(cast(pc."NSHARE"as numeric(7,4)),0)  as VTXPART,
-                            'LPV' as DCOMPA,
-                            '' as DMARCA
-                            from usvtimv01."PART_CONTR" pc --'2007-11-20'	'2016-04-15' 
-                            where cast(pc."DCOMPDATE" as date) between '{p_fecha_inicio}' and '{p_fecha_fin}')
-                            ) AS TMP
-                           '''
+ spark = glue_context.spark_session
+ l_df_obresegura = None
+  
+ print(tablas)
+  
+ for tabla in tablas:
+    print('Aqui esta la lista de tablas:',tabla['lista'])
     
-    #EJECUTAR CONSULTA
-  print("1-TERMINO TABLA OBRESSEGURA_VT")
-  L_DF_OBRESSEGURA_VTIME = glue_context.read.format('jdbc').options(**connection).option("dbtable",L_OBRESSEGURA_VTIME).load()
-  print("2-TERMINO TABLA OBRESSEGURA_VT")
+    for item in tabla['lista']:
+      view_name = item['vista']
+      file_path = item['path']
+      
+      print('la vista : ', view_name)
+      print('el path origen: ',file_path)
+      
+      # Leer datos desde Parquet usando pandas
+      pandas_df = spark.read.parquet('s3://'+bucket+'/'+file_path)
 
-  L_OBRESSEGURA_INSIS = f'''
-                           (
-                            (select
-                             'D' as INDDETREC,
-                             'OBRESSEGURA' as TABLAIFRS17,
-                             '' as PK,
-                             '' as DTPREG,
-                             '' as TIOCPROC,
-                             coalesce(cast(cast(rtr."ACTIVE_FROM" as date) as varchar),'') as TIOCFRM,
-                             '' as TIOCTO,
-                             'PNV' as KGIORIGM,
-                             '' as DCDINTTRA,
-                             '' as KOCSBTRT,
-                             '' as DDESCDSBTRT,
-                             '' as KOCPOOL,
-                             rtr."REINSURER_ID" as KOCCDRESS,
-                             '' as DCDRESS,
-                             ''  as DCDCORR,
-                             rtr."REINSURER_ID"  as KEBENTID_RSS,
-                             cast(rtr."REINRINSR_SHARE" as numeric(7,4)) as VTXPART,
-                             'LPV' as DCOMPA,
-                             '' as DMARCA
-                              FROM usinsiv01."RI_TREATY_REINSURERS" rtr
-                            where cast(rtr."ACTIVE_FROM" as date) between '{p_fecha_inicio}' and '{p_fecha_fin}')
-                            ) AS TMP
-                           '''
-  print("1-TERMINO TABLA OBRESSEGURA_INS")
-  L_DF_OBRESSEGURA_INSIS = glue_context.read.format('jdbc').options(**connection).option("dbtable",L_OBRESSEGURA_INSIS).load()
-  print("2-TERMINO TABLA OBRESSEGURA_INS")
-  #PERFORM THE UNION OPERATION
-  L_DF_OBRESSEGURA = L_DF_OBRESSEGURA_INSUNIX.union(L_DF_OBRESSEGURA_VTIME).union(L_DF_OBRESSEGURA_INSIS)
-
-  return L_DF_OBRESSEGURA
+      pandas_df.createOrReplaceTempView(view_name)
+      
+    current_df = spark.sql(locals()[tabla['var']])
+    print('la variable a ejecutar', tabla['var'])
+    
+    if l_df_obresegura is None:
+      l_df_obresegura = current_df
+    else: 
+      # Ejecutar la consulta final
+      l_df_obresegura = l_df_obresegura.union(current_df)
+    current_df.show()
+  
+ print('Proceso Final')
+ l_df_obresegura.show()
+    
+ return l_df_obresegura
