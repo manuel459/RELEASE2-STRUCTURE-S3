@@ -11,7 +11,7 @@ def get_log(cliente_dynamodb, id):
 
     return log
 
-def update_log(cliente_dynamodb, id, step, nombre_error,last_start_time,tipo_carga):
+def update_log(cliente_dynamodb, id, step,number,nombre_error,last_start_time,tipo_carga):
 
     log = get_log(cliente_dynamodb, id)
 
@@ -29,7 +29,7 @@ def update_log(cliente_dynamodb, id, step, nombre_error,last_start_time,tipo_car
             ExpressionAttributeValues={
                 ':fi': {'S': fecha_inicio},
                 ':ff': {'S': 'ESPERE'},
-                ':st': {'S': steps[0]},
+                ':st': {'S': steps[number]},
                 ':tc': {'S': tipo_carga},
                 ':ne': {'S': '-'},
                 ':te': {'S': ' '},
