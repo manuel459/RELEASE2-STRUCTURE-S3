@@ -20,7 +20,7 @@ glue_client = boto3.client('glue')
 s3r = boto3.resource('s3')
 cliente_dynamodb = boto3.client("dynamodb")
 ssm = boto3.client('ssm', 'us-east-1')
-id = 'REASEGURO'
+id = 'REASEGUROS'
 nombre_error = '-'
 job_name = 'fndtifrs17gluereasegurod02_test'
 response = glue_client.get_job_runs(JobName=job_name, MaxResults=1)
