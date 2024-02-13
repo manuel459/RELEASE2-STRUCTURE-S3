@@ -53,4 +53,4 @@ def generate_entidad_parquets(bucketName, config_dominio, glue_context, connecti
             Bucket = bucketName,
             Key = tabla['name'], 
             Body=L_BUFFER.read()
-        )
+        )   
