@@ -97,7 +97,7 @@ try:
     
     tipo_carga = l_dic_config['GENERAL']['tipoCarga']
 
-    trazaupdate = trazabilidad.update_log(cliente_dynamodb, id, 1, nombre_error,last_start_time,tipo_carga)
+    trazaupdate = trazabilidad.update_log(cliente_dynamodb, id, 1,0, nombre_error,last_start_time,tipo_carga)
     
     #--------------------------------------#
     #  CONEXIÓN A LA BASE DE DATOS AURORA
@@ -124,13 +124,13 @@ try:
             #parametros 1: Nombre_bucket_destino 2: lista de tablas, 3: ContextGlue , 4: Conexion a base de datos , 5 : Cliente de S3, 6: IO 
             L_DF = script.generate_reaseguro_parquets(l_dic_config['GENERAL']['bucket']['artifact'], values['tablas'], glueContext, connection, s3_client, io)
             
-    trazabilidad.update_log(cliente_dynamodb, id, 2,nombre_error, last_start_time,tipo_carga)
+    trazabilidad.update_log(cliente_dynamodb, id, 2,0,nombre_error, last_start_time,tipo_carga)
     
 except Exception as e:
     # Log the error for debugging purposes
     print(f"Error: {str(e)}")
     nombre_error = str(e)
-    trazabilidad.update_log(cliente_dynamodb, id, 2,nombre_error, last_start_time,tipo_carga)
+    trazabilidad.update_log(cliente_dynamodb, id, 2,0,nombre_error, last_start_time,tipo_carga)
     
 job.commit()
  
