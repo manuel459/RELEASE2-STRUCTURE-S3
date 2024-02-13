@@ -25,8 +25,7 @@ cliente_dynamodb = boto3.client("dynamodb")
 ssm = boto3.client('ssm', 'us-east-1')
 id = 'REASEGURO'
 nombre_error = '-'
-job_name = 'fndtifrs17gluereasegurod01_test'
-response = glue_client.get_job_runs(JobName=job_name, MaxResults=1)
+
 
 
 #FUNCIÓN PARA EJECUTAR UN SCRIPT GUARDADO EN UN BUCKET S3
@@ -53,14 +52,6 @@ def extract_config(l_configuraciones, nombre_tabla):
         l_dic_config[config['Item']['NOMBRE_DOMINIO']['S']] = json.loads(config['Item'][dominio['COLUMNA']]['S'])
        
     return l_dic_config
-    
-last_run = response['JobRuns'][0]
-print("ID-GLUE")
-print(last_run)
-
-last_start_time = last_run['StartedOn']
-
-print(f"Last Start Time: {last_start_time}")
 
 #EXTRACCION DE LAS CONFIGURACIONES PARA LOS AMBIENTES 
 def get_ssm():
@@ -76,6 +67,22 @@ try:
     #   EXTRAER VARIABLES DE ENTORNO
     #-------------------------------------#
     env = get_ssm()
+    
+    #-------------------------------------#
+    #
+    #-------------------------------------#
+    job_name = f'fndtifrs17gluereaseguro{env}01_test'
+    
+    response = glue_client.get_job_runs(JobName=job_name, MaxResults=1)
+    
+    last_run = response['JobRuns'][0]
+    print("ID-GLUE")
+    print(last_run)
+
+    last_start_time = last_run['StartedOn']
+
+    print(f"Last Start Time: {last_start_time}")
+    
     #-------------------------------------#
     #   EXTRAER CONFIGURACIONES DYNAMODB
     #-------------------------------------#
