@@ -58,20 +58,20 @@ def get_data(glue_context, bucket ,tablas, p_fecha_inicio, p_fecha_fin):
     #EJECUTAR CONSULTA
       
   #--------------------------------------------------------------------------------------------------------------------------#
-  spark = glue_context.spark_session
-  #l_df_arprsap = spark.createDataFrame([])
   
+  spark = glue_context.spark_session
+  l_df_ebentid = None
   print(tablas)
   
   for tabla in tablas:
     print('Aqui esta la lista de tablas:',tabla['lista'])
     
     for item in tabla['lista']:
-      view_name = item["vista"]
-      file_path = item["path"]
+      view_name = item['vista']
+      file_path = item['path']
       
-      print("la vista : ", view_name)
-      print("el path origen: ",file_path)
+      print('la vista : ', view_name)
+      print('el path origen: ',file_path)
       
       # Leer datos desde Parquet usando pandas
       pandas_df = spark.read.parquet('s3://'+bucket+'/'+file_path)
@@ -80,11 +80,15 @@ def get_data(glue_context, bucket ,tablas, p_fecha_inicio, p_fecha_fin):
       
     current_df = spark.sql(locals()[tabla['var']])
     print('la variable a ejecutar', tabla['var'])
-      
-    # Ejecutar la consulta final
-    #l_df_arprsap = l_df_arprsap.union(current_df)
+    
+    if l_df_ebentid is None:
+      l_df_ebentid = current_df
+    else: 
+      # Ejecutar la consulta final
+      l_df_ebentid = l_df_ebentid.union(current_df)
     current_df.show()
   
-  spark.stop()
-    
-  return 'true'
+  print('Proceso Final')
+  l_df_ebentid.show()
+
+  return l_df_ebentid

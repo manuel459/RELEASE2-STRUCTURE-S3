@@ -3,34 +3,22 @@ from awsglue.utils import getResolvedOptions
 from pyspark.context import SparkContext
 from awsglue.context import GlueContext
 from awsglue.job import Job
-from pyspark.sql.functions import col, concat, concat_ws, lit, trim, StringType, coalesce, expr
-from datetime import datetime
-from pyspark.sql import Row
 import boto3
 import io
 import json
 import importlib.util
+from boto3.dynamodb.conditions import Key
 
 #INICIALIZAR OBJETOS
 args = getResolvedOptions(sys.argv, ["JOB_NAME"])
 sc = SparkContext()
 glueContext = GlueContext(sc)
-spark = glueContext.spark_session
 job = Job(glueContext)
 job.init(args["JOB_NAME"], args)
+s3_client = boto3.client('s3')
 s3r = boto3.resource('s3')
 cliente_dynamodb = boto3.client("dynamodb")
 ssm = boto3.client('ssm', 'us-east-1')
-
-def extract_config(l_configuraciones, nombre_tabla):
-    #CREAR UN DICCIONARIO PARA ESTABLECER LAS CONFIGURACIONES
-    l_dic_config = {}
-    
-    #Extraer las CONFIGURACIONES NECESARIAS segun la lista
-    for dominio in l_configuraciones:
-        config = cliente_dynamodb.get_item(TableName=nombre_tabla, Key={'NOMBRE_DOMINIO':{'S':str(dominio)}})
-        l_dic_config[config['Item']['NOMBRE_DOMINIO']['S']] = json.loads(config['Item']['ESTRUCTURA']['S'])
-    return l_dic_config
 
 def execute_script(name_bucket, name_object):
     path_temp = 'fileTemp.py'
@@ -49,6 +37,18 @@ def get_ssm():
                 WithDecryption=True  # Descifra el valor si es un SecureString
             )
         return response['Parameter']['Value']
+    
+#EXTRACCION DE LAS CONFIGURACIONES Y RETORNARLAS EN UN DICCIONARIO DE DATOS        
+def extract_config(l_configuraciones, nombre_tabla):
+    #CREAR UN DICCIONARIO PARA ESTABLECER LAS CONFIGURACIONES
+    l_dic_config = {}
+    
+    #Extraer las CONFIGURACIONES NECESARIAS segun la lista
+    for dominio in l_configuraciones:
+        config = cliente_dynamodb.get_item(TableName=nombre_tabla, Key={'NOMBRE_DOMINIO': {'S': str(dominio['DOMINIO'])}})
+        l_dic_config[config['Item']['NOMBRE_DOMINIO']['S']] = json.loads(config['Item'][dominio['COLUMNA']]['S'])
+       
+    return l_dic_config
 
 try:
     #-------------------------------------#
@@ -61,26 +61,58 @@ try:
     #-------------------------------------#
     
     #CREAR UNA LISTA CON TODAS LAS CONFIGURACIONES NECESARIAS SEGUN EL DOMINIO
-    l_configuraciones = ["ENTIDADES","GENERAL"]
+    l_configuraciones = [{ "DOMINIO": "GENERAL" , "COLUMNA": "ESTRUCTURA" }, { "DOMINIO": "ENTIDADES" , "COLUMNA": "NEGOCIO" }]
     
     #NOMBRE DE LA TABLA DE CONFIGURACIONES
-    nombre_tabla = f'fndtifrs17dydb{env}01'
     
+    nombre_tabla = f'TablaTestIFRS17'
+    
+    #CREAR UN DICCIONARIO PARA ESTABLECER LAS CONFIGURACIONES
+    l_dic_config = {}
+
     #EXTRAER CONFIGURACIONES
     l_dic_config = extract_config(l_configuraciones, nombre_tabla)
+    
+    print(l_dic_config)
+                 
+    #--------------------------------------------------#
+    #    EJECUCIÓN DEL GRUPO DE INFORMACIÓN PRODUCTOS
+    #--------------------------------------------------#
+    
+    for config in l_dic_config['ENTIDADES']['path_file_tmp']:
+        if config['flag'] == 1:
+            
+            print(config['script'])
+            print(config['tablas'])
+            
+            #VALIDAR EL TIPO DE CARGA : INI = INICIAL | INC = INCREMENTAL
+            if l_dic_config['GENERAL']['tipoCarga'] == 'INI':
+                #OBTENER SCRIPTS ALMACENADOS EN S3
+                structure = execute_script(l_dic_config['GENERAL']['bucket']['artifact'], config['script_inicial'])
+            
+            elif l_dic_config['GENERAL']['tipoCarga'] == 'INC':
+                #OBTENER SCRIPTS ALMACENADOS EN S3
+                structure = execute_script(l_dic_config['GENERAL']['bucket']['artifact'], config['script_incremental'])
+            
+            #LLAMAR Y LANZAR LOS PARAMETROS A LA FUNCION getData
+            L_DF_ENTIDAD = structure.get_data(glueContext, l_dic_config['GENERAL']['bucket']['artifact'] ,config['tablas'],l_dic_config['GENERAL']['fechas']['dFecha_Inicio'], l_dic_config['GENERAL']['fechas']['dFecha_Fin'])
+            
+            print(L_DF_ENTIDAD)
         
-    #----------------------------------------------------------#
-    #   EJECUTAR FUNCION QUE ESTRUCTURA LOS FILES IFRS17 A TXT
-    #----------------------------------------------------------#
-    #OBTENER LAS FUNCIONES ALMACENADAS EN S3
-    structure = execute_script(l_dic_config['GENERAL']['bucket']['artifact'], l_dic_config['GENERAL']['funciones']['structure'])
-
-    #LLAMAR Y LANZAR LOS PARAMETROS A LA FUNCION generate_files
-    domain = 'ENTIDADES'
-    structure.generate_files(l_dic_config, domain)
+            #Trasformar a bit escrito en formato txt
+            L_BUFFER_ENTIDAD = io.BytesIO()
+            L_DF_ENTIDAD.toPandas().to_parquet(L_BUFFER_ENTIDAD, index=False)
+            L_BUFFER_ENTIDAD.seek(0)
+            
+            # Escribir el objeto Parquet en S3
+            s3_client.put_object(
+                Bucket = l_dic_config['GENERAL']['bucket']['artifact'],
+                Key = config['path'],
+                Body=L_BUFFER_ENTIDAD.read()
+            )
 
 except Exception as e:
     # Log the error for debugging purposes
-    print(f"Error: {str(e)}")
-    
+    print(f"Error Glue de Regla de Negocio del Dominio de ENTIDADES: {str(e)}")
+
 job.commit()

@@ -22,16 +22,31 @@ secretSession = boto3.session.Session()
 cliente_dynamodb = boto3.client("dynamodb")
 ssm = boto3.client('ssm', 'us-east-1')
 
+#FUNCIÓN PARA EJECUTAR UN SCRIPT GUARDADO EN UN BUCKET S3
 def execute_script(name_bucket, name_object):
-    path_temp = 'fileTemp.py'
-    s3r.Object(name_bucket, name_object).download_file(path_temp)
-    #importando
-    spec = importlib.util.spec_from_file_location('module', path_temp)
-    structure = importlib.util.module_from_spec(spec)
-    #lee mi script
-    spec.loader.exec_module(structure)
-    return structure
+        path_temp = 'fileTemp.py'
+        s3r.Object(name_bucket, name_object).download_file(path_temp)
+        
+        #importando
+        spec = importlib.util.spec_from_file_location('module', path_temp)
+        structure = importlib.util.module_from_spec(spec)
+        
+        #lee mi script
+        spec.loader.exec_module(structure)
+        return structure
 
+#EXTRACCION DE LAS CONFIGURACIONES Y RETORNARLAS EN UN DICCIONARIO DE DATOS        
+def extract_config(l_configuraciones, nombre_tabla):
+    #CREAR UN DICCIONARIO PARA ESTABLECER LAS CONFIGURACIONES
+    l_dic_config = {}
+    
+    #Extraer las CONFIGURACIONES NECESARIAS segun la lista
+    for dominio in l_configuraciones:
+        config = cliente_dynamodb.get_item(TableName=nombre_tabla, Key={'NOMBRE_DOMINIO': {'S': str(dominio['DOMINIO'])}})
+        l_dic_config[config['Item']['NOMBRE_DOMINIO']['S']] = json.loads(config['Item'][dominio['COLUMNA']]['S'])
+       
+    return l_dic_config
+    
 def get_ssm():
         parameter_name = "/configuracion/variable/entorno"
         response = ssm.get_parameter(
@@ -41,7 +56,6 @@ def get_ssm():
         return response['Parameter']['Value']
 
 try:
-    
     #-------------------------------------#
     #   EXTRAER VARIABLES DE ENTORNO
     #-------------------------------------#
@@ -51,53 +65,42 @@ try:
     #-------------------------------------#
     
     #CREAR UNA LISTA CON TODAS LAS CONFIGURACIONES NECESARIAS SEGUN EL DOMINIO
-    l_configuraciones = ["ENTIDADES","GENERAL"]
-
-    #NOMBRE DE LA TABLA DE CONFIGURACIONES
-    nombre_tabla = f'fndtifrs17dydb{env}01'
-
-    #CREAR UN DICCIONARIO PARA ESTABLECER LAS CONFIGURACIONES
-    l_dic_config = {}
-
-    #Extraer las CONFIGURACIONES NECESARIAS segun la lista
-    for dominio in l_configuraciones:
-        config = cliente_dynamodb.get_item(TableName=nombre_tabla, Key={'NOMBRE_DOMINIO':{'S':str(dominio)}})
-        l_dic_config[config['Item']['NOMBRE_DOMINIO']['S']] = json.loads(config['Item']['ESTRUCTURA']['S'])
+    l_configuraciones = [{ "DOMINIO": "GENERAL" , "COLUMNA": "ESTRUCTURA" }, { "DOMINIO": "ENTIDADES" , "COLUMNA": "LECTURA" }]
     
-    print(l_dic_config)
-
+    #NOMBRE DE LA TABLA DE CONFIGURACIONES
+    
+    nombre_tabla = 'TablaTestIFRS17'
+    
+    #EXTRAER CONFIGURACIONES
+    l_dic_config = extract_config(l_configuraciones, nombre_tabla)
+    
     #--------------------------------------#
-    #  Conexión a la base de datos AURORA
+    #  CONEXIÓN A LA BASE DE DATOS AURORA
     #--------------------------------------#
     structure = execute_script(l_dic_config['GENERAL']['bucket']['artifact'], l_dic_config['GENERAL']['funciones']['secret'])
 
     #validar secreto para generar la conexion al RDS
     connection = structure.get_secret(secretSession, env)
-
+    print(connection)
+    
     #--------------------------------------------------#
     #    EJECUCIÓN DEL GRUPO DE INFORMACIÓN ENTIDADES
     #--------------------------------------------------#
-
-    for config in l_dic_config['ENTIDADES']['path_file_tmp']:
-        #OBTENER SCRIPTS ALMACENADOS EN S3
-        structure = execute_script(l_dic_config['GENERAL']['bucket']['artifact'], config['script'])
-
-        #LLAMAR Y LANZAR LOS PARAMETROS A LA FUNCION getData
-        L_DF_ENTIDADES_EBENTID = structure.get_data(glueContext, connection, l_dic_config['GENERAL']['fechas']['dFecha_Inicio'], l_dic_config['GENERAL']['fechas']['dFecha_Fin'])
+    
+    print(l_dic_config['ENTIDADES']["ENTIDADES"].items())
+    #ITERAR TODOS LOS SCRIPTS SEGUN LA COMPAÑIA
+    for producto, values in l_dic_config['ENTIDADES']["ENTIDADES"].items():
         
-        #Trasformar a bit escrito en formato txt
-        L_BUFFER_ENTIDADES_EBENTID = io.BytesIO()
-        L_DF_ENTIDADES_EBENTID.toPandas().to_parquet(L_BUFFER_ENTIDADES_EBENTID, index=False)
-        L_BUFFER_ENTIDADES_EBENTID.seek(0)
+        if values['flag'] == 1:
+            
+            #extraer la funcion base del script de cada compañia en el path
+            script = execute_script(l_dic_config['GENERAL']['bucket']['artifact'], values['path'])
         
-        # Escribir el objeto Parquet en S3
-        s3_client.put_object(
-            Bucket = l_dic_config['GENERAL']['bucket']['artifact'],
-            Key = config['path'],
-            Body=L_BUFFER_ENTIDADES_EBENTID.read()
-            )
+            #parametros 1: Nombre_bucket_destino 2: lista de tablas, 3: ContextGlue , 4: Conexion a base de datos , 5 : Cliente de S3, 6: IO 
+            L_DF = script.generate_entidad_parquets(l_dic_config['GENERAL']['bucket']['artifact'], values['tablas'], glueContext, connection, s3_client, io)
+
 except Exception as e:
     # Log the error for debugging purposes
-    print(f"Error: {str(e)}")
-   
+    print(f"Error Glue de lectura del Dominio de ENTIDADES: {str(e)}")
+
 job.commit()

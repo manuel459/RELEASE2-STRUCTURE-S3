@@ -3,7 +3,8 @@
        {
           "nombre_tabla":"EBENTID",
           "path":"tmp/Entidad/RN-ENTIDAD-EBENTID.parquet",
-          "script":"lib/fndtifrs17glueentidadd01/regla_negocio/fndtifrs17glueentidadesd01ebentid.py",
+          "script_inicial":"lib/fndtifrs17glueentidadd01/regla_negocio/inicial/fndtifrs17glueentidadesd01ebentid.py",
+          "script_incremental":"lib/fndtifrs17glueentidadd01/regla_negocio/incremental/fndtifrs17glueentidadesd01ebentid.py",
           "flag":1,
           "tablas" : [
             { 
