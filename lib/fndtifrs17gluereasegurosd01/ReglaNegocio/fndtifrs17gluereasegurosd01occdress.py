@@ -1,124 +1,123 @@
-def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
-    L_OCCDRESS_INSUNIX = f'''
-                                   (
-                                   (select
-                                   'D' as INDDETREC,
-                                   'OCCDRESS' as TABLAIFRS17,
-                                   '' as PK,
-                                   '' as DTPREG,
-                                   '' as TIOCPROC,
-                                   coalesce(cast(c.effecdate as varchar) ,'') as TIOCFRM,
-                                   '' as TIOCTO,
-                                   'PIG' as KGIORIGM,
-                                   coalesce((
-                                             select evi.scod_vt  from usinsug01.equi_vt_inx evi
-                                             where c.client = evi.scod_inx 
-                                   ),'') as DCODIGO,
-                                   '' as DDESC,
-                                   '' as KOICDRESS
-                                   from usinsug01.company c 
-                                   where c.compdate between '{p_fecha_inicio}' and '{p_fecha_fin}'
-                                   )
-                                   union all
-                                   --1994-02-16 - 2023-08-04
-                                   
-                                   (select
-                                   'D' as INDDETREC,
-                                   'OCCDRESS' as TABLAIFRS17,
-                                   '' as PK,
-                                   '' as DTPREG,
-                                   '' as TIOCPROC,
-                                   coalesce(cast(c.effecdate as varchar) ,'') as TIOCFRM,
-                                   '' as TIOCTO,
-                                   'PIV' as KGIORIGM,
-                                   coalesce((
-                                             select evi.scod_vt  from usinsug01.equi_vt_inx evi
-                                             where c.client = evi.scod_inx 
-                                   ),'') as DCODIGO,
-                                   '' as DDESC,
-                                   '' as KOICDRESS
-                                   from usinsug01.company c 
-                                   where c.compdate between '{p_fecha_inicio}' and '{p_fecha_fin}'
-                                   )
-                                   --1994-02-16 - 2023-08-04
-                                   ) AS TMP         
-                          '''
-    #EJECUTAR CONSULTA
-    print("1-TERMINO TABLA OCCDRESS_IN")
-    L_DF_OCCDRESS_INSUNIX = glue_context.read.format('jdbc').options(**connection).option("dbtable",L_OCCDRESS_INSUNIX).load()
-    print("2-TERMINO TABLA OCCDRESS_IN")
-    
-    L_OCCDRESS_VTIME = f'''
-                                   (
-                                   (
-                                   ---------------------
-                                   --     VTIME       --
-                                   ---------------------
-                                   select
-                                   'D' as INDDETREC,
-                                   'OCCDRESS' as TABLAIFRS17,
-                                   '' as PK,
-                                   '' as DTPREG,
-                                   '' as TIOCPROC,
-                                   cast(c."DCOMPDATE" as date ) as TIOCFRM,
-                                   '' as TIOCTO,
-                                   'PVG' as KGIORIGM,
-                                   coalesce(c."SCLIENT",'')  as DCODIGO,
-                                   '' as DDESC,
-                                   '' as KOICDRESS
-                                   from usvtimg01."COMPANY" c
-                                   where cast(c."DCOMPDATE" as date )  between '{p_fecha_inicio}' and '{p_fecha_fin}'
-                                   )
-                                   union all 
-                                   --2007-12-03 - 2023-08-04 
-                                   
-                                   -- LPV
-                                   (select
-                                   'D' as INDDETREC,
-                                   'OCCDRESS' as TABLAIFRS17,
-                                   '' as PK,
-                                   '' as DTPREG,
-                                   '' as TIOCPROC,
-                                   cast(c."DCOMPDATE" as date ) as TIOCFRM,
-                                   '' as TIOCTO,
-                                   'PVV' as KGIORIGM,
-                                   coalesce(c."SCLIENT",'')  as DCODIGO,
-                                   '' as DDESC,
-                                   '' as KOICDRESS
-                                   from usvtimg01."COMPANY" c
-                                   where cast(c."DCOMPDATE" as date )  between '{p_fecha_inicio}' and '{p_fecha_fin}'
-                                   )
-                                   --2007-12-03 - 2023-08-04 
-                                   ) AS TMP
+def get_data(glue_context, bucket ,tablas, p_fecha_inicio, p_fecha_fin):
+
+ l_occdress_insunix_lpg = f'''
+                         select
+                         'D' as INDDETREC,
+                         'OCCDRESS' as TABLAIFRS17,
+                         '' as PK,
+                         '' as DTPREG,
+                         '' as TIOCPROC,
+                         coalesce(cast(c.EFFECDATE as STRING) ,'') as TIOCFRM,
+                         '' as TIOCTO,
+                         'PIG' as KGIORIGM,
+                         coalesce((SELECT  MAX(EVI.SCOD_VT)
+                                   FROM EQUI_VT_INX EVI
+                                   WHERE c.CLIENT = EVI.SCOD_INX),'') as DCODIGO,
+                         '' as DDESC,
+                         '' as KOICDRESS
+                         FROM COMPANY C --1994-02-16 - 2023-08-04
+                      '''
+#--------------------------------------------------------------------------------------------------------------------------# 
+ l_occdress_insunix_lpv = f'''
+                         select
+                         'D' as INDDETREC,
+                         'OCCDRESS' as TABLAIFRS17,
+                         '' as PK,
+                         '' as DTPREG,
+                         '' as TIOCPROC,
+                         coalesce(cast(c.EFFECDATE as STRING) ,'') as TIOCFRM,
+                         '' as TIOCTO,
+                         'PIV' as KGIORIGM,
+                         coalesce((SELECT  MAX(EVI.SCOD_VT)
+                                   FROM EQUI_VT_INX EVI
+                                   WHERE c.CLIENT = EVI.SCOD_INX
+                         ),'') as DCODIGO,
+                         '' as DDESC,
+                         '' as KOICDRESS
+                         FROM COMPANY C --1994-02-16 - 2023-08-04
+                      '''
+#--------------------------------------------------------------------------------------------------------------------------#
+ l_occdress_vtime_lpg = f'''
+                           select
+                           'D' as INDDETREC,
+                           'OCCDRESS' as TABLAIFRS17,
+                           '' as PK,
+                           '' as DTPREG,
+                           '' as TIOCPROC,
+                           cast(c.DCOMPDATE as date ) as TIOCFRM,
+                           '' as TIOCTO,
+                           'PVG' as KGIORIGM,
+                           coalesce(c.SCLIENT,'')  as DCODIGO,
+                           '' as DDESC,
+                           '' as KOICDRESS
+                           FROM COMPANY C --2007-12-03 - 2023-08-04 
                         '''
-    #EJECUTAR CONSULTA
-    print("1-TERMINO TABLA OCCDRESS_VT")
-    L_DF_OCCDRESS_VTIME = glue_context.read.format('jdbc').options(**connection).option("dbtable",L_OCCDRESS_VTIME).load()
-    print("2-TERMINO TABLA OCCDRESS_VT")
-    L_OCCDRESS_INSIS = f'''
-                                   (
-                                   (select
-                                   'D' as INDDETREC,
-                                   'OCCDRESS' as TABLAIFRS17,
-                                   '' as PK,
-                                   '' as DTPREG,
-                                   '' as TIOCPROC,
-                                   cast(pin.fecha_replicacion_positiva  as date) as TIOCFRM,
-                                   '' as TIOCTO,
-                                   'PNV' as KGIORIGM,
-                                   pin."MAN_ID" as DCODIGO,
-                                   '' as DDESC,
-                                   '' as KOICDRESS
-                                   from usinsiv01."P_INSURERS" pin --2023-11-06 - 2023-11-06 
-                                   where cast(pin.fecha_replicacion_positiva  as date)  between '{p_fecha_inicio}' and '{p_fecha_fin}' --LA TABLA ORIGINAL NO TIENE FECHAS 
-                                   )
-                                   ) AS TMP
+#--------------------------------------------------------------------------------------------------------------------------#
+ l_occdress_vtime_lpv = f'''
+                           select
+                           'D' as INDDETREC,
+                           'OCCDRESS' as TABLAIFRS17,
+                           '' as PK,
+                           '' as DTPREG,
+                           '' as TIOCPROC,
+                           cast(C.DCOMPDATE as date ) as TIOCFRM,
+                           '' as TIOCTO,
+                           'PVV' as KGIORIGM,
+                           coalesce(C.SCLIENT,'')  as DCODIGO,
+                           '' as DDESC,
+                           '' as KOICDRESS
+                           FROM COMPANY C --2007-12-03 - 2023-08-04 
                         '''
-    #EJECUTAR CONSULTA
-    print("1-TERMINO TABLA OCCDRESS_INS")
-    L_DF_OCCDRESS_INSIS = glue_context.read.format('jdbc').options(**connection).option("dbtable",L_OCCDRESS_INSIS).load()
-    print("2-TERMINO TABLA OCCDRESS_INS")
+#--------------------------------------------------------------------------------------------------------------------------#
+ l_occdress_insis_lpv = f'''
+                           select
+                           'D' as INDDETREC,
+                           'OCCDRESS' as TABLAIFRS17,
+                           '' as PK,
+                           '' as DTPREG,
+                           '' as TIOCPROC,
+                           cast(PIN.fecha_replicacion_positiva  as date) as TIOCFRM,
+                           '' as TIOCTO,
+                           'PNV' as KGIORIGM,
+                           PIN.MAN_ID as DCODIGO,
+                           '' as DDESC,
+                           '' as KOICDRESS
+                           FROM P_INSURERS PIN --2023-11-06 - 2023-11-06 
+                           --LA TABLA ORIGINAL NO TIENE FECHAS 
+                        '''
+  #--------------------------------------------------------------------------------------------------------------------------#
+
+ spark = glue_context.spark_session
+ l_df_occdress = None
+  
+ print(tablas)
+  
+ for tabla in tablas:
+    print('Aqui esta la lista de tablas:',tabla['lista'])
     
-    #PERFORM THE UNION OPERATION
-    L_DF_OCCDRESS = L_DF_OCCDRESS_INSUNIX.union(L_DF_OCCDRESS_VTIME).union(L_DF_OCCDRESS_INSIS)
-    return L_DF_OCCDRESS
+    for item in tabla['lista']:
+      view_name = item['vista']
+      file_path = item['path']
+      
+      print('la vista : ', view_name)
+      print('el path origen: ',file_path)
+      
+      # Leer datos desde Parquet usando pandas
+      pandas_df = spark.read.parquet('s3://'+bucket+'/'+file_path)
+
+      pandas_df.createOrReplaceTempView(view_name)
+      
+    current_df = spark.sql(locals()[tabla['var']])
+    print('la variable a ejecutar', tabla['var'])
+    
+    if l_df_occdress is None:
+      l_df_occdress = current_df
+    else: 
+      # Ejecutar la consulta final
+      l_df_occdress = l_df_occdress.union(current_df)
+    current_df.show()
+  
+ print('Proceso Final')
+ l_df_occdress.show()
+    
+ return l_df_occdress
