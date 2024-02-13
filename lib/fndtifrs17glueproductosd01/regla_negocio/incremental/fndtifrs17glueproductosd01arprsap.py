@@ -1,6 +1,6 @@
-def get_data(glue_context, bucket ,tablas):
+def get_data(glue_context, bucket ,tablas, p_fecha_inicio, p_fecha_fin):
   
-  l_arprsap_insunix_lpg = '''
+  l_arprsap_insunix_lpg = f'''
                          SELECT
                           'D' INDDETREC,
                           'ARPRSAP' TABLAIFRS17,
@@ -75,11 +75,12 @@ def get_data(glue_context, bucket ,tablas):
                           		    FROM	PRODUCT PRO
                           		    WHERE	BRANCH IN (SELECT BRANCH FROM TABLE10B WHERE COMPANY = 1)) PR0, PRODUCT PRO
                           	WHERE PRO.id_replicacion_positiva = PR0.PRO_ID) P 
-                          ON GC.BRANCH = P.BRANCH  AND GC.PRODUCT  = P.PRODUCT limit 4
+                          ON GC.BRANCH = P.BRANCH  AND GC.PRODUCT  = P.PRODUCT
+                          WHERE GC.COMPDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
                           '''
   #--------------------------------------------------------------------------------------------------------------------------# 
                         
-  l_arprsap_insunix_lpv = '''
+  l_arprsap_insunix_lpv = f'''
                               SELECT
                               'D' INDDETREC,
                               'ARPRSAP' TABLAIFRS17,
@@ -151,13 +152,14 @@ def get_data(glue_context, bucket ,tablas):
                                       FROM	PRODUCT PRO
                                       WHERE	BRANCH IN (SELECT BRANCH FROM TABLE10B WHERE COMPANY = 2)) PR0, PRODUCT PRO
                                 WHERE PRO.id_replicacion_positiva = PR0.PRO_ID) P
-                              ON LC.BRANCH = P.BRANCH  AND LC.PRODUCT  = P.PRODUCT limit 4
+                              ON LC.BRANCH = P.BRANCH  AND LC.PRODUCT  = P.PRODUCT
+                              WHERE LC.COMPDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
                           '''
     #EJECUTAR CONSULTA
   
   #--------------------------------------------------------------------------------------------------------------------------#
 
-  l_arprsap_vtime_lpg = '''
+  l_arprsap_vtime_lpg = f'''
                            SELECT 
                             'D' INDDETREC,
                             'ARPRSAP' TABLAIFRS17,
@@ -184,13 +186,14 @@ def get_data(glue_context, bucket ,tablas):
                             '' AS KACCDFDO_PR/*,
                             GC.NMODULEC AS MODULO*/
                             FROM GEN_COVER GC 
-                            LEFT JOIN PRODMASTER PM  ON GC.NBRANCH = PM.NBRANCH  AND GC.NPRODUCT = PM.NPRODUCT limit 4
+                            LEFT JOIN PRODMASTER PM  ON GC.NBRANCH = PM.NBRANCH  AND GC.NPRODUCT = PM.NPRODUCT
+                            WHERE GC.DCOMPDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
                        '''
     #EJECUTAR CONSULTA
    
   #--------------------------------------------------------------------------------------------------------------------------#
   
-  l_arprsap_vtime_lpv= '''
+  l_arprsap_vtime_lpv= f'''
                           SELECT
                           'D' INDDETREC,
                           'ARPRSAP' TABLAIFRS17,
@@ -217,13 +220,14 @@ def get_data(glue_context, bucket ,tablas):
                           '' AS KACCDFDO_PR/*,
                           LC.NMODULEC AS MODULO*/                          
                           FROM LIFE_COVER LC
-                          LEFT JOIN PRODMASTER PM ON LC.NBRANCH = PM.NBRANCH AND LC.NPRODUCT = PM.NPRODUCT limit 4
+                          LEFT JOIN PRODMASTER PM ON LC.NBRANCH = PM.NBRANCH AND LC.NPRODUCT = PM.NPRODUCT
+                          WHERE LC.DCOMPDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
                       '''
     #EJECUTAR CONSULTA
 
   #--------------------------------------------------------------------------------------------------------------------------#
     
-  l_arprsap_insis = '''
+  l_arprsap_insis = f'''
                       SELECT 
                       'D' INDDETREC,
                       'ARPRSAP' TABLAIFRS17,
@@ -253,7 +257,8 @@ def get_data(glue_context, bucket ,tablas):
                       LEFT JOIN CFG_NL_PRODUCT C_NL_PROD ON C_NL_COV.PRODUCT_LINK_ID = C_NL_PROD.PRODUCT_LINK_ID
                       INNER JOIN CFG_NL_PRODUCT_CONDS C_NL_PROD_C ON C_NL_PROD.PRODUCT_LINK_ID = C_NL_PROD_C.PRODUCT_LINK_ID
                       INNER JOIN CPR_PARAMS C_PARAM ON C_NL_PROD_C.PARAM_CPR_ID = C_PARAM.PARAM_CPR_ID AND C_PARAM.FOLDER = 'LPV' AND C_PARAM.PARAM_NAME LIKE 'AS_IS%'
-                      JOIN CPRS_PARAM_VALUE C_PARAM_V ON C_PARAM.PARAM_CPR_ID = C_PARAM_V.PARAM_ID limit 4
+                      JOIN CPRS_PARAM_VALUE C_PARAM_V ON C_PARAM.PARAM_CPR_ID = C_PARAM_V.PARAM_ID
+                      WHERE C_NL_COV.VALID_FROM BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
                     '''
     
     #EJECUTAR CONSULTA

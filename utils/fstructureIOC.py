@@ -18,6 +18,9 @@ def generate_files(l_dic_config, domain):
     # LISTA DE OBJETOS DE LA CARPETA ESPECIFICADA
     L_LIST_GROUP = s3_client.list_objects_v2(Bucket=l_dic_config['GENERAL']['bucket']['artifact'], Prefix=l_dic_config[domain]['path_origen'])
     
+    print('llego')
+    print(L_LIST_GROUP)
+    
     #DECLARA DATAFRAME
     L_DF_GRUPO_FINAL = pd.DataFrame(columns=['resultado'])
     
@@ -37,9 +40,10 @@ def generate_files(l_dic_config, domain):
             L_PQ_FILE = pq.read_table(L_PARQUET_DATA)
             L_DF_GRUPO = L_PQ_FILE.to_pandas()
             print(len(L_DF_GRUPO))
+            print(L_DF_GRUPO)
         
             # FILTRAR POR SISTEMA ORIGEN ENTRANTE 
-            L_DF_GRUPO = L_DF_GRUPO[L_DF_GRUPO['kgiorigm'] == str(l_sistema_origen['sistema_origen'])]
+            L_DF_GRUPO = L_DF_GRUPO[L_DF_GRUPO['KGIORIGM'] == str(l_sistema_origen['sistema_origen'])]
 
             # FORMAR ESTRUCTURA CON | DE SEPARADOR
             L_DF_GRUPO['resultado'] = L_DF_GRUPO.apply(lambda row: '|'.join(map(str, row)), axis=1)

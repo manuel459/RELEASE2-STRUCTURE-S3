@@ -6,7 +6,8 @@ def generate_product_parquets(bucketName, config_dominio, glue_context, connecti
                       PRO."NBRANCH",
                       PRO."NPRODUCT",
                       cast(cast(PRO."DEFFECDATE" as date) as varchar) "DEFFECDATE",
-                      CAST(CAST(PRO."DNULLDATE" AS DATE) AS VARCHAR) "DNULLDATE" 
+                      CAST(CAST(PRO."DNULLDATE" AS DATE) AS VARCHAR) "DNULLDATE",
+                      id_replicacion_positiva
                       from USVTIMV01."PRODUCT" PRO
                 ) AS TMP
                 '''
@@ -31,7 +32,10 @@ def generate_product_parquets(bucketName, config_dominio, glue_context, connecti
                     cast(cast(LC."DEFFECDATE" as date) as varchar) "DEFFECDATE",
                     LC."NCOVERGEN",
                     LC."NBRANCH_LED",
-                    LC."NMODULEC"
+                    LC."NMODULEC",
+                    "SADDSUINI",
+                    "SROURESER",
+                    CAST(CAST(LC."DCOMPDATE" AS DATE) AS VARCHAR) "DCOMPDATE"
                     FROM USVTIMV01."LIFE_COVER" LC
                   ) AS TMP
                   '''

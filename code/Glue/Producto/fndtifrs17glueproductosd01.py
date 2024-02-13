@@ -68,8 +68,8 @@ try:
     l_configuraciones = [{ "DOMINIO": "GENERAL" , "COLUMNA": "ESTRUCTURA" }, { "DOMINIO": "PRODUCTOS" , "COLUMNA": "LECTURA" }]
     
     #NOMBRE DE LA TABLA DE CONFIGURACIONES
-    
-    nombre_tabla = 'TablaTestIFRS17'
+    #nombre_tabla = f'fndtifrs17dydb{env}01'
+    nombre_tabla = f'TablaTestIFRS17'
     
     #EXTRAER CONFIGURACIONES
     l_dic_config = extract_config(l_configuraciones, nombre_tabla)
@@ -99,6 +99,6 @@ try:
 
 except Exception as e:
     # Log the error for debugging purposes
-    print(f"Error: {str(e)}")
-
+    print(f"Error Glue de Lectura del Dominio de Productos: {str(e)}")
+    sys.exit(1)
 job.commit()

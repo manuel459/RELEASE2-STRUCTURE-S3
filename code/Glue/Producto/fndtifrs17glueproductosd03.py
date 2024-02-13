@@ -22,14 +22,16 @@ cliente_dynamodb = boto3.client("dynamodb")
 s3r = boto3.resource('s3')
 ssm = boto3.client('ssm', 'us-east-1')
 
+#EXTRACCION DE LAS CONFIGURACIONES Y RETORNARLAS EN UN DICCIONARIO DE DATOS        
 def extract_config(l_configuraciones, nombre_tabla):
     #CREAR UN DICCIONARIO PARA ESTABLECER LAS CONFIGURACIONES
     l_dic_config = {}
     
     #Extraer las CONFIGURACIONES NECESARIAS segun la lista
     for dominio in l_configuraciones:
-        config = cliente_dynamodb.get_item(TableName=nombre_tabla, Key={'NOMBRE_DOMINIO':{'S':str(dominio)}})
-        l_dic_config[config['Item']['NOMBRE_DOMINIO']['S']] = json.loads(config['Item']['ESTRUCTURA']['S'])
+        config = cliente_dynamodb.get_item(TableName=nombre_tabla, Key={'NOMBRE_DOMINIO': {'S': str(dominio['DOMINIO'])}})
+        l_dic_config[config['Item']['NOMBRE_DOMINIO']['S']] = json.loads(config['Item'][dominio['COLUMNA']]['S'])
+       
     return l_dic_config
 
 def execute_script(name_bucket, name_object):
@@ -61,10 +63,11 @@ try:
     #-------------------------------------#
     
     #CREAR UNA LISTA CON TODAS LAS CONFIGURACIONES NECESARIAS SEGUN EL DOMINIO
-    l_configuraciones = ["PRODUCTOS","GENERAL"]
+    l_configuraciones = [{ "DOMINIO": "GENERAL" , "COLUMNA": "ESTRUCTURA" }, { "DOMINIO": "PRODUCTOS" , "COLUMNA": "ESTRUCTURA" }]
     
     #NOMBRE DE LA TABLA DE CONFIGURACIONES
-    nombre_tabla = f'fndtifrs17dydb{env}01'
+    #nombre_tabla = f'fndtifrs17dydb{env}01'
+    nombre_tabla = f'TablaTestIFRS17'
     
     #EXTRAER CONFIGURACIONES
     l_dic_config = extract_config(l_configuraciones, nombre_tabla)
@@ -81,6 +84,7 @@ try:
  
 except Exception as e:
     # Log the error for debugging purposes
-    print(f"Error en el GLUE: {str(e)}")
+    print(f"Error Glue de Estructura del Dominio de Productos: {str(e)}")
+    sys.exit(1)
 
 job.commit()

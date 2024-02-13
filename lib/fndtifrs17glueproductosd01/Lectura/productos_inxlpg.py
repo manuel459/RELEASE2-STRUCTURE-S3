@@ -30,7 +30,8 @@ def generate_product_parquets(bucketName, config_dominio, glue_context, connecti
                      GC.CACALMAX,
                      GC.BRANCH,
                      GC.PRODUCT,
-                     GC.BILL_ITEM
+                     GC.BILL_ITEM,
+                     CAST(CAST(GC.COMPDATE AS DATE) AS VARCHAR) COMPDATE 
                     FROM USINSUG01.GEN_COVER GC
                 ) AS TMP
                 '''

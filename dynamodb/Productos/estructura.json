@@ -1,5 +1,5 @@
 {
-    "path_origen":"tmp/Productos",
+    "path_origen":"tmp/regla_negocio/Productos",
     "path_file_txt":[
        {
           "sistema_origen":"PIG",

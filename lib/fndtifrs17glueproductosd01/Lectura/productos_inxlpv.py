@@ -23,7 +23,13 @@ def generate_product_parquets(bucketName, config_dominio, glue_context, connecti
                     CAST(cast(LC.effecdate as date) AS VARCHAR) effecdate,
                     covergen,
                     currency,
-                    bill_item
+                    bill_item,
+                    ADDCAPII,
+                    ROUCHACA,
+                    CACALFIX,
+                    CACALCOV,
+                    CACALFRI,
+                    CAST(CAST(LC.COMPDATE AS DATE) AS VARCHAR) COMPDATE
                     FROM USINSUV01.LIFE_COVER LC
                  ) AS TMP
                  '''

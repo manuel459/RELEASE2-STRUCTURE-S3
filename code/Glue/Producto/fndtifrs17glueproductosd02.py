@@ -64,7 +64,7 @@ try:
     l_configuraciones = [{ "DOMINIO": "GENERAL" , "COLUMNA": "ESTRUCTURA" }, { "DOMINIO": "PRODUCTOS" , "COLUMNA": "NEGOCIO" }]
     
     #NOMBRE DE LA TABLA DE CONFIGURACIONES
-    
+    #nombre_tabla = f'fndtifrs17dydb{env}01'
     nombre_tabla = f'TablaTestIFRS17'
     
     #CREAR UN DICCIONARIO PARA ESTABLECER LAS CONFIGURACIONES
@@ -80,11 +80,21 @@ try:
     #--------------------------------------------------#
     for config in l_dic_config['PRODUCTOS']['path_file_tmp']:
         if config['flag'] == 1:
-            #OBTENER SCRIPTS ALMACENADOS EN S3
-            structure = execute_script(l_dic_config['GENERAL']['bucket']['artifact'], config['script'])
+            
+            #VALIDAR EL TIPO DE CARGA : INI = INICIAL | INC = INCREMENTAL
+            if l_dic_config['GENERAL']['tipoCarga'] == 'INI':
+                #OBTENER SCRIPTS ALMACENADOS EN S3
+                structure = execute_script(l_dic_config['GENERAL']['bucket']['artifact'], config['script_inicial'])
 
-            #LLAMAR Y LANZAR LOS PARAMETROS A LA FUNCION getData
-            L_DF_PRODUCTOS = structure.get_data(glueContext, l_dic_config['GENERAL']['bucket']['artifact'] ,config['tablas'])
+                #LLAMAR Y LANZAR LOS PARAMETROS A LA FUNCION getData
+                L_DF_PRODUCTOS = structure.get_data(glueContext, l_dic_config['GENERAL']['bucket']['artifact'] ,config['tablas'])
+                
+            elif l_dic_config['GENERAL']['tipoCarga'] == 'INC':
+                #OBTENER SCRIPTS ALMACENADOS EN S3
+                structure = execute_script(l_dic_config['GENERAL']['bucket']['artifact'], config['script_incremental'])
+
+                #LLAMAR Y LANZAR LOS PARAMETROS A LA FUNCION getData
+                L_DF_PRODUCTOS = structure.get_data(glueContext, l_dic_config['GENERAL']['bucket']['artifact'] ,config['tablas'], l_dic_config['GENERAL']['fechas']['dFecha_Inicio'], l_dic_config['GENERAL']['fechas']['dFecha_Fin'])
         
             #Trasformar a bit escrito en formato txt
             L_BUFFER_PRODUCTOS = io.BytesIO()
@@ -100,6 +110,7 @@ try:
 
 except Exception as e:
     # Log the error for debugging purposes
-    print(f"Error: {str(e)}")
+    print(f"Error Glue Regla de Negocio del Dominio de Productos: {str(e)}")
+    sys.exit(1)
 
 job.commit()

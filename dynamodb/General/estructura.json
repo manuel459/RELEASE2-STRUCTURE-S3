@@ -1,0 +1,22 @@
+{
+    "bucket":{
+       "artifact":"fndtifrs17s3based01test",
+       "dimensiones":"fndtifrs17s3based02"
+    },
+    "funciones":{
+       "structure":"utils/fstructureIOC.py",
+       "secret":"utils/fgetsecret.py",
+       "log":"utils/flog.py",
+       "read":"utils/fread.py",
+       "structure_test":"utils/fstructureIOC_Test.py"
+    },
+    "fechas":{
+       "dFecha_Inicio":"2021-01-01",
+       "dFecha_Fin":"2021-12-31"
+    },
+    "tipoCarga": "INC",
+    "Release":{
+       "path":"code/Release_2/tmp/producto/Test_Release_Lectura_CFG_NL_RECIBOS21_INSUNIXLPG.parquet",
+       "path1":"code/Release_2/tmp/producto/Test_Release_Lectura_CFG_NL_RECIBOS27_INSUNIXLPG.parquet"
+    }
+}
