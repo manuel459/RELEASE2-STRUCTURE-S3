@@ -102,5 +102,6 @@ try:
 except Exception as e:
     # Log the error for debugging purposes
     print(f"Error Glue de lectura del Dominio de ENTIDADES: {str(e)}")
+    sys.exit(1)
 
 job.commit()

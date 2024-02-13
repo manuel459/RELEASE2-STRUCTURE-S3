@@ -2,9 +2,9 @@
     "path_file_tmp":[
        {
           "nombre_tabla":"EBENTID",
-          "path":"tmp/Entidad/RN-ENTIDAD-EBENTID.parquet",
-          "script_inicial":"lib/fndtifrs17glueentidadd01/regla_negocio/inicial/fndtifrs17glueentidadesd01ebentid.py",
-          "script_incremental":"lib/fndtifrs17glueentidadd01/regla_negocio/incremental/fndtifrs17glueentidadesd01ebentid.py",
+          "path":"tmp/regla_negocio/Entidades/RN-ENTIDAD-EBENTID.parquet",
+          "script_inicial":"lib/fndtifrs17glueentidadesd01/regla_negocio/inicial/fndtifrs17glueentidadesd01ebentid.py",
+          "script_incremental":"lib/fndtifrs17glueentidadesd01/regla_negocio/incremental/fndtifrs17glueentidadesd01ebentid.py",
           "flag":1,
           "tablas" : [
             { 
@@ -18,7 +18,4 @@
           ]
        }
     ]
- }
-
-
-                
+}

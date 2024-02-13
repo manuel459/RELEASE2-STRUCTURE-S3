@@ -79,7 +79,7 @@ try:
     structure = execute_script(l_dic_config['GENERAL']['bucket']['artifact'], l_dic_config['GENERAL']['funciones']['structure'])
     
     #LLAMAR Y LANZAR LOS PARAMETROS A LA FUNCION generate_files
-    domain = 'PRODUCTOS'
+    domain = 'ENTIDADES'
     structure.generate_files(l_dic_config, domain)
  
 except Exception as e:
