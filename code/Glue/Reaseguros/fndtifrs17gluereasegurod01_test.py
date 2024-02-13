@@ -23,7 +23,7 @@ s3r = boto3.resource('s3')
 secretSession = boto3.session.Session()
 cliente_dynamodb = boto3.client("dynamodb")
 ssm = boto3.client('ssm', 'us-east-1')
-id = 'REASEGUROS'
+id = 'REASEGURO'
 nombre_error = '-'
 job_name = 'fndtifrs17gluereasegurod01_test'
 response = glue_client.get_job_runs(JobName=job_name, MaxResults=1)
@@ -61,7 +61,8 @@ print(last_run)
 last_start_time = last_run['StartedOn']
 
 print(f"Last Start Time: {last_start_time}")
-    
+
+#EXTRACCION DE LAS CONFIGURACIONES PARA LOS AMBIENTES 
 def get_ssm():
         parameter_name = "/configuracion/variable/entorno"
         response = ssm.get_parameter(
@@ -93,11 +94,14 @@ try:
     #  CONTROL DE EJECUCION DYNAMODB
     #--------------------------------------#
     
+    #EXTRAR LA FUNCION DE LA TRAZABILIDAD 
     trazabilidad = execute_script(l_dic_config['GENERAL']['bucket']['artifact'],l_dic_config['GENERAL']['funciones']['log'])
     
+    #EXTRAR EL TIPO DE CARGA DEL DYNAMODB
     tipo_carga = l_dic_config['GENERAL']['tipoCarga']
 
-    trazaupdate = trazabilidad.update_log(cliente_dynamodb, id, 1,0, nombre_error,last_start_time,tipo_carga)
+    #EJECUTAR LA TRAXABILIDAD
+    trazabilidad.update_log(cliente_dynamodb, id, 1,0, nombre_error,last_start_time,tipo_carga)
     
     #--------------------------------------#
     #  CONEXIÓN A LA BASE DE DATOS AURORA
@@ -124,6 +128,7 @@ try:
             #parametros 1: Nombre_bucket_destino 2: lista de tablas, 3: ContextGlue , 4: Conexion a base de datos , 5 : Cliente de S3, 6: IO 
             L_DF = script.generate_reaseguro_parquets(l_dic_config['GENERAL']['bucket']['artifact'], values['tablas'], glueContext, connection, s3_client, io)
             
+    #EJECUTAR LA TRAZABILIDAD CAPTURANDO LOS TIEMPOS
     trazabilidad.update_log(cliente_dynamodb, id, 2,0,nombre_error, last_start_time,tipo_carga)
     
 except Exception as e:
