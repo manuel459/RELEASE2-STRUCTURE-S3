@@ -21,6 +21,9 @@ s3r = boto3.resource('s3')
 secretSession = boto3.session.Session()
 cliente_dynamodb = boto3.client("dynamodb")
 ssm = boto3.client('ssm', 'us-east-1')
+glue_client = boto3.client('glue')
+id = 'PRODUCTOS'
+nombre_error = '-'
 
 #FUNCIÓN PARA EJECUTAR UN SCRIPT GUARDADO EN UN BUCKET S3
 def execute_script(name_bucket, name_object):
@@ -60,6 +63,18 @@ try:
     #   EXTRAER VARIABLES DE ENTORNO
     #-------------------------------------#
     env = get_ssm()
+    
+    #-------------------------------------#
+    #   OBTENER LA FECHA INICIO DEL JOB
+    #-------------------------------------#
+    job_name = f'fndtifrs17glueproductos{env}01_test'
+    
+    response = glue_client.get_job_runs(JobName=job_name, MaxResults=1)
+    
+    last_run = response['JobRuns'][0]
+
+    last_start_time = last_run['StartedOn']
+     
     #-------------------------------------#
     #   EXTRAER CONFIGURACIONES DYNAMODB
     #-------------------------------------#
@@ -73,6 +88,30 @@ try:
     
     #EXTRAER CONFIGURACIONES
     l_dic_config = extract_config(l_configuraciones, nombre_tabla)
+    
+    #--------------------------------------#
+    #  CONTROL DE EJECUCION DYNAMODB
+    #--------------------------------------#
+    
+    #EXTRAR LA FUNCION DE LA TRAZABILIDAD 
+    trazabilidad = execute_script(l_dic_config['GENERAL']['bucket']['artifact'],l_dic_config['GENERAL']['funciones']['log'])
+    
+    #EXTRAR EL TIPO DE CARGA DEL DYNAMODB
+    tipo_carga = l_dic_config['GENERAL']['tipoCarga']
+
+    #------------------------------------------------------------------------#        
+    #  EJECUTAR LA TRAZABILIDAD
+    #------------------------------------------------------------------------#
+    #  Parametros
+    #  cliente_dynamodb: cliente, 
+    #  id: nombre del dominio,
+    #  step: codigo 1 = Inicio del proceso - codigo 2 = Fin del proceso
+    #  number: Job Actual(Lectura = 0, Regla de negocio = 1, Estructura = 2) 
+    #  nombre_error : Captura el Error
+    #  last_start_time : Captura la fecha del proceso
+    #  tipo_carga : Tipo de carga INCREMENTAL O INICIAL
+    #------------------------------------------------------------------------#
+    trazabilidad.update_log(cliente_dynamodb, id, 1,0, nombre_error,last_start_time,tipo_carga)
     
     #--------------------------------------#
     #  CONEXIÓN A LA BASE DE DATOS AURORA
@@ -96,9 +135,16 @@ try:
         
             #parametros 1: Nombre_bucket_destino 2: lista de tablas, 3: ContextGlue , 4: Conexion a base de datos , 5 : Cliente de S3, 6: IO 
             L_DF = script.generate_product_parquets(l_dic_config['GENERAL']['bucket']['artifact'], values['tablas'], glueContext, connection, s3_client, io)
+    
+    #------------------------------------------------------------------------#        
+    # EJECUTAR LA TRAZABILIDAD
+    #------------------------------------------------------------------------#
+    trazabilidad.update_log(cliente_dynamodb, id, 2,0,nombre_error, last_start_time,tipo_carga)
 
 except Exception as e:
     # Log the error for debugging purposes
     print(f"Error Glue de Lectura del Dominio de Productos: {str(e)}")
+    nombre_error = str(e)
+    trazabilidad.update_log(cliente_dynamodb, id, 2,0,nombre_error, last_start_time,tipo_carga)
     sys.exit(1)
 job.commit()
