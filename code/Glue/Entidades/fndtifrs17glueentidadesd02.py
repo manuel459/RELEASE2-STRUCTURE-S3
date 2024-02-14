@@ -19,6 +19,9 @@ s3_client = boto3.client('s3')
 s3r = boto3.resource('s3')
 cliente_dynamodb = boto3.client("dynamodb")
 ssm = boto3.client('ssm', 'us-east-1')
+glue_client = boto3.client('glue')
+id = 'ENTIDADES'
+nombre_error = '-'
 
 def execute_script(name_bucket, name_object):
     path_temp = 'fileTemp.py'
@@ -55,6 +58,16 @@ try:
     #   EXTRAER VARIABLES DE ENTORNO
     #-------------------------------------#
     env = get_ssm()
+    #-------------------------------------#
+    #   OBTENER LA FECHA INICIO DEL JOB
+    #-------------------------------------#
+    job_name = f'fndtifrs17glueentidades{env}02_test'
+    
+    response = glue_client.get_job_runs(JobName=job_name, MaxResults=1)
+    
+    last_run = response['JobRuns'][0]
+
+    last_start_time = last_run['StartedOn']
     
     #-------------------------------------#
     #   EXTRAER CONFIGURACIONES DYNAMODB
@@ -74,6 +87,30 @@ try:
     l_dic_config = extract_config(l_configuraciones, nombre_tabla)
     
     print(l_dic_config)
+    
+    #--------------------------------------#
+    #  CONTROL DE EJECUCION DYNAMODB
+    #--------------------------------------#
+    
+    #EXTRAR LA FUNCION DE LA TRAZABILIDAD 
+    trazabilidad = execute_script(l_dic_config['GENERAL']['bucket']['artifact'],l_dic_config['GENERAL']['funciones']['log'])
+    
+    #EXTRAR EL TIPO DE CARGA DEL DYNAMODB
+    tipo_carga = l_dic_config['GENERAL']['tipoCarga']
+
+    #------------------------------------------------------------------------#        
+    #  EJECUTAR LA TRAZABILIDAD
+    #------------------------------------------------------------------------#
+    #  Parametros
+    #  cliente_dynamodb: cliente, 
+    #  id: nombre del dominio,
+    #  step: codigo 1 = Inicio del proceso - codigo 2 = Fin del proceso
+    #  number: Job Actual(Lectura = 0, Regla de negocio = 1, Estructura = 2) 
+    #  nombre_error : Captura el Error
+    #  last_start_time : Captura la fecha del proceso
+    #  tipo_carga : Tipo de carga INCREMENTAL O INICIAL
+    #------------------------------------------------------------------------#
+    trazabilidad.update_log(cliente_dynamodb, id, 1, 1, nombre_error,last_start_time,tipo_carga)
                  
     #--------------------------------------------------#
     #    EJECUCIÓN DEL GRUPO DE INFORMACIÓN PRODUCTOS
@@ -81,9 +118,6 @@ try:
     
     for config in l_dic_config['ENTIDADES']['path_file_tmp']:
         if config['flag'] == 1:
-            
-            print(config['script'])
-            print(config['tablas'])
             
             #VALIDAR EL TIPO DE CARGA : INI = INICIAL | INC = INCREMENTAL
             if l_dic_config['GENERAL']['tipoCarga'] == 'INI':
@@ -110,10 +144,17 @@ try:
                 Key = config['path'],
                 Body=L_BUFFER_ENTIDAD.read()
             )
+            
+    #------------------------------------------------------------------------#        
+    # EJECUTAR LA TRAZABILIDAD
+    #------------------------------------------------------------------------#
+    trazabilidad.update_log(cliente_dynamodb, id, 2,1,nombre_error, last_start_time,tipo_carga)
 
 except Exception as e:
     # Log the error for debugging purposes
     print(f"Error Glue de Regla de Negocio del Dominio de ENTIDADES: {str(e)}")
+    nombre_error = str(e)
+    trazabilidad.update_log(cliente_dynamodb, id, 2,1,nombre_error, last_start_time,tipo_carga)
     sys.exit(1)
 
 job.commit()
