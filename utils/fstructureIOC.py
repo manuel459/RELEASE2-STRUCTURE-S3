@@ -40,6 +40,11 @@ def generate_files(l_dic_config, domain):
             L_PQ_FILE = pq.read_table(L_PARQUET_DATA)
             L_DF_GRUPO = L_PQ_FILE.to_pandas()
             print(len(L_DF_GRUPO))
+            print('ANTES')
+            print(L_DF_GRUPO)
+            #CONVERTIR LAS COLUMNAS A MAYUSCULAS
+            L_DF_GRUPO.columns = L_DF_GRUPO.columns.str.upper()
+            print('DESPUES')
             print(L_DF_GRUPO)
         
             # FILTRAR POR SISTEMA ORIGEN ENTRANTE 

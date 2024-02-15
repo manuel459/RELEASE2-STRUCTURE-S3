@@ -23,6 +23,9 @@ s3r = boto3.resource('s3')
 secretSession = boto3.session.Session()
 cliente_dynamodb = boto3.client("dynamodb")
 ssm = boto3.client('ssm', 'us-east-1')
+glue_client = boto3.client('glue')
+id = 'POLIZAS'
+nombre_error = '-'
 
 def execute_script(name_bucket, name_object):
     path_temp = 'fileTemp.py'
@@ -42,30 +45,75 @@ def get_ssm():
             )
         return response['Parameter']['Value']
 
+#EXTRACCION DE LAS CONFIGURACIONES Y RETORNARLAS EN UN DICCIONARIO DE DATOS        
+def extract_config(l_configuraciones, nombre_tabla):
+    #CREAR UN DICCIONARIO PARA ESTABLECER LAS CONFIGURACIONES
+    l_dic_config = {}
+    
+    #Extraer las CONFIGURACIONES NECESARIAS segun la lista
+    for dominio in l_configuraciones:
+        config = cliente_dynamodb.get_item(TableName=nombre_tabla, Key={'NOMBRE_DOMINIO': {'S': str(dominio['DOMINIO'])}})
+        l_dic_config[config['Item']['NOMBRE_DOMINIO']['S']] = json.loads(config['Item'][dominio['COLUMNA']]['S'])
+       
+    return l_dic_config
+
 try:
     #-------------------------------------#
     #   EXTRAER VARIABLES DE ENTORNO
     #-------------------------------------#
     env = get_ssm()
+    
+    #-------------------------------------#
+    #   OBTENER LA FECHA INICIO DEL JOB
+    #-------------------------------------#
+    job_name = f'fndtifrs17gluepolizas{env}01_test'
+    
+    response = glue_client.get_job_runs(JobName=job_name, MaxResults=1)
+    
+    last_run = response['JobRuns'][0]
+
+    last_start_time = last_run['StartedOn']
 
     #-------------------------------------#
     #   EXTRAER CONFIGURACIONES DYNAMODB
     #-------------------------------------#
     
     #CREAR UNA LISTA CON TODAS LAS CONFIGURACIONES NECESARIAS SEGUN EL DOMINIO
-    l_configuraciones = ["POLIZAS","GENERAL"]
+    l_configuraciones = [{ "DOMINIO": "GENERAL" , "COLUMNA": "ESTRUCTURA" }, { "DOMINIO": "POLIZAS" , "COLUMNA": "NEGOCIO" }]
     
     #NOMBRE DE LA TABLA DE CONFIGURACIONES
-    
-    nombre_tabla = f'fndtifrs17dydb{env}01'
+    nombre_tabla = 'TablaTestIFRS17'
+    #nombre_tabla = f'fndtifrs17dydb{env}01'
     
     #CREAR UN DICCIONARIO PARA ESTABLECER LAS CONFIGURACIONES
     l_dic_config = {}
+    
+    #EXTRAER CONFIGURACIONES
+    l_dic_config = extract_config(l_configuraciones, nombre_tabla)
+    
+    #--------------------------------------#
+    #  CONTROL DE EJECUCION DYNAMODB
+    #--------------------------------------#
+    
+    #EXTRAR LA FUNCION DE LA TRAZABILIDAD 
+    trazabilidad = execute_script(l_dic_config['GENERAL']['bucket']['artifact'],l_dic_config['GENERAL']['funciones']['log'])
+    
+    #EXTRAR EL TIPO DE CARGA DEL DYNAMODB
+    tipo_carga = l_dic_config['GENERAL']['tipoCarga']
 
-    #Extraer las CONFIGURACIONES NECESARIAS segun la lista
-    for dominio in l_configuraciones:
-        config = cliente_dynamodb.get_item(TableName=nombre_tabla, Key={'NOMBRE_DOMINIO':{'S':str(dominio)}})
-        l_dic_config[config['Item']['NOMBRE_DOMINIO']['S']] = json.loads(config['Item']['ESTRUCTURA']['S'])
+    #------------------------------------------------------------------------#        
+    #  EJECUTAR LA TRAZABILIDAD
+    #------------------------------------------------------------------------#
+    #  Parametros
+    #  cliente_dynamodb: cliente, 
+    #  id: nombre del dominio,
+    #  step: codigo 1 = Inicio del proceso - codigo 2 = Fin del proceso
+    #  number: Job Actual(Lectura = 0, Regla de negocio = 1, Estructura = 2) 
+    #  nombre_error : Captura el Error
+    #  last_start_time : Captura la fecha del proceso
+    #  tipo_carga : Tipo de carga INCREMENTAL O INICIAL
+    #------------------------------------------------------------------------#
+    trazabilidad.update_log(cliente_dynamodb, id, 1, 1, nombre_error,last_start_time,tipo_carga)
          
     #--------------------------------------#
     #  CONEXIÓN A LA BASE DE DATOS AURORA
@@ -79,9 +127,16 @@ try:
     #    EJECUCIÓN DEL GRUPO DE INFORMACIÓN POLIZAS
     #--------------------------------------------------#
     for config in l_dic_config['POLIZAS']['path_file_tmp']:
-        if config['script'] != None and config['flag'] == 1:
-            #OBTENER SCRIPTS ALMACENADOS EN S3
-            structure = execute_script(l_dic_config['GENERAL']['bucket']['artifact'], config['script'])
+        if config['flag'] == 1:
+            
+            #VALIDAR EL TIPO DE CARGA : INI = INICIAL | INC = INCREMENTAL
+            if tipo_carga == 'INI':
+                #OBTENER SCRIPTS ALMACENADOS EN S3
+                structure = execute_script(l_dic_config['GENERAL']['bucket']['artifact'], config['script_inicial'])
+                
+            elif tipo_carga == 'INC':
+                #OBTENER SCRIPTS ALMACENADOS EN S3
+                structure = execute_script(l_dic_config['GENERAL']['bucket']['artifact'], config['script_incremental'])
             
             #LLAMAR Y LANZAR LOS PARAMETROS A LA FUNCION getData
             L_DF_POLIZAS = structure.get_data(glueContext, connection, l_dic_config['GENERAL']['fechas']['dFecha_Inicio'], l_dic_config['GENERAL']['fechas']['dFecha_Fin'] )
@@ -97,8 +152,16 @@ try:
             Key = config['path'],
             Body=L_BUFFER_POLIZAS.read())
             
+    #------------------------------------------------------------------------#        
+    # EJECUTAR LA TRAZABILIDAD
+    #------------------------------------------------------------------------#
+    trazabilidad.update_log(cliente_dynamodb, id, 2,1,nombre_error, last_start_time,tipo_carga)
+            
 except Exception as e:
     # Log the error for debugging purposes
-    print(f"Error: {str(e)}")
-
+    print(f"Error Glue Regla de Negocio del Dominio de Polizas: {str(e)}")
+    nombre_error = str(e)
+    trazabilidad.update_log(cliente_dynamodb, id, 2,1,nombre_error, last_start_time,tipo_carga)
+    sys.exit(1)
+    
 job.commit()

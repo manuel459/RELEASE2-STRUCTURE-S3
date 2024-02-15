@@ -1,0 +1,25 @@
+{
+    "path_origen":"tmp/regla_negocio/Polizas",
+    "path_file_txt":[
+       {
+          "sistema_origen":"PIG",
+          "path":"Dimensiones/Actual/Polizas/D_ISXPPE-R-APO-POLIZAS"
+       },
+       {
+          "sistema_origen":"PIV",
+          "path":"Dimensiones/Actual/Polizas/D_ISXPPE-V-APO-POLIZAS"
+       },
+       {
+          "sistema_origen":"PNV",
+          "path":"Dimensiones/Actual/Polizas/D_INSPPE-V-APO-POLIZAS"
+       },
+       {
+          "sistema_origen":"PVG",
+          "path":"Dimensiones/Actual/Polizas/D_VTMPPE-R-APO-POLIZAS"
+       },
+       {
+          "sistema_origen":"PVV",
+          "path":"Dimensiones/Actual/Polizas/D_VTMPPE-V-APO-POLIZAS"
+       }
+    ]
+ }
