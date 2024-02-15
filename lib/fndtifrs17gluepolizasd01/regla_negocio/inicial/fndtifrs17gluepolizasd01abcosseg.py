@@ -6,8 +6,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
     l_fecha_carga_inicial = '2021-12-31'
       
     l_abcosseg_insunix_g = f'''
-                             (
-                              SELECT
+                             (SELECT
                               'D' AS INDDETREC,
                               'ABCOSSEG' AS TABLAIFRS17,
                               '' AS PK,
@@ -85,9 +84,9 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                         (P.POLITYPE <> '1' -- COLECTIVAS 
                                         AND CERT.EXPIRDAT >= '{l_fecha_carga_inicial}' 
                                         AND (CERT.NULLDATE IS NULL OR CERT.NULLDATE > '{l_fecha_carga_inicial}')))
-                                    )/*
+                                    )
                                         
-                                    union
+                                    union /*SE QUITO EL UNION DESDE AQUI */
                                     
                                     (SELECT P.USERCOMP, P.COMPANY, P.CERTYPE, P.BRANCH, P.PRODUCT, PSP.SUB_PRODUCT, P.POLICY, CERT.CERTIF, P.TITULARC, P.EFFECDATE ,P.POLITYPE , CERT.EFFECDATE as EFFECDATE_CERT
                                      FROM USINSUG01.POLICY P 
@@ -179,8 +178,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                                                                                                                                             where	(tcl.reserve = 1 or tcl.ajustes = 1 or tcl.pay_amount = 1))
                                                                                                                                           and     clh.operdate >= '{l_fecha_carga_inicial}') 
                                             )
-                                     )*/
-                                        
+                                     )/*SE QUITO EL UNION HASTA AQUI */
                                  ) AS PC	
                              ON  C.USERCOMP = PC.USERCOMP 
                              AND C.COMPANY  = PC.COMPANY 
@@ -190,7 +188,6 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                              AND C.EFFECDATE <= PC.EFFECDATE 
                              AND (C.NULLDATE IS NULL OR C.NULLDATE > PC.EFFECDATE)
                              AND C.EFFECDATE BETWEEN '{p_fecha_inicio}' and '{p_fecha_fin}'
-                             
                              ) AS TMP
                              '''
     #EJECUTAR CONSULTA
@@ -199,8 +196,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
     print("2-TERMINO TABLA ABCOSSEG_INX_G")
 
     l_abcosseg_insunix_v = f'''
-                             (
-                              SELECT
+                             (SELECT
                                     'D' AS INDDETREC,
                                     'ABCOSSEG' AS TABLAIFRS17,
                                     '' AS PK,
@@ -272,8 +268,8 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                                 (P.POLITYPE <> '1' -- COLECTIVAS 
                                                 AND CERT.EXPIRDAT >= '{l_fecha_carga_inicial}' 
                                                 AND (CERT.NULLDATE IS NULL OR CERT.NULLDATE > '{l_fecha_carga_inicial}')))
-                                                )/*
-                                                union
+                                                )
+                                                union /*SE QUITO EL UNION DESDE AQUI */
                                                 (
                                                 SELECT P.USERCOMP, P.COMPANY, P.CERTYPE, P.BRANCH, P.PRODUCT, P.POLICY, CERT.CERTIF, P.TITULARC, P.EFFECDATE , P.POLITYPE, CERT.EFFECDATE as EFFECDATE_CERT
                                                 FROM USINSUV01.POLICY P 
@@ -350,7 +346,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                                                                                                                                                         where	(tcl.reserve = 1 or tcl.ajustes = 1 or tcl.pay_amount = 1))
                                                                                                                                                       and     clh.operdate >= '{l_fecha_carga_inicial}') 
                                                 )
-                                          )*/
+                                          )/*SE QUITO EL UNION HASTA AQUI */
                                     ) AS PC	
                               ON  C.USERCOMP = PC.USERCOMP 
                               AND C.COMPANY  = PC.COMPANY 
@@ -360,7 +356,6 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                               AND C.EFFECDATE <= PC.EFFECDATE 
                               AND (C.NULLDATE IS NULL OR C.NULLDATE > PC.EFFECDATE) --1997-10-02	2020-11-02
                               AND C.EFFECDATE BETWEEN '{p_fecha_inicio}' and '{p_fecha_fin}'
-                              
                              ) AS TMP
                              '''
     
@@ -370,8 +365,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
     print("2-TERMINO TABLA ABCOSSEG_INX_V")
     
     l_abcosseg_vtime_g = f'''
-                            (
-                              SELECT 
+                            (SELECT 
                               'D' AS INDDETREC,
                               'ABCOSSEG' AS TABLAIFRS17,
                               '' AS PK,
@@ -495,7 +489,6 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                               AND C."NPOLICY"   = PC."NPOLICY"
                               AND C."DEFFECDATE" <= PC."DSTARTDATE" 
                               AND (C."DNULLDATE" IS NULL OR C."DNULLDATE" > PC."DSTARTDATE") --0029-09-20	2019-12-17
-                              
                             ) AS TMP
                            '''
     #EJECUTAR CONSULTA
@@ -504,8 +497,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
     print("2-TERMINO TABLA ABCOSSEG_VT")    
 
     l_abcosseg_vtime_v = f'''
-                            (
-                              SELECT 
+                            ( SELECT 
                               'D' AS INDDETREC,
                               'ABCOSSEG' AS TABLAIFRS17,
                               '' AS PK,
@@ -630,7 +622,6 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                               AND C."NPRODUCT"  = PC."NPRODUCT"
                               AND C."NPOLICY"   = PC."NPOLICY"  
                               AND C."DEFFECDATE" <= PC."DSTARTDATE" 
-                              
                             ) AS TMP
                            '''
     

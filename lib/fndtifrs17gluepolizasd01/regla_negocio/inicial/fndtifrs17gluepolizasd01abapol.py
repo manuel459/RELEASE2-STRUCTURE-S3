@@ -1288,7 +1288,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                    AND CERT."DEXPIRDAT" >= '{l_fecha_carga_inicial}' 
                                    AND (CERT."DNULLDATE" IS NULL OR CERT."DNULLDATE" > '{l_fecha_carga_inicial}'))
                                  )
-                             AND P."DSTARTDATE" BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}' LIMIT 100)
+                             AND P."DSTARTDATE" BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}' ) --SE ESTA QUITANDO EL LIMIT 100
 
                           UNION 
 
@@ -1726,7 +1726,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                            CAST(P.CERTIF AS VARCHAR) AS DNMCERT,
                            '' AS DTERMO,     --BLANCO
                            COALESCE((
-                                  SELECT SCOD_VT FROM USINSUG01.EQUI_VT_INX EVI
+                                  SELECT 'PAE' || '-' || SCOD_VT FROM USINSUG01.EQUI_VT_INX EVI
                                   WHERE EVI.SCOD_INX =  (CASE WHEN P.POLITYPE = '1' THEN P.TITULARC ELSE P.CERT_TITULARC END)
                            ), '') AS KEBENTID_TO,
                            COALESCE(CAST((CASE WHEN P.POLITYPE = '1' THEN P.DATE_ORIGI ELSE P.CERT_DATE_ORIGI END) AS VARCHAR), '') AS TCRIAPO, 
@@ -2139,7 +2139,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                 AND (CERT.NULLDATE IS NULL OR CERT.NULLDATE > '{l_fecha_carga_inicial}')))
                             AND P.EFFECDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}')
 
-                            /*UNION 
+                            UNION --SE QUITO EL UNION, DESDE AQUI 
 
                             (SELECT 
                             P.USERCOMP,
@@ -2220,7 +2220,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                           AND   TRIM(CLH.OPER_TYPE) IN  (SELECT CAST(TCL.OPERATION AS VARCHAR(2)) FROM  USINSUG01.TAB_CL_OPE TCL
                                                                          WHERE (TCL.RESERVE = 1 OR TCL.AJUSTES = 1 OR TCL.PAY_AMOUNT = 1))
                                           AND  CLH.OPERDATE >= '{l_fecha_carga_inicial}'))) 
-                            AND P.EFFECDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}')*/)P ) AS TMP 
+                            AND P.EFFECDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}') /*SE QUITO EL UNION, DESDE HASTA AQUI */ )P ) AS TMP
                           '''
 
   l_df_polizas_insunix_lpg = glue_context.read.format('jdbc').options(**connection).option("dbtable",l_polizas_insunix_lpg).load()                      
@@ -2250,7 +2250,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                               CAST(P.CERTIF AS VARCHAR) AS DNMCERT,
                               '' AS DTERMO,
                               COALESCE((
-                                SELECT SCOD_VT FROM USINSUG01.EQUI_VT_INX EVI
+                                SELECT 'PAE' || '-' || SCOD_VT FROM USINSUG01.EQUI_VT_INX EVI
                                 WHERE EVI.SCOD_INX = (case when p.politype = '1' then P.TITULARC else P.titularc end)
                               ), '')
                               AS KEBENTID_TO,
@@ -2644,7 +2644,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                AND (CERT.NULLDATE IS NULL OR CERT.NULLDATE > '{l_fecha_carga_inicial}')))
                                AND P.EFFECDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}')
                                
-                               /*UNION
+                               UNION
 
                                (SELECT 
                                 P.USERCOMP,
@@ -2700,9 +2700,9 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                             AND   TRIM(CLH.OPER_TYPE) IN (SELECT CAST(TCL.OPERATION AS VARCHAR(2)) FROM     USINSUG01.TAB_CL_OPE TCL
                                                                               WHERE  (TCL.RESERVE = 1 OR TCL.AJUSTES = 1 OR TCL.PAY_AMOUNT = 1)) 
                                             AND   CLH.OPERDATE >= '{l_fecha_carga_inicial}'))) 
-                                AND P.EFFECDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}')*/
+                                AND P.EFFECDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}')
                                 
-                                /*UNION
+                                UNION --SE QUITO EL UNION, DESDE AQUI 
                                 
                                 (SELECT 
                                 P.USERCOMP,
@@ -2761,7 +2761,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                             AND   TRIM(CLH.OPER_TYPE) IN  (SELECT CAST(TCL.OPERATION AS VARCHAR(2)) FROM  USINSUG01.TAB_CL_OPE TCL
                                                                              WHERE (TCL.RESERVE = 1 OR TCL.AJUSTES = 1 OR TCL.PAY_AMOUNT = 1))
                                             AND  CLH.OPERDATE >= '{l_fecha_carga_inicial}')))
-                                AND P.EFFECDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin})*/) AS P) AS TMP
+                                AND P.EFFECDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}')/*SE QUITO EL UNION, DESDE HAST AQUI */) AS P) AS TMP
                           '''
    #Ejecutar consulta
   
@@ -2784,13 +2784,13 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                       'PNV' AS KGIORIGM,
                       'LPV' AS KACCOMPA,
                       COALESCE(P."ATTR1", '0') AS KGCRAMO,
-                      P."INSR_TYPE" || '-' || C_PARAM_V."PARAM_VALUE" AS KABPRODT,
+                      P."INSR_TYPE"  AS KABPRODT,
                       KABAPOL,
                       SUBSTRING(CAST(DNUMAPO AS VARCHAR),6,12) DNUMAPO,
                       SUBSTRING(CAST(DNMCERT AS VARCHAR),6,12) DNMCERT,
                       '' AS DTERMO, --EN BLANCO
                       COALESCE((
-                                SELECT ILPI."LEGACY_ID" FROM
+                                SELECT 'PAE' || '-' || ILPI."LEGACY_ID" FROM
                                 USINSIV01."INTRF_LPV_PEOPLE_IDS" ILPI
                                 WHERE ILPI."MAN_ID" = PC."MAN_ID"), '') AS KEBENTID_TO,
                       CAST(CAST(P."REGISTRATION_DATE" AS DATE) AS VARCHAR) AS TCRIAPO,

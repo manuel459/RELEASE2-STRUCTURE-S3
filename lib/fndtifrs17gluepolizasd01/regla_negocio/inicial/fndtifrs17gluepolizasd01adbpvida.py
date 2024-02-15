@@ -3,8 +3,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
     l_fecha_carga_inicial = '2021-12-31'
 
     l_abdpvida_insunix_life = f'''
-                              (
-                                SELECT 
+                              (SELECT 
                                 'D' AS INDDETREC,
                                 'ABDPVIDA' AS TABLAIFRS17, 
                                 COALESCE(A.BRANCH, 0) || '-' || COALESCE(A.PRODUCT, 0) || '-' || COALESCE(A.POLICY, 0) || '-' || COALESCE(A.CERTIF, 0) AS KABAPOL,
@@ -112,7 +111,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                             AND CERT.EXPIRDAT >= '{l_fecha_carga_inicial}' 
                                             AND (CERT.NULLDATE IS NULL OR CERT.NULLDATE > '{l_fecha_carga_inicial}'))
                                             )  AND P.EFFECDATE between '{p_fecha_inicio}' and '{p_fecha_fin}'
-                                  )/*
+                                  )/*SE QUITO EL UNION DESDE AQUI */
                                   union
                                   (
                                     SELECT P.USERCOMP, P.COMPANY, P.CERTYPE, P.BRANCH, P.PRODUCT,P.POLICY, CERT.CERTIF, P.TITULARC, P.EFFECDATE
@@ -196,7 +195,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                                                                                                                                                   where	(tcl.reserve = 1 or tcl.ajustes = 1 or tcl.pay_amount = 1))
                                                                                                                                                 and     clh.operdate >= '{l_fecha_carga_inicial}') 
                                                 )
-                                  )*/
+                                  )/*SE QUITO EL UNION HASTA AQUI */
                                 )  a --1,847
                                 ON  L.USERCOMP  = A.USERCOMP
                                 AND L.COMPANY   = A.COMPANY
@@ -213,8 +212,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
     print("2-TERMINO TABLA ABDPVIDA_IN_LIFE")
     
     l_abdpvida_insunix_life_prev = f'''
-                                   (
-                                    select 
+                                   (SELECT
                                       'D' as INDDETREC,
                                       'ABDPVIDA' as TABLAIFRS17, 
                                       coalesce(a.branch, 0) || '-' || coalesce(a.product, 0) || '-' || coalesce(a.policy, 0) || '-' || coalesce(a.certif,0) as KABAPOL,
@@ -323,8 +321,8 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                                     AND CERT.EXPIRDAT >= '{l_fecha_carga_inicial}' 
                                                     AND (CERT.NULLDATE IS NULL OR CERT.NULLDATE > '{l_fecha_carga_inicial}'))
                                               ) AND P.EFFECDATE  between '{p_fecha_inicio}' and '{p_fecha_fin}'
-                                        )/*
-                                        union
+                                        )
+                                        union /*SE QUITO EL UNION DESDE AQUI */
                                         (
                                           SELECT P.USERCOMP, P.COMPANY, P.CERTYPE, P.BRANCH, P.PRODUCT,P.POLICY, CERT.CERTIF, P.TITULARC, P.EFFECDATE  
                                                 FROM usinsuv01.POLICY P
@@ -407,7 +405,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                                                                                                                                                         where	(tcl.reserve = 1 or tcl.ajustes = 1 or tcl.pay_amount = 1))
                                                                                                                                                       and     clh.operdate >= '{l_fecha_carga_inicial}') 
                                                       )
-                                        )*/
+                                        ) /*SE QUITO EL UNION HASTA AQUI */
                                       )  a -- 15 344 466
                                       on lp.usercomp = a.usercomp
                                       and lp.company = a.company
@@ -422,8 +420,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
     print("2-TERMINO TABLA ABDPVIDA_LIFE_PREV")
 
     l_abdpvida_vtime_life = f'''
-                            (
-                              SELECT 
+                            (SELECT 
                                 'D' AS INDDETREC,
                                 'ABDPVIDA' AS TABLAIFRS17, 
                                 A."NBRANCH" || '-' || A."NPRODUCT" || '-' || A."NPOLICY" || '-' || A."NCERTIF" AS KABAPOL,
@@ -572,9 +569,9 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                 )
                               ) A
                                 ON  L."SCERTYPE"  = A."SCERTYPE"
-                                AND L."NBRANCH"   = A."NBRANCH" 
+                                AND L."NBRANCH"   = A."NBRANCH"
                                 AND L."NPRODUCT"  = A."NPRODUCT"
-                                AND L."NPOLICY"   = A."NPOLICY" 
+                                AND L."NPOLICY"   = A."NPOLICY"
                                 AND L."NCERTIF"   = A."NCERTIF"  
                                 AND L."DEFFECDATE" <= A."DSTARTDATE" 
                                 AND (L."DNULLDATE" IS NULL OR L."DNULLDATE" > A."DSTARTDATE") 

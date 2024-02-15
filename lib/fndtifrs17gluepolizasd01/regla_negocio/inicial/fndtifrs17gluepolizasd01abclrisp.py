@@ -65,7 +65,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                           )
                              END AS KGCTPCBT,
                              ROW_NUMBER () OVER (PARTITION  BY PC.BRANCH, COALESCE (PC.PRODUCT, 0), PC.POLICY, PC.CERTIF ORDER BY R.CLIENT) AS DNPESEG,
-                             (SELECT EVI.SCOD_VT  FROM USINSUG01.EQUI_VT_INX EVI WHERE EVI.SCOD_INX  = R.CLIENT) AS KEBENTID_PS,
+                             (SELECT 'PAE' || '-' || EVI.SCOD_VT  FROM USINSUG01.EQUI_VT_INX EVI WHERE EVI.SCOD_INX  = R.CLIENT) AS KEBENTID_PS,
                              (SELECT DATE_PART('YEAR', AGE(CURRENT_DATE, CLI.BIRTHDAT)) FROM USINSUG01.CLIENT CLI WHERE CLI.CODE = R.CLIENT) AS DIDADEAC,
                              '' AS DANOREF, --EN BLANCO
                              '' AS KACEMPR,
@@ -229,7 +229,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                    AND (CERT.NULLDATE IS NULL OR CERT.NULLDATE > '{l_fecha_carga_inicial}')))
                                AND P.EFFECDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}')
 
-                               /*UNION 
+                               UNION  /*QUITANDO UNION DESDE AQUI*/
 
                                (SELECT P.USERCOMP, P.COMPANY, P.CERTYPE, P.BRANCH, P.PRODUCT, PSP.SUB_PRODUCT, P.POLICY, CERT.CERTIF, P.TITULARC, P.EFFECDATE ,P.POLITYPE , CERT.EFFECDATE as EFFECDATE_CERT
                                FROM USINSUG01.POLICY P 
@@ -290,7 +290,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                                                           FROM USINSUG01.TAB_CL_OPE TCL 
                                                                           WHERE (TCL.RESERVE = 1 OR TCL.AJUSTES = 1 OR TCL.PAY_AMOUNT = 1)) 
                                             AND  CLH.OPERDATE >= '{l_fecha_carga_inicial}')))
-                                AND P.EFFECDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}')*/
+                                AND P.EFFECDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}') /*QUITANDO UNION HASTA AQUI*/
                              ) AS PC	
                              ON  R.USERCOMP = PC.USERCOMP 
                              AND R.COMPANY  = PC.COMPANY 
@@ -300,8 +300,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                              AND R.CERTIF   = PC.CERTIF  
                              AND R.EFFECDATE <= PC.EFFECDATE 
                              AND (R.NULLDATE IS NULL OR R.NULLDATE > PC.EFFECDATE)
-                             AND R.ROLE IN (2,8)
-                             LIMIT 100) AS PIG
+                             AND R.ROLE IN (2,8)) AS PIG
                              '''
     
     l_df_abclrisp_insunix_lpg = glue_context.read.format('jdbc').options(**connection).option("dbtable", l_abclrisp_insunix_lpg).load()
@@ -309,8 +308,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
     print("INSUNIX LPG")
 
     l_abclrisp_insunix_lpv = f'''
-                             (
-                               SELECT
+                             (SELECT
                                     'D' INDDETREC, 
                                     'ABCLRISP' TABLAIFRS17, 
                                     '' AS PK,
@@ -323,19 +321,39 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                     PC.BRANCH ||'-'|| COALESCE (PC.PRODUCT, 0) ||'-'|| PC.POLICY ||'-'|| PC.CERTIF || '-' || COALESCE((SELECT EVI.SCOD_VT FROM USINSUG01.EQUI_VT_INX EVI WHERE EVI.SCOD_INX = R.CLIENT), '0') AS KABUNRIS,
                                     case PC.POLITYPE when  '1'
                                     then                                    
-                                    ( SELECT COALESCE(GC.COVERGEN, 0) ||'-'|| COALESCE(GC.CURRENCY, 0)
+                                    ( SELECT COALESCE(GC.COVERGEN, '0') ||'-'|| COALESCE(GC.CURRENCY, 0)
                                           FROM /*USBI01.IFRS170_V_GEN_LIFE_COVER_INXLPV*/
-                                          (SELECT GC.USERCOMP,
-										  GC.COMPANY,GC.BRANCH,GC.PRODUCT,GC.CURRENCY,
-										  GC.MODULEC,GC.COVER,GC.EFFECDATE,GC.NULLDATE,
-										  GC.COVERGEN
-										  FROM USINSUV01.GEN_COVER GC
-										  UNION 
-										  SELECT LC.USERCOMP,
-										  LC.COMPANY,LC.BRANCH,LC.PRODUCT,LC.CURRENCY,
-										  0 AS MODULEC,LC.COVER,LC.EFFECDATE,LC.NULLDATE,
-										  LC.COVERGEN
-										  FROM USINSUV01.LIFE_COVER LC) GC 
+                                          (
+                                                SELECT gco.usercomp,
+                                                      gco.company,
+                                                      gco.branch,
+                                                      gco.product,
+                                                      gco.currency,
+                                                      gco.modulec,
+                                                      gco.cover,
+                                                      gco.effecdate,
+                                                      gco.nulldate,
+                                                      ((gco.covergen || '-'::text) || gco.currency) || '-g'::text AS covergen
+                                                      FROM usinsuv01.gen_cover gco
+                                                      WHERE ((( SELECT DISTINCT pro.brancht
+                                                            FROM usinsuv01.product pro
+                                                            WHERE pro.usercomp = gco.usercomp AND pro.company = gco.company AND pro.branch = gco.branch AND pro.product = gco.product AND pro.nulldate IS NULL))::text) <> ALL (ARRAY['1'::character varying, '5'::character varying]::text[])
+                                                      UNION
+                                                      SELECT gco.usercomp,
+                                                      gco.company,
+                                                      gco.branch,
+                                                      gco.product,
+                                                      gco.currency,
+                                                      0 AS modulec,
+                                                      gco.cover,
+                                                      gco.effecdate,
+                                                      gco.nulldate,
+                                                      ((gco.covergen || '-'::text) || gco.currency) || '-l'::text AS covergen
+                                                      FROM usinsuv01.life_cover gco
+                                                      WHERE ((( SELECT DISTINCT pro.brancht
+                                                            FROM usinsuv01.product pro
+                                                            WHERE pro.usercomp = gco.usercomp AND pro.company = gco.company AND pro.branch = gco.branch AND pro.product = gco.product AND pro.nulldate IS NULL))::text) = ANY (ARRAY['1'::character varying, '5'::character varying]::text[])
+                                          ) GC 
                                           JOIN USINSUV01.COVER C  
                                           ON  GC.USERCOMP = C.USERCOMP 
                                           AND GC.COMPANY  = C.COMPANY 
@@ -357,19 +375,39 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                           AND  (C.NULLDATE IS NULL OR C.NULLDATE > PC.EFFECDATE)
                                           AND  C.COVER = 1 limit 1
                                            ) else
-		                                           ( SELECT COALESCE(GC.COVERGEN, 0) ||'-'|| COALESCE(GC.CURRENCY, 0)
+		                                           ( SELECT COALESCE(GC.COVERGEN, '0') ||'-'|| COALESCE(GC.CURRENCY, 0)
 		                                          FROM /*USBI01.IFRS170_V_GEN_LIFE_COVER_INXLPV*/
-		                                          (SELECT GC.USERCOMP,
-												  GC.COMPANY,GC.BRANCH,GC.PRODUCT,GC.CURRENCY,
-												  GC.MODULEC,GC.COVER,GC.EFFECDATE,GC.NULLDATE,
-												  GC.COVERGEN
-												  FROM USINSUV01.GEN_COVER GC
-												  UNION 
-												  SELECT LC.USERCOMP,
-												  LC.COMPANY,LC.BRANCH,LC.PRODUCT,LC.CURRENCY,
-												  0 AS MODULEC,LC.COVER,LC.EFFECDATE,LC.NULLDATE,
-												  LC.COVERGEN
-												  FROM USINSUV01.LIFE_COVER LC) GC 
+		                                          (
+                                                            SELECT gco.usercomp,
+                                                            gco.company,
+                                                            gco.branch,
+                                                            gco.product,
+                                                            gco.currency,
+                                                            gco.modulec,
+                                                            gco.cover,
+                                                            gco.effecdate,
+                                                            gco.nulldate,
+                                                            ((gco.covergen || '-'::text) || gco.currency) || '-g'::text AS covergen
+                                                            FROM usinsuv01.gen_cover gco
+                                                            WHERE ((( SELECT DISTINCT pro.brancht
+                                                                  FROM usinsuv01.product pro
+                                                                  WHERE pro.usercomp = gco.usercomp AND pro.company = gco.company AND pro.branch = gco.branch AND pro.product = gco.product AND pro.nulldate IS NULL))::text) <> ALL (ARRAY['1'::character varying, '5'::character varying]::text[])
+                                                            UNION
+                                                            SELECT gco.usercomp,
+                                                            gco.company,
+                                                            gco.branch,
+                                                            gco.product,
+                                                            gco.currency,
+                                                            0 AS modulec,
+                                                            gco.cover,
+                                                            gco.effecdate,
+                                                            gco.nulldate,
+                                                            ((gco.covergen || '-'::text) || gco.currency) || '-l'::text AS covergen
+                                                            FROM usinsuv01.life_cover gco
+                                                            WHERE ((( SELECT DISTINCT pro.brancht
+                                                                  FROM usinsuv01.product pro
+                                                                  WHERE pro.usercomp = gco.usercomp AND pro.company = gco.company AND pro.branch = gco.branch AND pro.product = gco.product AND pro.nulldate IS NULL))::text) = ANY (ARRAY['1'::character varying, '5'::character varying]::text[]) 
+                                                      ) GC 
 		                                          JOIN USINSUV01.COVER C  
 		                                          ON  GC.USERCOMP = C.USERCOMP 
 		                                          AND GC.COMPANY  = C.COMPANY 
@@ -556,9 +594,9 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                           AND CERT.EXPIRDAT >= '{l_fecha_carga_inicial}' 
                                           AND (CERT.NULLDATE IS NULL OR CERT.NULLDATE > '{l_fecha_carga_inicial}'))))
 
-                                          /*UNION 
+                                          UNION /*SE QUITO EL UNION DESDE AQUI */
 
-                                          (SELECT P.USERCOMP, P.COMPANY, P.CERTYPE, P.BRANCH, P.PRODUCT, PSP.SUB_PRODUCT, P.POLICY, CERT.CERTIF, P.TITULARC, P.EFFECDATE ,P.POLITYPE , CERT.EFFECDATE as EFFECDATE_CERT
+                                          (SELECT P.USERCOMP, P.COMPANY, P.CERTYPE, P.BRANCH, P.PRODUCT, P.POLICY, CERT.CERTIF, P.TITULARC, P.EFFECDATE ,P.POLITYPE , CERT.EFFECDATE as EFFECDATE_CERT
                                            FROM USINSUV01.POLICY P 
                              	             LEFT JOIN USINSUV01.CERTIFICAT CERT ON P.USERCOMP = CERT.USERCOMP AND P.COMPANY = CERT.COMPANY AND P.CERTYPE = CERT.CERTYPE AND P.BRANCH  = CERT.BRANCH AND P.POLICY  = CERT.policy                             	           
                              	             JOIN /*USBI01."IFRS170_T_RAMOS_POR_TIPO_RIESGO"*/
@@ -587,7 +625,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
 
                                            UNION
 
-                                           (SELECT P.USERCOMP, P.COMPANY, P.CERTYPE, P.BRANCH, P.PRODUCT, PSP.SUB_PRODUCT, P.POLICY, CERT.CERTIF, P.TITULARC, P.EFFECDATE ,P.POLITYPE , CERT.EFFECDATE as EFFECDATE_CERT
+                                           (SELECT P.USERCOMP, P.COMPANY, P.CERTYPE, P.BRANCH, P.PRODUCT, P.POLICY, CERT.CERTIF, P.TITULARC, P.EFFECDATE ,P.POLITYPE , CERT.EFFECDATE as EFFECDATE_CERT
                                             FROM USINSUV01.POLICY P 
                              	              LEFT JOIN USINSUV01.CERTIFICAT CERT ON P.USERCOMP = CERT.USERCOMP AND P.COMPANY = CERT.COMPANY AND P.CERTYPE = CERT.CERTYPE AND P.BRANCH  = CERT.BRANCH AND P.POLICY  = CERT.policy                             	              
                              	              JOIN /*USBI01."IFRS170_T_RAMOS_POR_TIPO_RIESGO"*/
@@ -613,7 +651,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                                                                       FROM  USINSUG01.TAB_CL_OPE TCL 
                                                                                       WHERE (TCL.RESERVE = 1 OR TCL.AJUSTES = 1 OR TCL.PAY_AMOUNT = 1)) 
                                                         AND  CLH.OPERDATE >= '{l_fecha_carga_inicial}')))
-                                            AND P.EFFECDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}')*/                                          
+                                            AND P.EFFECDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}') /*SE QUITO EL UNION HASTA AQUI */
                                     ) AS PC	
                                     ON  R.USERCOMP = PC.USERCOMP 
                                     AND R.COMPANY  = PC.COMPANY 
@@ -626,7 +664,6 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                     AND (R.NULLDATE IS NULL OR R.NULLDATE > PC.EFFECDATE)
                                     WHERE R.ROLE IN (2,8)
                                     AND PC.EFFECDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}' 
-                                    LIMIT 100      
                              ) AS TMP
                              '''
     
@@ -665,7 +702,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                               JOIN USVTIMG01."COVER" C  
                                               ON  GLC."NBRANCH"   = C."NBRANCH"
                                               AND GLC."NPRODUCT"  = PC."NPRODUCT"
-                                              --AND GLC."NCURRENCY" = C."NCURRENCY"
+                                              AND GLC."NCURRENCY" = C."NCURRENCY"
                                               AND GLC."NMODULEC" =  C."NMODULEC"
                                               AND GLC."NCOVER"   =  C."NCOVER"
                                               AND GLC."DEFFECDATE" <= PC."DSTARTDATE"
@@ -694,7 +731,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                               JOIN USVTIMG01."COVER" C  
                                               ON  GLC."NBRANCH"   = C."NBRANCH"
                                               AND GLC."NPRODUCT"  = PC."NPRODUCT"
-                                              --AND GLC."NCURRENCY" = C."NCURRENCY"
+                                              AND GLC."NCURRENCY" = C."NCURRENCY"
                                               AND GLC."NMODULEC" =  C."NMODULEC"
                                               AND GLC."NCOVER"   =  C."NCOVER"
                                               AND GLC."DEFFECDATE" <= PC."DSTARTDATE_CERT"
@@ -844,7 +881,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                            AND CERT."DEXPIRDAT" >= '2018-12-31' 
                                            AND (CERT."DNULLDATE" IS NULL OR CERT."DNULLDATE" > '2018-12-31'))))
                                      
-                                     /*UNION
+                                     UNION /*SE QUITO EL UNION DESDE AQUI */
 
                                      (SELECT P."SCERTYPE", P."NBRANCH", P."NPRODUCT", P."NPOLICY", CERT."NCERTIF", P."SCLIENT", P."DSTARTDATE" ,P."SPOLITYPE" ,CERT."DSTARTDATE" AS "DSTARTDATE_CERT"
                                       FROM USVTIMG01."POLICY" P 
@@ -858,7 +895,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                                           'USVTIMG01','USVTIMG01','USVTIMG01','USVTIMG01','USVTIMG01','USVTIMG01','USVTIMG01','USVTIMG01','USVTIMG01']) AS "SOURCESCHEMA",  
                                               UNNEST(ARRAY[21, 23, 24, 27, 31, 32, 33, 34, 35, 36, 37, 40, 42, 64, 71, 75, 91]) AS "BRANCHCOM",
                                               UNNEST(ARRAY[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]) AS "RISKTYPEN") RTR ON RTR."BRANCHCOM" = P."NBRANCH" AND  RTR."RISKTYPEN" = 1 AND RTR."SOURCESCHEMA" = 'USVTIMG01'
-                                      JOIN USVTIMG01."CLAIM" CLA ON CLA."SCERTYPE" = POL."SCERTYPE" AND CLA."NPOLICY" = POL."NPOLICY" AND CLA."NBRANCH" = POL."NBRANCH"
+                                      JOIN USVTIMG01."CLAIM" CLA ON CLA."SCERTYPE" = P."SCERTYPE" AND CLA."NPOLICY" = P."NPOLICY" AND CLA."NBRANCH" = P."NBRANCH"
                                       JOIN (
                                              SELECT DISTINCT CLH."NCLAIM" 
                                              FROM (
@@ -905,7 +942,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                       WHERE P."SCERTYPE" = '2' 
                                       AND P."SSTATUS_POL" NOT IN ('2','3') 
                                       AND P."SPOLITYPE" <> '1' 
-                                      AND (CERT."DEXPIRDAT" < '{l_fecha_carga_inicial}' OR CERT."DNULLDATE" < '{l_fecha_carga_inicial}'))*/
+                                      AND (CERT."DEXPIRDAT" < '{l_fecha_carga_inicial}' OR CERT."DNULLDATE" < '{l_fecha_carga_inicial}')) /*SE QUITO EL UNION HASTA AQUI */
                                ) AS PC	
                                ON  R."SCERTYPE"  = PC."SCERTYPE"
                                AND R."NBRANCH"   = PC."NBRANCH" 
@@ -915,7 +952,6 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                AND R."DEFFECDATE" <= PC."DSTARTDATE" 
                                AND (R."DNULLDATE" IS NULL OR R."DNULLDATE" > PC."DSTARTDATE")
                                WHERE R."NROLE" IN (2,8) 
-                               LIMIT 100
                               ) AS TMP
                             '''
     
@@ -1110,7 +1146,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                     AND (CERT."DNULLDATE" IS NULL OR CERT."DNULLDATE" > '{l_fecha_carga_inicial}'))
                                     AND p."DSTARTDATE" between '{p_fecha_inicio}' and '{p_fecha_fin}')
 
-                                    /*UNION 
+                                    UNION /*SE QUITO EL UNION DESDE AQUI */
                               
                                     (SELECT P."SCERTYPE", P."NBRANCH", P."NPRODUCT", P."NPOLICY", CERT."NCERTIF", P."SCLIENT", P."DSTARTDATE" ,P."SPOLITYPE" ,CERT."DSTARTDATE" AS "DSTARTDATE_CERT"
                                      FROM USVTIMV01."POLICY" P 
@@ -1124,7 +1160,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                                                 'usvtimv01','usvtimv01','usvtimv01','usvtimv01','usvtimv01','usvtimv01','usvtimv01','usvtimv01']) AS "SOURCESCHEMA",  
 						        unnest(ARRAY[21, 23, 24, 27, 31, 32, 33, 34, 35, 36, 37, 40, 42, 64, 71, 75, 91]) AS "BRANCHCOM",
 						        unnest(ARRAY[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]) AS "RISKTYPEN") RTR ON RTR."BRANCHCOM" = P."NBRANCH" AND  RTR."RISKTYPEN" = 1 AND RTR."SOURCESCHEMA" = 'usvtimv01'
-                                     JOIN USVTIMV01."CLAIM" CLA ON CLA."SCERTYPE" = POL."SCERTYPE" AND CLA."NPOLICY" = POL."NPOLICY" AND CLA."NBRANCH" = POL."NBRANCH"
+                                     JOIN USVTIMV01."CLAIM" CLA ON CLA."SCERTYPE" = P."SCERTYPE" AND CLA."NPOLICY" = P."NPOLICY" AND CLA."NBRANCH" = P."NBRANCH"
                                      JOIN (
                                            SELECT DISTINCT CLH."NCLAIM" FROM (SELECT CAST("SVALUE" AS INT4) "SVALUE" FROM USVTIMV01."CONDITION_SERV" CS WHERE "NCONDITION" IN (71, 72, 73)) CSV 
                                            JOIN USVTIMV01."CLAIM_HIS" CLH ON COALESCE(CLH."NCLAIM", 0) > 0 AND CLH."NOPER_TYPE" = CSV."SVALUE" AND CLH."DOPERDATE" >= '{l_fecha_carga_inicial}'
@@ -1160,8 +1196,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                     WHERE P."SCERTYPE" = '2' 
                                     AND P."SSTATUS_POL" NOT IN ('2','3') 
                                     AND P."SPOLITYPE" <> '1' 
-                                    AND (CERT."DEXPIRDAT" < '{l_fecha_carga_inicial}' OR CERT."DNULLDATE" < '{l_fecha_carga_inicial}'))*/ 
-
+                                    AND (CERT."DEXPIRDAT" < '{l_fecha_carga_inicial}' OR CERT."DNULLDATE" < '{l_fecha_carga_inicial}'))/*SE QUITO EL UNION HASTA AQUI */
                               ) AS PC	
                            ON  R."SCERTYPE"  = PC."SCERTYPE"
                            AND R."NBRANCH"   = PC."NBRANCH" 
@@ -1170,8 +1205,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                            AND R."NCERTIF"   = PC."NCERTIF"  
                            AND R."DEFFECDATE" <= PC."DSTARTDATE" 
                            AND (R."DNULLDATE" IS NULL OR R."DNULLDATE" > PC."DSTARTDATE")
-                           WHERE R."NROLE" IN (2,8) 
-                           LIMIT 100) AS VTIME_LPV
+                           WHERE R."NROLE" IN (2,8)) AS VTIME_LPV
                            '''
     
     l_df_abclrisp_vtime_lpv = glue_context.read.format('jdbc').options(**connection).option("dbtable", l_abclrisp_vtime_lpv).load()
@@ -1195,7 +1229,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                             '' AS KGCTPCBT, --EN BLANCO
                             ROW_NUMBER () OVER (PARTITION  BY P."ATTR1", P."ATTR2", P."POLICY_ID", P."POLICY_NO" /*ORDER BY R."SCLIENT"*/) AS DNPESEG,
                             (
-                            SELECT ILPI."LEGACY_ID" 
+                            SELECT 'PAE' || '-' || ILPI."LEGACY_ID" 
                             FROM USINSIV01."INTRF_LPV_PEOPLE_IDS" ILPI
                             WHERE ILPI."MAN_ID" = OA."MAN_ID"
                             )
@@ -1322,8 +1356,9 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                         	      	                              		           AND "OP_TYPE" IN ('REG','EST','CLC','PAYMCONF','PAYMINV')
                         	      	                              		           AND CAST(CRH."REGISTRATION_DATE" AS DATE) >= '{l_fecha_carga_inicial}'
                         	      	                                                    ))
-                            )
-                            --AND P."REGISTRATION_DATE" BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}') AS PNV'''
+                                   )
+                                   --AND P."REGISTRATION_DATE" BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
+                            ) AS PNV'''
     
     l_df_abclrisp_insis_lpv = glue_context.read.format('jdbc').options(**connection).option("dbtable", l_abclrisp_insis_lpv).load()
 

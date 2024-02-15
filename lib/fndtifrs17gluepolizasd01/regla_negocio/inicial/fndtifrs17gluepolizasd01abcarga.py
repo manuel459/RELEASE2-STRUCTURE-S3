@@ -58,7 +58,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                 OR  (P."SPOLITYPE" <> '1' AND CERT."DEXPIRDAT" >= '{l_fecha_carga_inicial}' AND (CERT."DNULLDATE" IS NULL OR CERT."DNULLDATE" > '{l_fecha_carga_inicial}')))
                                 AND P."DSTARTDATE" BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}')
 
-                                /*UNION 
+                                UNION  /*SE QUITO EL UNION DESDE AQUI */
 								
                                 (SELECT DX."DEFFECDATE", DX."NBRANCH", DX."NPRODUCT", DX."NPOLICY", DX."NCERTIF", DX."NDISC_CODE", DX."NAMOUNT", DX."NPERCENT", DE."SDISEXPRI" 
                                 FROM USVTIMG01."POLICY" P
@@ -91,7 +91,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                  AND P."SSTATUS_POL" NOT IN ('2','3') 
                                  AND P."SPOLITYPE" <> '1' 
                                  AND (CERT."DEXPIRDAT" < '{l_fecha_carga_inicial}' OR CERT."DNULLDATE" < '{l_fecha_carga_inicial}')
-                                 AND P."DSTARTDATE" BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}')*/
+                                 AND P."DSTARTDATE" BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}') /*SE QUITO EL UNION DESDE AQUI */
                               ) AS DXP) AS TMP
                               '''
    
@@ -148,9 +148,9 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                WHERE P."SCERTYPE" = '2'  AND P."SSTATUS_POL" NOT IN ('2', '3')
                                AND ((P."SPOLITYPE" = '1' AND P."DEXPIRDAT" >= '{l_fecha_carga_inicial}' AND (P."DNULLDATE" IS NULL OR P."DNULLDATE" > '{l_fecha_carga_inicial}'))
                                OR  (P."SPOLITYPE" <> '1' AND CERT."DEXPIRDAT" >= '{l_fecha_carga_inicial}' AND (CERT."DNULLDATE" IS NULL OR CERT."DNULLDATE" > '{l_fecha_carga_inicial}')))
-                               AND P."DSTARTDATE" BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}' LIMIT 100)
+                               AND P."DSTARTDATE" BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}' )
 
-                               /*UNION 
+                               UNION  /*SE QUITO EL UNION DESDE AQUI */
                               
                                (SELECT DX."DEFFECDATE", DX."NBRANCH", DX."NPRODUCT", DX."NPOLICY", DX."NCERTIF", DX."NDISC_CODE", DX."NAMOUNT", DX."NPERCENT", DE."SDISEXPRI" 
                                FROM USVTIMV01."POLICY" P
@@ -166,7 +166,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                 AND P."SSTATUS_POL" NOT IN ('2','3') 
                                 AND P."SPOLITYPE" = '1' 
                                 AND (P."DEXPIRDAT" < '{l_fecha_carga_inicial}' OR P."DNULLDATE" < '{l_fecha_carga_inicial}')
-                                AND P."DSTARTDATE" BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}' LIMIT 100)
+                                AND P."DSTARTDATE" BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}')
 
                                 UNION
 
@@ -184,7 +184,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                  AND P."SSTATUS_POL" NOT IN ('2','3') 
                                  AND P."SPOLITYPE" <> '1' 
                                  AND (CERT."DEXPIRDAT" < '{l_fecha_carga_inicial}' OR CERT."DNULLDATE" < '{l_fecha_carga_inicial}')  
-                                 AND P."DSTARTDATE" BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}' LIMIT 100)*/
+                                 AND P."DSTARTDATE" BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}' ) /*SE QUITO EL UNION HASTA AQUI */
                              ) AS DXP) AS TMP
                           '''
    
@@ -316,7 +316,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                         		                                   FROM 	USINSUG01.TAB_CL_OPE TCL
                                         		                                   WHERE  (TCL.RESERVE = 1 OR TCL.AJUSTES = 1 OR TCL.PAY_AMOUNT = 1)) --SINIESTROS QUE TIENEN OPERACIONES DE RESERVAS AJUSTES Y PAGOS QUE ESTEN POSTERIORES DESPUES DE LA FECHA DE CORTE 
                                                    AND CLH.OPERDATE >= '{l_fecha_carga_inicial}'))                                     
-                                       /*AND P.EFFECDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'*/)
+                                       AND P.EFFECDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'/*SE QUITO EL COMENTARIO DEL FILTRO */)
 
                                        UNION
 
@@ -365,7 +365,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                                    AND TRIM(CLH.OPER_TYPE) IN (SELECT CAST(TCL.OPERATION AS VARCHAR(2)) 
                                                                                FROM  USINSUG01.TAB_CL_OPE TCL 
                                                                                WHERE (TCL.RESERVE = 1 OR TCL.AJUSTES = 1 OR TCL.PAY_AMOUNT = 1)) AND CLH.OPERDATE >= '{l_fecha_carga_inicial}')))
-                                       /*AND P.EFFECDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'*/
+                                       AND P.EFFECDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'/*SE QUITO EL COMENTARIO DEL FILTRO */
 	                                    ) P
                                      LEFT JOIN USINSUG01.DISC_XPREM DX 
                                      ON DX.USERCOMP = P.USERCOMP 
@@ -384,8 +384,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
    print('USINSUG01 EXITOSO')
    
    l_polizas_insunix_vida = f'''
-                            (
-                              SELECT 
+                            (SELECT 
                               'D' INDDETREC, 
                               'ABCARGA' TABLAIFRS17, 
                               '' PK, --PENDIENTE
@@ -450,14 +449,14 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                    AND DX.BRANCH = P.BRANCH 
                                    AND DX.POLICY = P.POLICY 
                                    AND DX.CERTIF = CERT.CERTIF 
-                                   AND DX.EFFECDATE <= (CASE WHEN P.POLITYPE = '1' THEN P.EFFECDATE ELSE CERT.EFFECTIVE END) 
-                                   AND (DX.NULLDATE IS NULL OR DX.NULLDATE > (CASE WHEN P.POLITYPE = '1' THEN P.EFFECDATE ELSE CERT.EFFECTIVE END))
+                                   AND DX.EFFECDATE <= (CASE WHEN P.POLITYPE = '1' THEN P.EFFECDATE ELSE CERT.EFFECDATE END) 
+                                   AND (DX.NULLDATE IS NULL OR DX.NULLDATE > (CASE WHEN P.POLITYPE = '1' THEN P.EFFECDATE ELSE CERT.EFFECDATE END))
                                    WHERE P.CERTYPE  = '2' AND P.STATUS_POL NOT IN ('2','3') 
                                    AND ((P.POLITYPE = '1' AND P.EXPIRDAT >= '{l_fecha_carga_inicial}' AND (P.NULLDATE IS NULL OR P.NULLDATE > '{l_fecha_carga_inicial}'))
                                    OR  (P.POLITYPE <> '1' AND CERT.EXPIRDAT >= '{l_fecha_carga_inicial}' AND (CERT.NULLDATE IS NULL OR CERT.NULLDATE > '{l_fecha_carga_inicial}')) 
-                                   /*AND DX.EFFECDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'*/))
+                                   AND DX.EFFECDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'/*SE QUITO EL COMENTARIO DEL FILTRO */))
                                   
-                                  /*UNION 
+                                  UNION /*SE QUITO EL UNION DESDE AQUI */
                                   
                                   (SELECT 
                                    DX.EFFECDATE, 
@@ -534,8 +533,8 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                    AND DX.CERTYPE = P.CERTYPE 
                                    AND DX.POLICY  = P.POLICY 
                                    AND DX.CERTIF  = CERT.CERTIF 
-                                   AND DX.EFFECDATE <= (CASE WHEN P.POLITYPE = '1' THEN P.EFFECDATE ELSE CERT.EFFECTIVE END)  
-                                   AND (DX.NULLDATE IS NULL OR DX.NULLDATE > (CASE WHEN P.POLITYPE = '1' THEN P.EFFECDATE ELSE CERT.EFFECTIVE END))
+                                   AND DX.EFFECDATE <= (CASE WHEN P.POLITYPE = '1' THEN P.EFFECDATE ELSE CERT.EFFECDATE END)  
+                                   AND (DX.NULLDATE IS NULL OR DX.NULLDATE > (CASE WHEN P.POLITYPE = '1' THEN P.EFFECDATE ELSE CERT.EFFECDATE END))
                                    WHERE P.CERTYPE = '2' AND P.STATUS_POL NOT IN ('2','3') AND P.POLITYPE <> '1'
                                    AND (((CERT.EXPIRDAT < '{l_fecha_carga_inicial}'  OR  CERT.NULLDATE < '{l_fecha_carga_inicial}') 
                                    AND EXISTS (SELECT 1 FROM  USINSUV01.CLAIM CLA    
@@ -553,8 +552,8 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                                AND TRIM(CLH.OPER_TYPE) IN (SELECT CAST(TCL.OPERATION AS VARCHAR(2)) 
                                                                            FROM  USINSUG01.TAB_CL_OPE TCL 
                                                                            WHERE (TCL.RESERVE = 1 OR TCL.AJUSTES = 1 OR TCL.PAY_AMOUNT = 1)) AND CLH.OPERDATE >= '{l_fecha_carga_inicial}')))
-                                   AND P.EFFECDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'))*/ 
-                              ) DX limit 1) AS TMP
+                                   AND P.EFFECDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'))DX /*SE QUITO EL UNION HASTA AQUI */  
+                                   ) AS TMP
                             '''
    #Ejecutar consulta
    l_df_polizas_insunix_vida = glue_context.read.format('jdbc').options(**connection).option("dbtable", l_polizas_insunix_vida).load()
@@ -612,7 +611,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                                                           )
                             )
                           )  
-                      AND P."REGISTRATION_DATE" BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}' LIMIT 100) AS TMP
+                      AND P."REGISTRATION_DATE" BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}' ) AS TMP
                       '''
 
    #Ejecutar consulta

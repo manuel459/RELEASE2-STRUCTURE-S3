@@ -5,8 +5,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
       l_fecha_carga_inicial = '2021-12-31'
 
       L_ABUNRIS_INSUNIX_G_PES = f'''
-                             (
-                               select 
+                             (select 
                                     'D' AS INDDETREC,
                                     'ABUNRIS' AS TABLAIFRS17,
                                     '' PK,                                                          -- Clave compuesta
@@ -114,8 +113,8 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                                       AND (CERT.NULLDATE IS NULL OR CERT.NULLDATE > '{l_fecha_carga_inicial}'))
                                                 )
                                           )
-                                          /*
-                                          union
+                                          
+                                          union /*SE QUITO EL UNION DESDE AQUI */
                                           
                                           (
                                                 SELECT P.USERCOMP, P.COMPANY, P.CERTYPE, P.BRANCH, P.PRODUCT, PSP.SUB_PRODUCT, P.POLICY, CERT.CERTIF, P.TITULARC, P.EFFECDATE ,P.POLITYPE , CERT.EFFECDATE as EFFECDATE_CERT
@@ -213,7 +212,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                                                                                                                                                         where	(tcl.reserve = 1 or tcl.ajustes = 1 or tcl.pay_amount = 1))
                                                                                                                                                       and     clh.operdate >= '{l_fecha_carga_inicial}') 
                                                 )
-                                          )*/  
+                                          )/*SE QUITO EL UNION HASTA AQUI */
                                     ) AS PC	
                               ON  ROL.USERCOMP = PC.USERCOMP 
                               AND ROL.COMPANY  = PC.COMPANY 
@@ -225,7 +224,6 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                               AND (ROL.NULLDATE IS NULL OR ROL.NULLDATE > PC.EFFECDATE)
                               AND ROL.ROLE IN (2,8) -- Asegurado , Asegurado adicional
                               AND PC.EFFECDATE BETWEEN  '{p_fecha_inicio}' and '{p_fecha_fin}'
-                              limit 100
                              ) AS TMP
                              '''
 
@@ -233,8 +231,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
       print("ABUNRIS INSUNIX PES")
 
       L_ABUNRIS_INSUNIX_G_PAT = f'''
-                             (
-                               select 
+                             (select 
                                     'D' AS INDDETREC,
                                     'ABUNRIS' AS TABLAIFRS17,
                                     '' PK,                                                          -- Clave compuesta
@@ -339,8 +336,8 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                                 (P.POLITYPE <> '1' -- COLECTIVAS 
                                                 AND CERT.EXPIRDAT >= '{l_fecha_carga_inicial}' 
                                                 AND (CERT.NULLDATE IS NULL OR CERT.NULLDATE > '{l_fecha_carga_inicial}'))))
-                                                /*
-                                                union
+                                                
+                                                union /*SE QUITO EL UNION DESDE AQUI */
                                                 
                                                 (
                                                 SELECT P.USERCOMP, P.COMPANY, P.CERTYPE, P.BRANCH, P.PRODUCT, P.NULLDATE, PSP.SUB_PRODUCT, P.POLICY, CERT.CERTIF, P.TITULARC, P.EFFECDATE ,P.POLITYPE , CERT.EFFECDATE as EFFECDATE_CERT
@@ -439,7 +436,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                                                                                                                                                               where	(tcl.reserve = 1 or tcl.ajustes = 1 or tcl.pay_amount = 1))
                                                                                                                                                             and     clh.operdate >= '{l_fecha_carga_inicial}') 
                                                       )
-                                                )*/
+                                                )/*SE QUITO EL UNION HASTA AQUI */
                                           ) AS PC	
                                     ON  AD.USERCOMP = PC.USERCOMP 
                                     AND AD.COMPANY  = PC.COMPANY 
@@ -455,8 +452,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
       print("ABUNRIS INSUNIX PAT")
 
       L_ABUNRIS_INSUNIX_G_AUT = f'''
-                             (
-                               select 
+                             (select 
                               'D' AS INDDETREC,
                               'ABUNRIS' AS TABLAIFRS17,
                               '' PK,                                                          -- Clave compuesta
@@ -563,8 +559,8 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                                       AND CERT.EXPIRDAT >= '{l_fecha_carga_inicial}' 
                                                       AND (CERT.NULLDATE IS NULL OR CERT.NULLDATE > '{l_fecha_carga_inicial}'))
                                                 )
-                                    )/*
-                                    union
+                                    )
+                                    union /*SE QUITO EL UNION DESDE AQUI */
                                     (
                                           SELECT P.USERCOMP, P.COMPANY, P.CERTYPE, P.BRANCH, P.PRODUCT, P.NULLDATE, PSP.SUB_PRODUCT, P.POLICY, CERT.CERTIF, P.TITULARC, P.EFFECDATE ,P.POLITYPE , CERT.EFFECDATE as EFFECDATE_CERT
                                           FROM USINSUG01.POLICY P 
@@ -661,7 +657,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                                                                                                                                                         where	(tcl.reserve = 1 or tcl.ajustes = 1 or tcl.pay_amount = 1))
                                                                                                                                                       and     clh.operdate >= '{l_fecha_carga_inicial}') 
                                                 )
-                                    )*/
+                                    )/*SE QUITO EL UNION HASTA AQUI */
                                     ) AS PC	
                               ON  TNB.USERCOMP = PC.USERCOMP
                               AND TNB.COMPANY  = PC.COMPANY 
@@ -684,8 +680,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
 
 
       L_ABUNRIS_INSUNIX_V_PES = f'''
-                            (
-                              select 
+                            (select 
                               'D' AS INDDETREC,
                               'ABUNRIS' AS TABLAIFRS17,
                               '' PK,                                                          -- Clave compuesta
@@ -787,8 +782,8 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                           AND CERT.EXPIRDAT >= '{l_fecha_carga_inicial}' 
                                           AND (CERT.NULLDATE IS NULL OR CERT.NULLDATE > '{l_fecha_carga_inicial}')))
                                     )
-                                    /*
-                                    union
+                                    
+                                    union /*SE QUITO EL UNION DESDE AQUI */
                                     (
                                           SELECT P.USERCOMP, P.COMPANY, P.CERTYPE, P.BRANCH, P.PRODUCT, P.POLICY, CERT.CERTIF, P.TITULARC, P.EFFECDATE , P.POLITYPE, CERT.EFFECDATE as EFFECDATE_CERT
                                           FROM USINSUV01.POLICY P 
@@ -871,7 +866,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                                                                                                                                                         where	(tcl.reserve = 1 or tcl.ajustes = 1 or tcl.pay_amount = 1))
                                                                                                                                                       and     clh.operdate >= '{l_fecha_carga_inicial}') 
                                                 )
-                                    )*/
+                                    ) /*SE QUITO EL UNION HASTA AQUI */
                               ) AS PC	
                               ON  ROL.USERCOMP = PC.USERCOMP 
                               AND ROL.COMPANY  = PC.COMPANY 
@@ -892,8 +887,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
       print("ABUNRIS INSUNIX V PES")
     
       L_ABUNRIS_VTIME_G_PES = f'''
-                            (
-                              select 
+                            (select 
                               'D' AS INDDETREC,
                               'ABUNRIS' AS TABLAIFRS17,
                               '' PK,                                                          -- Clave compuesta
@@ -1052,7 +1046,6 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                     AND ROL."DEFFECDATE" <= PC."DSTARTDATE" 
                                     AND (ROL."DNULLDATE" IS NULL OR ROL."DNULLDATE" > PC."DSTARTDATE")
                                     WHERE ROL."NROLE" IN (2,8) 
-                              limit 100
                             ) AS TMP
                            '''
     
@@ -1061,8 +1054,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
       print("ABUNRIS VTIME LPG PES")                            
 
       L_ABUNRIS_VTIME_G_PAT = f'''
-                            (
-                              select 
+                            (select 
                               'D' AS INDDETREC,
                               'ABUNRIS' AS TABLAIFRS17,
                               '' PK,                                                          -- Clave compuesta
@@ -1222,7 +1214,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                     AND AD."NBRANCH"   = PC."NBRANCH" 
                                     AND AD."NPRODUCT"  = PC."NPRODUCT"
                                     AND AD."NPOLICY"   = PC."NPOLICY" 
-                                    AND AD."NCERTIF"   = PC."NCERTIF" limit 10
+                                    AND AD."NCERTIF"   = PC."NCERTIF"
                             ) AS TMP
                            '''
     
@@ -1231,8 +1223,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
       print("ABUNRIS VTIME LPG PAT")  
 
       L_ABUNRIS_VTIME_G_AUT = f'''
-                            (
-                              select 
+                            (select 
                                     'D' AS INDDETREC,
                                     'ABUNRIS' AS TABLAIFRS17,
                                     '' PK,                                                          -- Clave compuesta
@@ -1570,7 +1561,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
 
       L_ABUNRIS_INSIS_V = f'''
                             (
-                            (select 
+                             select 
                               'D' AS INDDETREC,
                               'ABUNRIS' AS TABLAIFRS17,
                               '' PK,                                                          
@@ -1642,8 +1633,6 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                               '' as DINREGFL                              
                              from  usinsiv01."INSURED_OBJECT" io 
                              where cast(io."REGISTRATION_DATE" as date)  between  '{p_fecha_inicio}' AND '{p_fecha_fin}'
-                             limit 100
-                            )
                             ) AS TMP
                            '''
     
