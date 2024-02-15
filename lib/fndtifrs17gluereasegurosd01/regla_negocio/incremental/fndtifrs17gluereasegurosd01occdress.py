@@ -16,6 +16,7 @@ def get_data(glue_context, bucket ,tablas, p_fecha_inicio, p_fecha_fin):
                          '' as DDESC,
                          '' as KOICDRESS
                          FROM COMPANY C --1994-02-16 - 2023-08-04
+                         WHERE C.COMPDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
                       '''
 #--------------------------------------------------------------------------------------------------------------------------# 
  l_occdress_insunix_lpv = f'''
@@ -35,6 +36,7 @@ def get_data(glue_context, bucket ,tablas, p_fecha_inicio, p_fecha_fin):
                          '' as DDESC,
                          '' as KOICDRESS
                          FROM COMPANY C --1994-02-16 - 2023-08-04
+                         WHERE cast(C.COMPDATE as date) BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
                       '''
 #--------------------------------------------------------------------------------------------------------------------------#
  l_occdress_vtime_lpg = f'''
@@ -51,6 +53,7 @@ def get_data(glue_context, bucket ,tablas, p_fecha_inicio, p_fecha_fin):
                            '' as DDESC,
                            '' as KOICDRESS
                            FROM COMPANY C --2007-12-03 - 2023-08-04 
+                           WHERE cast(C.DCOMPDATE as date) BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
                         '''
 #--------------------------------------------------------------------------------------------------------------------------#
  l_occdress_vtime_lpv = f'''
@@ -60,13 +63,14 @@ def get_data(glue_context, bucket ,tablas, p_fecha_inicio, p_fecha_fin):
                            '' as PK,
                            '' as DTPREG,
                            '' as TIOCPROC,
-                           cast(C.DCOMPDATE as date ) as TIOCFRM,
+                           cast(C.DCOMPDATE as date) as TIOCFRM,
                            '' as TIOCTO,
                            'PVV' as KGIORIGM,
                            coalesce(C.SCLIENT,'')  as DCODIGO,
                            '' as DDESC,
                            '' as KOICDRESS
                            FROM COMPANY C --2007-12-03 - 2023-08-04 
+                           WHERE cast(C.DCOMPDATE as date) BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
                         '''
 #--------------------------------------------------------------------------------------------------------------------------#
  l_occdress_insis_lpv = f'''
@@ -84,6 +88,7 @@ def get_data(glue_context, bucket ,tablas, p_fecha_inicio, p_fecha_fin):
                            '' as KOICDRESS
                            FROM P_INSURERS PIN --2023-11-06 - 2023-11-06 
                            --LA TABLA ORIGINAL NO TIENE FECHAS 
+                           WHERE CAST(PIN.fecha_replicacion_positiva  as date) BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
                         '''
   #--------------------------------------------------------------------------------------------------------------------------#
 
