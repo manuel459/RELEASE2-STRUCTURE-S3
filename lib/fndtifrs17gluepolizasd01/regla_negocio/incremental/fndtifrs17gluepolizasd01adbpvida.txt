@@ -3,7 +3,8 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
     l_fecha_carga_inicial = '2021-12-31'
 
     l_abdpvida_insunix_life = f'''
-                              (SELECT 
+                              (
+                                SELECT 
                                 'D' AS INDDETREC,
                                 'ABDPVIDA' AS TABLAIFRS17, 
                                 COALESCE(A.BRANCH, 0) || '-' || COALESCE(A.PRODUCT, 0) || '-' || COALESCE(A.POLICY, 0) || '-' || COALESCE(A.CERTIF, 0) AS KABAPOL,
@@ -103,15 +104,16 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                       AND RTR."SOURCESCHEMA" = 'usinsuv01'
                                       WHERE P.CERTYPE = '2'
                                         AND P.STATUS_POL NOT IN ('2','3') 
-                                        AND ((P.POLITYPE = '1' -- INDIVIDUAL 
-                                            AND P.EXPIRDAT >= '{l_fecha_carga_inicial}' 
-                                            AND (P.NULLDATE IS NULL OR P.NULLDATE > '{l_fecha_carga_inicial}') )
-                                            OR 
-                                            (P.POLITYPE <> '1' -- COLECTIVAS 
-                                            AND CERT.EXPIRDAT >= '{l_fecha_carga_inicial}' 
-                                            AND (CERT.NULLDATE IS NULL OR CERT.NULLDATE > '{l_fecha_carga_inicial}'))
-                                            )  AND P.EFFECDATE between '{p_fecha_inicio}' and '{p_fecha_fin}'
-                                  )/*SE QUITO EL UNION DESDE AQUI */
+                                        -- JAOS
+                                        --AND ((P.POLITYPE = '1' -- INDIVIDUAL 
+                                        --    AND P.EXPIRDAT >= '{l_fecha_carga_inicial}' 
+                                        --    AND (P.NULLDATE IS NULL OR P.NULLDATE > '{l_fecha_carga_inicial}') )
+                                        --    OR 
+                                        --    (P.POLITYPE <> '1' -- COLECTIVAS 
+                                        --    AND CERT.EXPIRDAT >= '{l_fecha_carga_inicial}' 
+                                        --    AND (CERT.NULLDATE IS NULL OR CERT.NULLDATE > '{l_fecha_carga_inicial}'))
+                                        --    )  AND P.EFFECDATE between '{p_fecha_inicio}' and '{p_fecha_fin}'
+                                  )/*  -- JAOS NO SE REQUIERE EN EL INCREMENTAL
                                   union
                                   (
                                     SELECT P.USERCOMP, P.COMPANY, P.CERTYPE, P.BRANCH, P.PRODUCT,P.POLICY, CERT.CERTIF, P.TITULARC, P.EFFECDATE
@@ -195,7 +197,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                                                                                                                                                   where	(tcl.reserve = 1 or tcl.ajustes = 1 or tcl.pay_amount = 1))
                                                                                                                                                 and     clh.operdate >= '{l_fecha_carga_inicial}') 
                                                 )
-                                  )/*SE QUITO EL UNION HASTA AQUI */
+                                  )JAOS NO SE REQUIERE EN EL INCREMENTAL */
                                 )  a --1,847
                                 ON  L.USERCOMP  = A.USERCOMP
                                 AND L.COMPANY   = A.COMPANY
@@ -203,6 +205,8 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                 AND L.BRANCH    = A.BRANCH
                                 AND L.POLICY  = A.POLICY 
                                 AND L.CERTIF    = A.CERTIF 
+                                -- JAOS 
+                                AND L.COMPDATE between '{p_fecha_inicio}' and '{p_fecha_fin}'
                               ) AS TMP         
                               '''
 
@@ -212,7 +216,8 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
     print("2-TERMINO TABLA ABDPVIDA_IN_LIFE")
     
     l_abdpvida_insunix_life_prev = f'''
-                                   (SELECT
+                                   (
+                                    select 
                                       'D' as INDDETREC,
                                       'ABDPVIDA' as TABLAIFRS17, 
                                       coalesce(a.branch, 0) || '-' || coalesce(a.product, 0) || '-' || coalesce(a.policy, 0) || '-' || coalesce(a.certif,0) as KABAPOL,
@@ -313,16 +318,17 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                             AND RTR."SOURCESCHEMA" = 'usinsuv01'
                                             WHERE P.CERTYPE = '2'
                                                 AND P.STATUS_POL NOT IN ('2','3') 
-                                                AND ( (P.POLITYPE = '1' -- INDIVIDUAL 
-                                                    AND P.EXPIRDAT >= '{l_fecha_carga_inicial}' 
-                                                    AND (P.NULLDATE IS NULL OR P.NULLDATE > '{l_fecha_carga_inicial}') )
-                                                    OR 
-                                                    (P.POLITYPE <> '1' -- COLECTIVAS 
-                                                    AND CERT.EXPIRDAT >= '{l_fecha_carga_inicial}' 
-                                                    AND (CERT.NULLDATE IS NULL OR CERT.NULLDATE > '{l_fecha_carga_inicial}'))
-                                              ) AND P.EFFECDATE  between '{p_fecha_inicio}' and '{p_fecha_fin}'
-                                        )
-                                        union /*SE QUITO EL UNION DESDE AQUI */
+                                               -- JAOS
+                                                --AND ( (P.POLITYPE = '1' -- INDIVIDUAL 
+                                                --    AND P.EXPIRDAT >= '{l_fecha_carga_inicial}' 
+                                                --    AND (P.NULLDATE IS NULL OR P.NULLDATE > '{l_fecha_carga_inicial}') )
+                                                --    OR 
+                                                --    (P.POLITYPE <> '1' -- COLECTIVAS 
+                                                --    AND CERT.EXPIRDAT >= '{l_fecha_carga_inicial}' 
+                                                --    AND (CERT.NULLDATE IS NULL OR CERT.NULLDATE > '{l_fecha_carga_inicial}'))
+                                             -- ) AND P.EFFECDATE  between '{p_fecha_inicio}' and '{p_fecha_fin}'
+                                        )/* -- JAOS NO SE REQUIERE EN CARGA INCTEMENTAL
+                                        union
                                         (
                                           SELECT P.USERCOMP, P.COMPANY, P.CERTYPE, P.BRANCH, P.PRODUCT,P.POLICY, CERT.CERTIF, P.TITULARC, P.EFFECDATE  
                                                 FROM usinsuv01.POLICY P
@@ -405,13 +411,16 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                                                                                                                                                         where	(tcl.reserve = 1 or tcl.ajustes = 1 or tcl.pay_amount = 1))
                                                                                                                                                       and     clh.operdate >= '{l_fecha_carga_inicial}') 
                                                       )
-                                        ) /*SE QUITO EL UNION HASTA AQUI */
+                                        )JAOS  NO SE REQUIERE EN CARGA INCREMENTAL */
                                       )  a -- 15 344 466
                                       on lp.usercomp = a.usercomp
                                       and lp.company = a.company
                                       and lp.certype = a.certype
                                       and lp.branch = a.branch
                                       and lp.policy = a.policy
+                                      -- JAOS
+                                      AND LP.COMPDATE  between '{p_fecha_inicio}' and '{p_fecha_fin}'
+
                                    ) AS TMP
                         '''
     #EJECUTAR CONSULTA
@@ -420,7 +429,8 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
     print("2-TERMINO TABLA ABDPVIDA_LIFE_PREV")
 
     l_abdpvida_vtime_life = f'''
-                            (SELECT 
+                            (
+                              SELECT 
                                 'D' AS INDDETREC,
                                 'ABDPVIDA' AS TABLAIFRS17, 
                                 A."NBRANCH" || '-' || A."NPRODUCT" || '-' || A."NPOLICY" || '-' || A."NCERTIF" AS KABAPOL,
@@ -507,15 +517,17 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                           unnest(ARRAY[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]) AS "RISKTYPEN") RTR ON RTR."BRANCHCOM" = P."NBRANCH" AND  RTR."RISKTYPEN" = 1 AND RTR."SOURCESCHEMA" = 'usvtimv01'
                                   WHERE P."SCERTYPE" = '2' 
                                   AND P."SSTATUS_POL" NOT IN ('2','3') 
-                                  AND ( (P."SPOLITYPE" = '1' -- INDIVIDUAL 
-                                      AND P."DEXPIRDAT" >= '{l_fecha_carga_inicial}' 
-                                      AND (P."DNULLDATE" IS NULL OR P."DNULLDATE" > '{l_fecha_carga_inicial}' ) )
-                                      OR 
-                                      (P."SPOLITYPE" <> '1' -- COLECTIVAS 
-                                      AND CERT."DEXPIRDAT" >= '{l_fecha_carga_inicial}' 
-                                      AND (CERT."DNULLDATE" IS NULL OR CERT."DNULLDATE" > '{l_fecha_carga_inicial}' )))
-                                  AND P."DSTARTDATE" BETWEEN '{p_fecha_inicio}' and '{p_fecha_fin}'
+                                  -- JAOS
+                                  --AND ( (P."SPOLITYPE" = '1' -- INDIVIDUAL 
+                                  --    AND P."DEXPIRDAT" >= '{l_fecha_carga_inicial}' 
+                                  --    AND (P."DNULLDATE" IS NULL OR P."DNULLDATE" > '{l_fecha_carga_inicial}' ) )
+                                  --    OR 
+                                  --    (P."SPOLITYPE" <> '1' -- COLECTIVAS 
+                                  --    AND CERT."DEXPIRDAT" >= '{l_fecha_carga_inicial}' 
+                                  --    AND (CERT."DNULLDATE" IS NULL OR CERT."DNULLDATE" > '{l_fecha_carga_inicial}' )))
+                                  --AND P."DSTARTDATE" BETWEEN '{p_fecha_inicio}' and '{p_fecha_fin}'
                                 )
+/* JAOS NO SE REQUIERE EN CARGA INCREMENTAL
                                 union 
                                 (
                                   SELECT P."SCERTYPE", P."NBRANCH", P."NPRODUCT", P."NPOLICY", CERT."NCERTIF", P."SCLIENT", P."DSTARTDATE"  
@@ -567,14 +579,17 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                             AND (CERT."DEXPIRDAT" < '{l_fecha_carga_inicial}' OR CERT."DNULLDATE" < '{l_fecha_carga_inicial}')
                                             AND P."DSTARTDATE" BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
                                 )
+JAOS NO SE REQUIERE EN CARGA INCREMENTAL */
                               ) A
                                 ON  L."SCERTYPE"  = A."SCERTYPE"
-                                AND L."NBRANCH"   = A."NBRANCH"
+                                AND L."NBRANCH"   = A."NBRANCH" 
                                 AND L."NPRODUCT"  = A."NPRODUCT"
-                                AND L."NPOLICY"   = A."NPOLICY"
+                                AND L."NPOLICY"   = A."NPOLICY" 
                                 AND L."NCERTIF"   = A."NCERTIF"  
                                 AND L."DEFFECDATE" <= A."DSTARTDATE" 
                                 AND (L."DNULLDATE" IS NULL OR L."DNULLDATE" > A."DSTARTDATE") 
+                                -- JAOS
+                                AND L.DCOMPDATE  BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'  
                             ) AS TMP
                         '''
     #EJECUTAR CONSULTA

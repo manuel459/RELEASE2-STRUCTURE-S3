@@ -5,7 +5,7 @@
           "path":"tmp/regla_negocio/Polizas/RN-POLIZAS-ABUNRIS.parquet",
           "script_inicial":"lib/fndtifrs17gluepolizasd01/regla_negocio/inicial/fndtifrs17gluepolizasd01abunris.py",
           "script_incremental":"lib/fndtifrs17gluepolizasd01/regla_negocio/incremental/fndtifrs17gluepolizasd01abunris.py",
-          "flag":1
+          "flag":0
        },
        {
           "nombre_tabla":"ABAPOL",
@@ -19,7 +19,7 @@
           "path":"tmp/regla_negocio/Polizas/RN-POLIZAS-ABCARGA.parquet",
           "script_inicial":"lib/fndtifrs17gluepolizasd01/regla_negocio/inicial/fndtifrs17gluepolizasd01abcarga.py",
           "script_incremental":"lib/fndtifrs17gluepolizasd01/regla_negocio/incremental/fndtifrs17gluepolizasd01abcarga.py",
-          "flag":0
+          "flag":1
        },
        {
           "nombre_tabla":"ABCLRISP",
