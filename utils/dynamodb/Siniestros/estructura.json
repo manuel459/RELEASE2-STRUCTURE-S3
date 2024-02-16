@@ -1,0 +1,25 @@
+{
+    "path_origen":"tmp/regla_negocio/Siniestro",
+    "path_file_txt":[
+       {
+          "sistema_origen":"PIG",
+          "path":"Dimensiones/Actual/Siniestro/D_ISXPPE-R-SIN-SINGERAL"
+       },
+       {
+          "sistema_origen":"PIV",
+          "path":"Dimensiones/Actual/Siniestro/D_ISXPPE-V-SIN-SINGERAL"
+       },
+       {
+          "sistema_origen":"PNV",
+          "path":"Dimensiones/Actual/Siniestro/D_INSPPE-V-SIN-SINGERAL"
+       },
+       {
+          "sistema_origen":"PVG",
+          "path":"Dimensiones/Actual/Siniestro/D_VTMPPE-R-SIN-SINGERAL"
+       },
+       {
+          "sistema_origen":"PVV",
+          "path":"Dimensiones/Actual/Siniestro/D_VTMPPE-V-SIN-SINGERAL"
+       }
+    ]
+ }

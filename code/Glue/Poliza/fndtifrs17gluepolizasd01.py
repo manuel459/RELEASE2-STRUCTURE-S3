@@ -85,9 +85,6 @@ try:
     nombre_tabla = 'TablaTestIFRS17'
     #nombre_tabla = f'fndtifrs17dydb{env}01'
     
-    #CREAR UN DICCIONARIO PARA ESTABLECER LAS CONFIGURACIONES
-    l_dic_config = {}
-    
     #EXTRAER CONFIGURACIONES
     l_dic_config = extract_config(l_configuraciones, nombre_tabla)
     

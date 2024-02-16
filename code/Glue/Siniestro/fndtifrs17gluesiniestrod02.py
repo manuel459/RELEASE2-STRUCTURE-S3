@@ -21,6 +21,9 @@ job.init(args["JOB_NAME"], args)
 cliente_dynamodb = boto3.client("dynamodb")
 s3r = boto3.resource('s3')
 ssm = boto3.client('ssm', 'us-east-1')
+glue_client = boto3.client('glue')
+id = 'SINIESTROS'
+nombre_error = '-'
 
 def extract_config(l_configuraciones, nombre_tabla):
     #CREAR UN DICCIONARIO PARA ESTABLECER LAS CONFIGURACIONES
@@ -28,8 +31,9 @@ def extract_config(l_configuraciones, nombre_tabla):
     
     #Extraer las CONFIGURACIONES NECESARIAS segun la lista
     for dominio in l_configuraciones:
-        config = cliente_dynamodb.get_item(TableName=nombre_tabla, Key={'NOMBRE_DOMINIO':{'S':str(dominio)}})
-        l_dic_config[config['Item']['NOMBRE_DOMINIO']['S']] = json.loads(config['Item']['ESTRUCTURA']['S'])
+        config = cliente_dynamodb.get_item(TableName=nombre_tabla, Key={'NOMBRE_DOMINIO': {'S': str(dominio['DOMINIO'])}})
+        l_dic_config[config['Item']['NOMBRE_DOMINIO']['S']] = json.loads(config['Item'][dominio['COLUMNA']]['S'])
+       
     return l_dic_config
 
 def execute_script(name_bucket, name_object):
@@ -55,18 +59,55 @@ try:
     #   EXTRAER VARIABLES DE ENTORNO
     #-------------------------------------#
     env = get_ssm()
+    
+    #-------------------------------------#
+    #   OBTENER LA FECHA INICIO DEL JOB
+    #-------------------------------------#
+    job_name = f'fndtifrs17gluepolizas{env}02_test'
+    
+    response = glue_client.get_job_runs(JobName=job_name, MaxResults=1)
+    
+    last_run = response['JobRuns'][0]
+
+    last_start_time = last_run['StartedOn']
+    
     #-------------------------------------#
     #   EXTRAER CONFIGURACIONES DYNAMODB
     #-------------------------------------#
     
     #CREAR UNA LISTA CON TODAS LAS CONFIGURACIONES NECESARIAS SEGUN EL DOMINIO
-    l_configuraciones = ["SINIESTROS","GENERAL"]
+    l_configuraciones = [{ "DOMINIO": "GENERAL" , "COLUMNA": "ESTRUCTURA" }, { "DOMINIO": "SINIESTROS" , "COLUMNA": "ESTRUCTURA" }]
     
     #NOMBRE DE LA TABLA DE CONFIGURACIONES
-    nombre_tabla = f'fndtifrs17dydb{env}01'
+    nombre_tabla = 'TablaTestIFRS17'
+    #nombre_tabla = f'fndtifrs17dydb{env}01'
     
     #EXTRAER CONFIGURACIONES
     l_dic_config = extract_config(l_configuraciones, nombre_tabla)
+    
+    #--------------------------------------#
+    #  CONTROL DE EJECUCION DYNAMODB
+    #--------------------------------------#
+    
+    #EXTRAR LA FUNCION DE LA TRAZABILIDAD 
+    trazabilidad = execute_script(l_dic_config['GENERAL']['bucket']['artifact'],l_dic_config['GENERAL']['funciones']['log'])
+    
+    #EXTRAR EL TIPO DE CARGA DEL DYNAMODB
+    tipo_carga = l_dic_config['GENERAL']['tipoCarga']
+
+    #------------------------------------------------------------------------#        
+    #  EJECUTAR LA TRAZABILIDAD
+    #------------------------------------------------------------------------#
+    #  Parametros
+    #  cliente_dynamodb: cliente, 
+    #  id: nombre del dominio,
+    #  step: codigo 1 = Inicio del proceso - codigo 2 = Fin del proceso
+    #  number: Job Actual(Lectura = 0, Regla de negocio = 1, Estructura = 2) 
+    #  nombre_error : Captura el Error
+    #  last_start_time : Captura la fecha del proceso
+    #  tipo_carga : Tipo de carga INCREMENTAL O INICIAL
+    #------------------------------------------------------------------------#
+    trazabilidad.update_log(cliente_dynamodb, id, 1, 2, nombre_error,last_start_time,tipo_carga)
     
     #----------------------------------------------------------#
     #   EJECUTAR FUNCION QUE ESTRUCTURA LOS FILES IFRS17 A TXT
@@ -75,11 +116,18 @@ try:
     structure = execute_script(l_dic_config['GENERAL']['bucket']['artifact'], l_dic_config['GENERAL']['funciones']['structure'])
     
     #LLAMAR Y LANZAR LOS PARAMETROS A LA FUNCION generate_files
-    domain = 'SINIESTROS'
-    structure.generate_files(l_dic_config, domain)
+    structure.generate_files(l_dic_config, id)
+    
+    #------------------------------------------------------------------------#        
+    # EJECUTAR LA TRAZABILIDAD
+    #------------------------------------------------------------------------#
+    trazabilidad.update_log(cliente_dynamodb, id, 2,2,nombre_error, last_start_time,tipo_carga)
  
 except Exception as e:
-    # Log the error for debugging purposes
-    print(f"Error en el GLUE: {str(e)}")
+     # Log the error for debugging purposes
+    print(f"Error Glue de Estructura del Dominio de Siniestros: {str(e)}")
+    nombre_error = str(e)
+    trazabilidad.update_log(cliente_dynamodb, id, 2,2,nombre_error, last_start_time,tipo_carga)
+    sys.exit(1)
       
 job.commit()
