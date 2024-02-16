@@ -8,7 +8,8 @@ def generate_reaseguro_parquets(bucketName, config_dominio, glue_context, connec
                     SELECT 
                     RTR."REINSURER_ID",
                     RTR."REINRINSR_SHARE",
-                    RTR."ACTIVE_FROM"
+                    RTR."ACTIVE_FROM",
+                    RTR."ACTIVE_TO"
                     FROM USINSIV01."RI_TREATY_REINSURERS" RTR
                 ) AS TMP
                 '''

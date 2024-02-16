@@ -12,7 +12,8 @@ def generate_reaseguro_parquets(bucketName, config_dominio, glue_context, connec
                     PC."NCOMPANY",
                     PC."NCORREDOR",
                     PC."NSHARE",
-                    PC."DCOMPDATE"
+                    PC."DCOMPDATE",
+                    PC."DNULLDATE"
                     FROM USVTIMV01."PART_CONTR" PC
                 ) AS TMP
                 '''

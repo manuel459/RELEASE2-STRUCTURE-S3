@@ -15,7 +15,8 @@ def generate_reaseguro_parquets(bucketName, config_dominio, glue_context, connec
                     CC.SUPERVIS,
                     CC.COMPANYC,
                     CC.COMPDATE,
-                    CC.SHARE
+                    CC.SHARE,
+                    CC.NULLDATE
                     FROM USINSUV01.CONTR_COMP CC
                 ) AS TMP
                 '''
@@ -30,7 +31,8 @@ def generate_reaseguro_parquets(bucketName, config_dominio, glue_context, connec
                     CT.EXPIRDAT,
                     CT.YEAR_CONTR,
                     CT.TYPE,
-                    CT.COMPDATE
+                    CT.COMPDATE,
+                    CT.NULLDATE
                     FROM USINSUV01.CONTRPROC CT
                 ) AS TMP
                 '''
