@@ -113,6 +113,7 @@ try:
     #  tipo_carga : Tipo de carga INCREMENTAL O INICIAL
     #------------------------------------------------------------------------#
     trazabilidad.update_log(cliente_dynamodb, id, 1, 1, nombre_error,last_start_time,tipo_carga)
+    
         
     #--------------------------------------#
     #  CONEXIÓN A LA BASE DE DATOS AURORA
@@ -140,10 +141,14 @@ try:
             
             #OBTENER SCRIPTS ALMACENADOS EN S3
             structure = execute_script(l_dic_config['GENERAL']['bucket']['artifact'], script_key)
-            
-            #LLAMAR Y LANZAR LOS PARAMETROS A LA FUNCION getData
-            L_DF_RECIBOS = structure.get_data(glueContext, connection, l_dic_config['GENERAL']['fechas']['dFecha_Inicio'], l_dic_config['GENERAL']['fechas']['dFecha_Fin'] )
-        
+
+            if tipo_carga == 'INI':
+                #LLAMAR Y LANZAR LOS PARAMETROS A LA FUNCION getData
+                L_DF_RECIBOS = structure.get_data(glueContext, connection)
+            elif tipo_carga in ['INC', 'HIS']:
+                #LLAMAR Y LANZAR LOS PARAMETROS A LA FUNCION getData
+                L_DF_RECIBOS = structure.get_data(glueContext, connection, l_dic_config['GENERAL']['fechas']['dFecha_Inicio'], l_dic_config['GENERAL']['fechas']['dFecha_Fin'] )
+
             #Trasformar a bit escrito en formato txt
             L_BUFFER_RECIBOS = io.BytesIO()
             L_DF_RECIBOS.toPandas().to_parquet(L_BUFFER_RECIBOS, index=False)
