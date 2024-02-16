@@ -120,13 +120,14 @@ try:
         if config['flag'] == 1:
             
             #VALIDAR EL TIPO DE CARGA : INI = INICIAL | INC = INCREMENTAL
-            if l_dic_config['GENERAL']['tipoCarga'] == 'INI':
-                #OBTENER SCRIPTS ALMACENADOS EN S3
-                structure = execute_script(l_dic_config['GENERAL']['bucket']['artifact'], config['script_inicial'])
+            if tipo_carga == 'INI':
+                script_key = config['script_inicial']
+            elif tipo_carga == 'INC':
+                script_key = config['script_incremental']
+            elif tipo_carga == 'HIS':
+                script_key = config['script_historico']
             
-            elif l_dic_config['GENERAL']['tipoCarga'] == 'INC':
-                #OBTENER SCRIPTS ALMACENADOS EN S3
-                structure = execute_script(l_dic_config['GENERAL']['bucket']['artifact'], config['script_incremental'])
+            structure = execute_script(l_dic_config['GENERAL']['bucket']['artifact'], script_key)
             
             #LLAMAR Y LANZAR LOS PARAMETROS A LA FUNCION getData
             L_DF_ENTIDAD = structure.get_data(glueContext, l_dic_config['GENERAL']['bucket']['artifact'] ,config['tablas'],l_dic_config['GENERAL']['fechas']['dFecha_Inicio'], l_dic_config['GENERAL']['fechas']['dFecha_Fin'])

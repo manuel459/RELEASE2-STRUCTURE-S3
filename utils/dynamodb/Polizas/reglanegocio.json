@@ -5,6 +5,7 @@
           "path":"tmp/regla_negocio/Polizas/RN-POLIZAS-ABUNRIS.parquet",
           "script_inicial":"lib/fndtifrs17gluepolizasd01/regla_negocio/inicial/fndtifrs17gluepolizasd01abunris.py",
           "script_incremental":"lib/fndtifrs17gluepolizasd01/regla_negocio/incremental/fndtifrs17gluepolizasd01abunris.py",
+          "script_historico":"lib/fndtifrs17gluepolizasd01/regla_negocio/historico/fndtifrs17gluepolizasd01abunris.py",
           "flag":0
        },
        {
@@ -12,6 +13,7 @@
           "path":"tmp/regla_negocio/Polizas/RN-POLIZAS-ABAPOL.parquet",
           "script_inicial":"lib/fndtifrs17gluepolizasd01/regla_negocio/inicial/fndtifrs17gluepolizasd01abapol.py",
           "script_incremental":"lib/fndtifrs17gluepolizasd01/regla_negocio/incremental/fndtifrs17gluepolizasd01abapol.py",
+          "script_historico":"lib/fndtifrs17gluepolizasd01/regla_negocio/historico/fndtifrs17gluepolizasd01abapol.py",
           "flag":0
        },
        {
@@ -19,6 +21,7 @@
           "path":"tmp/regla_negocio/Polizas/RN-POLIZAS-ABCARGA.parquet",
           "script_inicial":"lib/fndtifrs17gluepolizasd01/regla_negocio/inicial/fndtifrs17gluepolizasd01abcarga.py",
           "script_incremental":"lib/fndtifrs17gluepolizasd01/regla_negocio/incremental/fndtifrs17gluepolizasd01abcarga.py",
+          "script_historico":"lib/fndtifrs17gluepolizasd01/regla_negocio/historico/fndtifrs17gluepolizasd01abcarga.py",
           "flag":1
        },
        {
@@ -26,6 +29,7 @@
           "path":"tmp/regla_negocio/Polizas/RN-POLIZAS-ABCLRISP.parquet",
           "script_inicial":"lib/fndtifrs17gluepolizasd01/regla_negocio/inicial/fndtifrs17gluepolizasd01abclrisp.py",
           "script_incremental":"lib/fndtifrs17gluepolizasd01/regla_negocio/incremental/fndtifrs17gluepolizasd01abclrisp.py",
+          "script_historico":"lib/fndtifrs17gluepolizasd01/regla_negocio/historico/fndtifrs17gluepolizasd01abclrisp.py",
           "flag":0
        },
        {
@@ -33,6 +37,7 @@
           "path":"tmp/regla_negocio/Polizas/RN-POLIZAS-ABCOBAP.parquet",
           "script_inicial":"lib/fndtifrs17gluepolizasd01/regla_negocio/inicial/fndtifrs17gluepolizasd01abcobap.py",
           "script_incremental":"lib/fndtifrs17gluepolizasd01/regla_negocio/incremental/fndtifrs17gluepolizasd01abcobap.py",
+          "script_historico":"lib/fndtifrs17gluepolizasd01/regla_negocio/historico/fndtifrs17gluepolizasd01abcobap.py",
           "flag":0
        },
        {
@@ -40,6 +45,7 @@
           "path":"tmp/regla_negocio/Polizas/RN-POLIZAS-ABCOSSEG.parquet",
           "script_inicial":"lib/fndtifrs17gluepolizasd01/regla_negocio/inicial/fndtifrs17gluepolizasd01abcosseg.py",
           "script_incremental":"lib/fndtifrs17gluepolizasd01/regla_negocio/incremental/fndtifrs17gluepolizasd01abcosseg.py",
+          "script_historico":"lib/fndtifrs17gluepolizasd01/regla_negocio/historico/fndtifrs17gluepolizasd01abcosseg.py",
           "flag":0
        },
        {
@@ -47,6 +53,7 @@
           "path":"tmp/regla_negocio/Polizas/RN-POLIZAS-ADBPVIDA.parquet",
           "script_inicial":"lib/fndtifrs17gluepolizasd01/regla_negocio/inicial/fndtifrs17gluepolizasd01adbpvida.py",
           "script_incremental":"lib/fndtifrs17gluepolizasd01/regla_negocio/incremental/fndtifrs17gluepolizasd01adbpvida.py",
+          "script_historico":"lib/fndtifrs17gluepolizasd01/regla_negocio/historico/fndtifrs17gluepolizasd01adbpvida.py",
           "flag":0
        }
     ]
