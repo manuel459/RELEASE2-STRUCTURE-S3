@@ -234,7 +234,7 @@ def get_data(glue_context, connection):
                                                         '' TIOCPROC, --excluido
                                                         dpr.compdate TIOCFRM, --excluido
                                                         '' TIOCTO, --excluido
-                                                        '' KGIORIGM, --excluido
+                                                        'PIG' KGIORIGM, --excluido
                                                         '' VTXPREM, --excluido
                                                         dpr.premium_cob + --existen registros de primas con comisi�n
                                                             case	when	not exists --valida que el certificado 0 no haya sido considerado en las operaciones para evitar duplicar sus primas asociadas
@@ -459,7 +459,7 @@ def get_data(glue_context, connection):
                                         '' TIOCTO, --excluido
                                         'PIV' KGIORIGM, --excluido
                                         '' VTXPREM, --excluido
-                                        dpr.premium_cob + --existen registros de primas con comisi�n
+                                        dpr.premium_cob + --existen registros de primas con comision
                                             case	when	not exists --valida que el certificado 0 no haya sido considerado en las operaciones para evitar duplicar sus primas asociadas
                                                             (	select	1
                                                                 from	usinsuv01.detail_pre dp0
@@ -510,7 +510,7 @@ def get_data(glue_context, connection):
                                                             and 	dp0.company = pre.company
                                                             and 	dp0.receipt = pre.receipt
                                                             and		dp0.code = dpr.code
-                                                            and		dp0.bill_item = 5),0) + --prima der. emisi�n (nivel_1)
+                                                            and		dp0.bill_item = 5),0) + --prima der. emision (nivel_1)
                                                 --se procede a distribuir las primas en el certificado 0 si es que el certificado en dpr es diferente a 0
                                                 --(si el certificado es 0, ya fue calculado en nivel_1)
                                                 case	when	not exists --valida que el certificado 0 no haya sido considerado en las operaciones para evitar duplicar sus primas asociadas
@@ -528,7 +528,7 @@ def get_data(glue_context, connection):
                                                                                 and 	dp0.company = pre.company
                                                                                 and 	dp0.receipt = pre.receipt
                                                                                 and		dp0.certif = 0
-                                                                                and		dp0.bill_item = 5),0) --solo interesa los casos con el monto asociado al der. emisi�n
+                                                                                and		dp0.bill_item = 5),0) --solo interesa los casos con el monto asociado al der. emision
                                                                     *	(coalesce(dpr.premium / nullif(SUM(dpr.premium) OVER (partition by dpr.pre_id),0),0)))
                                                         else 	0 end) VMTENCG,
                                         (	dpr.premium_imp + --prima impuestos a nivel del certificado/cobertura (nivel_1a)
@@ -609,12 +609,12 @@ def get_data(glue_context, connection):
                                                     from	usinsuv01.acc_autom2 acc
                                                     where	ctid =
                                                             coalesce(
-                                                                (   select  min(ctid) --b�squeda normal en acc_autom2(ramo;producto;concepto 1 para todos, excepto incendio)
+                                                                (   select  min(ctid) --busqueda normal en acc_autom2(ramo;producto;concepto 1 para todos, excepto incendio)
                                                                     from    usinsuv01.acc_autom2 abe
                                                                     where   abe.branch = pre.branch
                                                                     and 	abe.product = pre.product
                                                                     and 	abe.concept_fac = 1),
-                                                                (   select  min(ctid) --b�squeda igual a anterior, pero en caso el producto no exista en acc_autom2 (error LP)
+                                                                (   select  min(ctid) --busqueda igual a anterior, pero en caso el producto no exista en acc_autom2 (error LP)
                                                                     from    usinsuv01.acc_autom2 abe
                                                                     where   abe.branch = pre.branch
                                                                     and 	abe.concept_fac = 1))),0) KGCRAMO_SAP
@@ -732,7 +732,7 @@ def get_data(glue_context, connection):
                                             and 	(pre.expirdat is null or cast(pre.expirdat as date) >= '12/31/2020')
                                             and 	(pre.nulldate is null or cast(pre.nulldate as date) > '12/31/2020')
                                             and 	pre.statusva not in ('2','3')
-                                            group 	by 1,2,3) dpr
+                                            group 	by 1,2,3,4) dpr
                                 join	usinsuv01.premium pre on pre.ctid = dpr.pre_id
                                 join 	(select 'LPV' cia, '-' sep) par on 1 = 1
                                 --7m55s (ramo 42) - 104 registros; existen casos en que no hay capital o primas asociado a los registros (puede ser por el ambiente)
@@ -750,7 +750,7 @@ def get_data(glue_context, connection):
                                         coalesce(dpr.ndet_code,0) KRCTPCBT,
                                         '' DTPREG, --excluido
                                         '' TIOCPROC, --excluido
-                                        dpr."DCOMPDATE" TIOCFRM, --excluido
+                                        cast (cast (dpr."DCOMPDATE" as date) as varchar) TIOCFRM, --excluido
                                         '' TIOCTO, --excluido
                                         'PVG' KGIORIGM, --excluido
                                         '' VTXPREM, --excluido
@@ -862,7 +862,7 @@ def get_data(glue_context, connection):
                                         coalesce(dpr.ndet_code,0) KRCTPCBT,
                                         '' DTPREG, --excluido
                                         '' TIOCPROC, --excluido
-                                        DPR."DCOMPDATE" TIOCFRM, --excluido
+                                       CAST ( CAST (DPR."DCOMPDATE" AS DATE) AS VARCHAR) TIOCFRM, --excluido
                                         '' TIOCTO, --excluido
                                         'PVV' KGIORIGM, --excluido
                                         '' VTXPREM, --excluido

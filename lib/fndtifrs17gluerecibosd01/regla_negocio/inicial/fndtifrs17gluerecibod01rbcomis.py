@@ -258,7 +258,7 @@ def get_data(glue_context, connection):
                                                                         and 	pre.statusva not in ('2','3')
                                                                         group 	by 1,2,3) dpr
                                                 join	usinsug01.premium pre on pre.ctid = dpr.pre_id
-                                                join 	(select 'LPG' cia, '-' sep) par on 1 = 1;
+                                                join 	(select 'LPG' cia, '-' sep) par on 1 = 1
                                                 --11m22s (otros ramos)        
                                            ) AS TPM     
                                            '''
@@ -932,6 +932,7 @@ def get_data(glue_context, connection):
                                                         where	dat.commis_p <> 0        
                                                 ) AS TMP        
                                                 '''
+
     DF_LPV_INSUNIX_RENTA_VITALICIA = glue_context.read.format('jdbc').options(**connection).option("fetchsize",10000).option("dbtable",L_RBCOMIS_INSUNIX_LPV_RENTA_VITALICIA).load()
 
     DF_LPV_INSUNIX = DF_LPV_INSUNIX_OTROS_RAMOS.union(DF_LPV_INSUNIX_RENTA_VITALICIA)
@@ -947,7 +948,7 @@ def get_data(glue_context, connection):
                                         coalesce(dpr.ndet_code,0) KRCTPCBT,
                                         '' DTPREG, --excluido
                                         '' TIOCPROC, --excluido
-                                        dpr."DCOMPDATE" TIOCFRM, --excluido
+                                       CAST( CAST (dpr."DCOMPDATE" AS DATE) AS VARCHAR ) TIOCFRM, --excluido
                                         '' TIOCTO, --excluido
                                         'PVG' KGIORIGM, --excluido
                                         dpr.ncommision VCOMISS,
@@ -958,7 +959,7 @@ def get_data(glue_context, connection):
                                         par.cia DCOMPA,
                                         '' DMARCA, --excluido,
                                         dpr.nbranch_led KGCRAMO_SAP,
-                                        '' DCODCSG --no aplica en este caso (el modelo en el excel ejemplo no indica compa��as o un % identificador asociado a la participaci�n por coasegurador)
+                                        '' DCODCSG --no aplica en este caso (el modelo en el excel ejemplo no indica companias o un % identificador asociado a la participacion por coasegurador)
                                 from	(	select 	pre."NRECEIPT" nreceipt,
                                                 dpr."NDET_CODE" ndet_code,
                                                 dpr."NBRANCH_LED" nbranch_led,
@@ -994,7 +995,7 @@ def get_data(glue_context, connection):
                                         coalesce(dpr.ndet_code,0) KRCTPCBT,
                                         '' DTPREG, --excluido
                                         '' TIOCPROC, --excluido
-                                        dpr."DCOMPDATE" TIOCFRM, --excluido
+                                        CAST (CAST (dpr."DCOMPDATE" AS DATE)AS VARCHAR) TIOCFRM, --excluido
                                         '' TIOCTO, --excluido
                                         'PVV' KGIORIGM, --excluido
                                         dpr.ncommision VCOMISS,
@@ -1044,7 +1045,7 @@ def get_data(glue_context, connection):
                                         '' KRCTPCBT,
                                         '' DTPREG,
                                         '' TIOCPROC,
-                                        BDO."ISSUE_DATE"  TIOCFRM,
+                                        CAST (CAST (BDO."ISSUE_DATE" AS DATE)AS VARCHAR)  TIOCFRM,
                                         '' TIOCTO,
                                         'PNV' KGIORIGM,
                                         B."AMOUNT" VCOMISS, 

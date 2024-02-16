@@ -2,15 +2,15 @@ def get_data(glue_context, connection):
 
   L_RBRSGRP_INSUNIX_LPG = '''
                              (
-                                select	'D' as INDDETREC,
-                                        'RBRSGRP' as TABLAIFRS17,
+                                select	        'D' AS INDDETREC,
+                                                'RBRSGRP' AS TABLAIFRS17,
                                                 pre.receipt KRBRECPR,
                                                 '' DORDRSG, --excluido
                                                 '' DTPREG, --excluido
                                                 '' TIOCPROC, --excluido
-                                                '' TIOCFRM, --excluido
+                                                coalesce(rea.compdate,pre.compdate) TIOCFRM,
                                                 '' TIOCTO, --excluido
-                                                'PIG' KGIORIGM, --excluido
+                                                'PIG' KGIORIGM,
                                                 rea.rei_number DTRATADO,
                                                 coalesce(rea.porc_capital,0) * 100 VTXCAPIT,
                                                 '' VTXPREM, --descartado
@@ -93,7 +93,7 @@ def get_data(glue_context, connection):
                                                                                         and     (coi.nulldate is null or coi.nulldate > pre.effecdate)
                                                                                         and 	coalesce(coi.companyc,0) = 1),100) / 100) VMTRESG,
                                                 rea.rei_company DCODRSG,
-                                                par.cia DCOMPA,
+                                                'LPG' DCOMPA,
                                                 '' DMARCA, --excluido
                                                 '' DCDCORR --excluido
                                 from	(	select	pre.ctid pre_id,
@@ -103,11 +103,11 @@ def get_data(glue_context, connection):
                                                                                 then    case when t173.codigint = 1 then 1 else rei.com_reinsu end
                                                                                         else    coalesce(ctp.companyc,1) end rei_company,
                                                                         case	when	ctp.ctid is not null
-                                                                                        then	case    when 	coalesce(t173.codigint,0) in (1,4,9) --en caso sea el tipo retenci�n o facultativos
+                                                                                        then	case    when 	coalesce(t173.codigint,0) in (1,4,9) --en caso sea el tipo retenci n o facultativos
                                                                                                 then	coalesce(rei.com_reinsu,0)
-                                                                                                                        else 	coalesce(ctp.share,0) --porcentaje por compa��as en el caso de no ser retenci�n/facultativo (sub-porcentaje)
+                                                                                                                        else 	coalesce(ctp.share,0) --porcentaje por compa  as en el caso de no ser retenci n/facultativo (sub-porcentaje)
                                                                                                                         end
-                                                                                        else	case when coalesce(t173.codigint,0) = 1 then 100 else 0 end --caso no exista subdistribuci�n
+                                                                                        else	case when coalesce(t173.codigint,0) = 1 then 100 else 0 end --caso no exista subdistribuci n
                                                                                         end porc_commision,
                                                                         coalesce((	sum(coalesce(rei.capital, 0))	/
                                                                                                 nullif(	sum(coalesce(case	when	dpr.addsuini in ('1', '3')
@@ -122,6 +122,7 @@ def get_data(glue_context, connection):
                                                                                                                                                                                                         and 	(exc.nulldate is null or exc.nulldate > pre.effecdate))
                                                                                                                                                                                 else 	1 end
                                                                                                                                                 else	0 end, 0)),0)),0) porc_capital,
+                                                                        max(rei.compdate) compdate,
                                                                         sum(coalesce(dpr.premium,0) + 
                                                                                 case	when	not exists
                                                                                                                 (	select	1
@@ -151,21 +152,21 @@ def get_data(glue_context, connection):
                                                                                                                                                                                 and		coalesce(dp2.premium,0) <> 0),0)),0)
                                                                                                 else 	0 end
                                                                                 * 	case	when	rei.ctid is not null 
-                                                                                                        then	coalesce(rei.commissi,0) /100 --distribuci�n reaseguro (tipo / compa��a)
-                                                                                                        else	0 end --si no hay reaseguro no aplica la comisi�n de reaseguro
+                                                                                                        then	coalesce(rei.commissi,0) /100 --distribuci n reaseguro (tipo / compa  a)
+                                                                                                        else	0 end --si no hay reaseguro no aplica la comisi n de reaseguro
                                                                                 *	case	when	ctp.ctid is not null
-                                                                                                        then	case    when 	coalesce(t173.codigint,0) in (1,4,9) --en caso sea el tipo retenci�n o facultativos
+                                                                                                        then	case    when 	coalesce(t173.codigint,0) in (1,4,9) --en caso sea el tipo retenci n o facultativos
                                                                                                                 then	100
-                                                                                                                                        else 	coalesce(ctp.com_rate,0) --porcentaje por compa��as en el caso de no ser retenci�n/facultativo (sub-porcentaje)
+                                                                                                                                        else 	coalesce(ctp.com_rate,0) --porcentaje por compa  as en el caso de no ser retenci n/facultativo (sub-porcentaje)
                                                                                                                                         end / 100
-                                                                                                        else	0 --caso no exista reaseguro/subdistribuci�n
+                                                                                                        else	0 --caso no exista reaseguro/subdistribuci n
                                                                                                         end
                                                                                 *	case	when	ctp.ctid is not null
-                                                                                                        then	case    when 	coalesce(t173.codigint,0) in (1,4,9) --en caso sea el tipo retenci�n o facultativos
+                                                                                                        then	case    when 	coalesce(t173.codigint,0) in (1,4,9) --en caso sea el tipo retenci n o facultativos
                                                                                                                 then	coalesce(rei.com_reinsu,0)
-                                                                                                                                        else 	coalesce(ctp.share,0) --porcentaje por compa��as en el caso de no ser retenci�n/facultativo (sub-porcentaje)
+                                                                                                                                        else 	coalesce(ctp.share,0) --porcentaje por compa  as en el caso de no ser retenci n/facultativo (sub-porcentaje)
                                                                                                                                         end / 100
-                                                                                                        else	0 --caso no exista subdistribuci�n
+                                                                                                        else	0 --caso no exista subdistribuci n
                                                                                                         end) rei_commision,
                                                                         sum(coalesce(dpr.premium,0) + 
                                                                                 case	when	not exists
@@ -196,14 +197,14 @@ def get_data(glue_context, connection):
                                                                                                                                                                                 and		coalesce(dp2.premium,0) <> 0),0)),0)
                                                                                                 else 	0 end
                                                                                 * 	case	when	rei.ctid is not null 
-                                                                                                        then	coalesce(rei.share,0) /100 --distribuci�n reaseguro (tipo / compa��a)
+                                                                                                        then	coalesce(rei.share,0) /100 --distribuci n reaseguro (tipo / compa  a)
                                                                                                         else	1 end --si no hay reaseguro se mantiene el coaseguro origen
                                                                                 *	case	when	ctp.ctid is not null
-                                                                                                        then	case    when 	coalesce(t173.codigint,0) in (1,4,9) --en caso sea el tipo retenci�n o facultativos
+                                                                                                        then	case    when 	coalesce(t173.codigint,0) in (1,4,9) --en caso sea el tipo retenci n o facultativos
                                                                                                                 then	100
-                                                                                                                                        else 	coalesce(ctp.share,0) --porcentaje por compa��as en el caso de no ser retenci�n/facultativo (sub-porcentaje)
+                                                                                                                                        else 	coalesce(ctp.share,0) --porcentaje por compa  as en el caso de no ser retenci n/facultativo (sub-porcentaje)
                                                                                                                                         end / 100
-                                                                                                        else	1 --caso no exista subdistribuci�n
+                                                                                                        else	1 --caso no exista subdistribuci n
                                                                                                         end) rei_premium
                                                         from	usinsug01.premium pre
                                                         join	usinsug01.detail_pre dpr
@@ -241,31 +242,30 @@ def get_data(glue_context, connection):
                                                                         and     ctp.nulldate is null
                                                         where 	pre.usercomp = 1
                                                         and 	pre.company = 1
-                                                        and     pre.branch = 66 --pre.branch not in (1,66,23)
+                                                        and		pre.branch = 6--not in (1,66,23)
                                                         and 	cast(pre.effecdate as date) <= '12/31/2020'
                                                         and 	(pre.expirdat is null or cast(pre.expirdat as date) >= '12/31/2020')
                                                         and 	(pre.nulldate is null or cast(pre.nulldate as date) > '12/31/2020')
                                                         and 	pre.statusva not in ('2','3')
                                                         group	by 1,2,3,4,5) rea
                                 join	usinsug01.premium pre on pre.ctid = rea.pre_id
-                                join 	(select 'LPG' cia, '-' sep) par on 1 = 1     
-                             ) AS TMP        
+                             ) AS TMP           
                              '''   
 
   DF_LPG_RBRSGRP_INSUNIX = glue_context.read.format('jdbc').options(**connection).option("fetchsize",10000).option("dbtable",L_RBRSGRP_INSUNIX_LPG).load()
 
   L_RBRSGRP_VTIME_LPG_SIN_REC_SIN_REASEGURO = '''
                                                (
-                                                  select	'D' as INDDETREC,
-                                                                'RBRSGRP' as TABLAIFRS17,
+                                                        select	        'D' AS INDDETREC,
+                                                                        'RBRSGRP' AS TABLAIFRS17,
                                                                         pre."NRECEIPT" KRBRECPR,
                                                                         '' DORDRSG, --excluido
                                                                         '' DTPREG, --excluido
                                                                         '' TIOCPROC, --excluido
-                                                                        '' TIOCFRM, --excluido
+                                                                        cast(pre."DCOMPDATE" as DATE) TIOCFRM,
                                                                         '' TIOCTO, --excluido
                                                                         'PVG' KGIORIGM, --excluido
-                                                                        '' DTRATADO,
+                                                                        null DTRATADO,
                                                                         0 VTXCAPIT,
                                                                         '' VTXPREM, --descartado
                                                                         0 VTXCOMMD,
@@ -296,9 +296,9 @@ def get_data(glue_context, connection):
                                                                                                                 and     coi."NPOLICY" = pre."NPOLICY"
                                                                                                                 and 	coi."NCOMPANY" = 1
                                                                                                                 and     CAST(coi."DEFFECDATE" AS DATE) <= CAST(PRE."DEFFECDATE" AS DATE)
-                                                                                                                and     (coi."DNULLDATE" is null or CAST(coi."DNULLDATE" AS DATE) > CAST(PRE."DEFFECDATE" AS DATE))),100)/100) VMTRESG, --coaseguro sobre el 100% de retenci�n
-                                                                        1 DCODRSG, --LP el �nico en este caso
-                                                                        par.cia DCOMPA,
+                                                                                                                and     (coi."DNULLDATE" is null or CAST(coi."DNULLDATE" AS DATE) > CAST(PRE."DEFFECDATE" AS DATE))),100)/100) VMTRESG, --coaseguro sobre el 100% de retenci n
+                                                                        1 DCODRSG, --LP el  nico en este caso
+                                                                        'LPG' DCOMPA,
                                                                         '' DMARCA, --excluido
                                                                         '' DCDCORR --excluido
                                                         from	(	select 	pre.ctid pre_id,
@@ -374,68 +374,68 @@ def get_data(glue_context, connection):
                                                                                                 and		dpr."NBILL_ITEM" not in (4,5,9,97)
                                                                                 group 	by 1,2) rea
                                                         join	usvtimg01."PREMIUM" pre on pre.ctid = rea.pre_id
-                                                        join 	(select 'LPG' cia, '-' sep) par on 1 = 1
-                                                        --32.443s (todos los ramos) SIN REC, SIN REASEGURO
-                                               ) AS TMP
+                                                        --4.357s (todos los ramos) SIN PRC SIN REASEGURO
+                                               ) AS TMP  
                                                '''
+
   DF_LPG_RBRSGRP_VTIME_SIN_REC_SIN_REASEGURO = glue_context.read.format('jdbc').options(**connection).option("fetchsize",10000).option("dbtable",L_RBRSGRP_VTIME_LPG_SIN_REC_SIN_REASEGURO).load()
                           
   L_RBRSGRP_VTIME_LPG_SIN_REC_CON_REASEGURO = '''
                                                  (
-                                                    select	'D' as INDDETREC,
-                                                                'RBRSGRP' as TABLAIFRS17,
-                                                                pre."NRECEIPT" KRBRECPR,
-                                                                '' DORDRSG, --excluido
-                                                                '' DTPREG, --excluido
-                                                                '' TIOCPROC, --excluido
-                                                                '' TIOCFRM, --excluido
-                                                                '' TIOCTO, --excluido
-                                                                'PVG' KGIORIGM, --excluido
-                                                                coalesce( rea.rei_number,0) DTRATADO,
-                                                                coalesce(rea.porc_capital,0) * 100 VTXCAPIT,
-                                                                '' VTXPREM, --descartado
-                                                                coalesce(rea.rei_commision,0) VTXCOMMD,
-                                                                coalesce((	select	max(case	when	dp0."SADDSUINI" in ('1', '3')
-                                                                                                                                then	coalesce(dp0."NCAPITAL", 0) 
-                                                                                                                                else	0 end)
-                                                                                        from	usvtimg01."DETAIL_PRE" dp0
-                                                                                        where	dp0."NRECEIPT" = pre."NRECEIPT"
-                                                                                        and		dp0."NDIGIT" = pre."NDIGIT"
-                                                                                        and		dp0."STYPE_DETAI" in ('1','2','4','6')
-                                                                                        and		dp0."NBILL_ITEM" not in (4,5,9,97)
-                                                                                        and		dp0."NDET_CODE" =rea.ndet_code),0) VMTCAPIT,
-                                                                coalesce((	select	sum(coalesce(dp0."NPREMIUM", 0) )
-                                                                                        from	usvtimg01."DETAIL_PRE" dp0
-                                                                                        where	dp0."NRECEIPT" = pre."NRECEIPT"
-                                                                                        and		dp0."NDIGIT" = pre."NDIGIT"
-                                                                                        and		dp0."STYPE_DETAI" in ('1','2','4','6')
-                                                                                        and		dp0."NBILL_ITEM" not in (4,5,9,97)
-                                                                                        and		dp0."NDET_CODE" =rea.ndet_code),0) VMTPREM,
-                                                                coalesce(rea.rei_commision,0) * 
-                                                                                (coalesce((	select 	"NSHARE"
-                                                                                                        from	usvtimg01."COINSURAN" coi
-                                                                                                        where	coi."SCERTYPE" = pre."SCERTYPE"
-                                                                                                        and     coi."NBRANCH" = pre."NBRANCH"
-                                                                                                        and     coi."NPRODUCT" = pre."NPRODUCT"
-                                                                                                        and     coi."NPOLICY" = pre."NPOLICY"
-                                                                                                        and 	coi."NCOMPANY" = 1
-                                                                                                        and     CAST(coi."DEFFECDATE" AS DATE) <= CAST(PRE."DEFFECDATE" AS DATE)
-                                                                                                        and     (coi."DNULLDATE" is null or CAST(coi."DNULLDATE" AS DATE) > CAST(PRE."DEFFECDATE" AS DATE))),100)/100) VMTCOMMD,
-                                                                rea.ndet_code KRCTPCBT,
-                                                                coalesce(rea.rei_npremium,0) *
-                                                                                (coalesce((	select 	"NSHARE"
-                                                                                                        from	usvtimg01."COINSURAN" coi
-                                                                                                        where	coi."SCERTYPE" = pre."SCERTYPE"
-                                                                                                        and     coi."NBRANCH" = pre."NBRANCH"
-                                                                                                        and     coi."NPRODUCT" = pre."NPRODUCT"
-                                                                                                        and     coi."NPOLICY" = pre."NPOLICY"
-                                                                                                        and 	coi."NCOMPANY" = 1
-                                                                                                        and     CAST(coi."DEFFECDATE" AS DATE) <= CAST(PRE."DEFFECDATE" AS DATE)
-                                                                                                        and     (coi."DNULLDATE" is null or CAST(coi."DNULLDATE" AS DATE) > CAST(PRE."DEFFECDATE" AS DATE))),100)/100) VMTRESG,
-                                                                rea.rei_ncompany DCODRSG,
-                                                                par.cia DCOMPA,
-                                                                '' DMARCA, --excluido
-                                                                '' DCDCORR --excluido
+                                                        select	        'D' AS INDDETREC,
+                                                                        'RBRSGRP' AS TABLAIFRS17,
+                                                                        pre."NRECEIPT" KRBRECPR,
+                                                                        '' DORDRSG, --excluido
+                                                                        '' DTPREG, --excluido
+                                                                        '' TIOCPROC, --excluido
+                                                                        cast(rea.dcompdate as date) TIOCFRM,
+                                                                        '' TIOCTO, --excluido
+                                                                        'PVG' KGIORIGM,
+                                                                        rea.rei_number DTRATADO,
+                                                                        coalesce(rea.porc_capital,0) * 100 VTXCAPIT,
+                                                                        '' VTXPREM, --descartado
+                                                                        coalesce(rea.rei_commision,0) VTXCOMMD,
+                                                                        coalesce((	select	max(case	when	dp0."SADDSUINI" in ('1', '3')
+                                                                                                                                        then	coalesce(dp0."NCAPITAL", 0) 
+                                                                                                                                        else	0 end)
+                                                                                                from	usvtimg01."DETAIL_PRE" dp0
+                                                                                                where	dp0."NRECEIPT" = pre."NRECEIPT"
+                                                                                                and		dp0."NDIGIT" = pre."NDIGIT"
+                                                                                                and		dp0."STYPE_DETAI" in ('1','2','4','6')
+                                                                                                and		dp0."NBILL_ITEM" not in (4,5,9,97)
+                                                                                                and		dp0."NDET_CODE" =rea.ndet_code),0) VMTCAPIT,
+                                                                        coalesce((	select	sum(coalesce(dp0."NPREMIUM", 0) )
+                                                                                                from	usvtimg01."DETAIL_PRE" dp0
+                                                                                                where	dp0."NRECEIPT" = pre."NRECEIPT"
+                                                                                                and		dp0."NDIGIT" = pre."NDIGIT"
+                                                                                                and		dp0."STYPE_DETAI" in ('1','2','4','6')
+                                                                                                and		dp0."NBILL_ITEM" not in (4,5,9,97)
+                                                                                                and		dp0."NDET_CODE" =rea.ndet_code),0) VMTPREM,
+                                                                        coalesce(rea.rei_commision,0) * 
+                                                                                        (coalesce((	select 	"NSHARE"
+                                                                                                                from	usvtimg01."COINSURAN" coi
+                                                                                                                where	coi."SCERTYPE" = pre."SCERTYPE"
+                                                                                                                and     coi."NBRANCH" = pre."NBRANCH"
+                                                                                                                and     coi."NPRODUCT" = pre."NPRODUCT"
+                                                                                                                and     coi."NPOLICY" = pre."NPOLICY"
+                                                                                                                and 	coi."NCOMPANY" = 1
+                                                                                                                and     CAST(coi."DEFFECDATE" AS DATE) <= CAST(PRE."DEFFECDATE" AS DATE)
+                                                                                                                and     (coi."DNULLDATE" is null or CAST(coi."DNULLDATE" AS DATE) > CAST(PRE."DEFFECDATE" AS DATE))),100)/100) VMTCOMMD,
+                                                                        rea.ndet_code KRCTPCBT,
+                                                                        coalesce(rea.rei_npremium,0) *
+                                                                                        (coalesce((	select 	"NSHARE"
+                                                                                                                from	usvtimg01."COINSURAN" coi
+                                                                                                                where	coi."SCERTYPE" = pre."SCERTYPE"
+                                                                                                                and     coi."NBRANCH" = pre."NBRANCH"
+                                                                                                                and     coi."NPRODUCT" = pre."NPRODUCT"
+                                                                                                                and     coi."NPOLICY" = pre."NPOLICY"
+                                                                                                                and 	coi."NCOMPANY" = 1
+                                                                                                                and     CAST(coi."DEFFECDATE" AS DATE) <= CAST(PRE."DEFFECDATE" AS DATE)
+                                                                                                                and     (coi."DNULLDATE" is null or CAST(coi."DNULLDATE" AS DATE) > CAST(PRE."DEFFECDATE" AS DATE))),100)/100) VMTRESG,
+                                                                        rea.rei_ncompany DCODRSG,
+                                                                        'LPG' DCOMPA,
+                                                                        '' DMARCA, --excluido
+                                                                        '' DCDCORR --excluido
                                                         from 	(	select	dpr.pre_id,
                                                                                                 dpr.npremium_100,
                                                                                                 dpr.ndet_code,
@@ -447,6 +447,7 @@ def get_data(glue_context, connection):
                                                                                                                                                         then	pcr."NCOMPANY"  --tabla contrmaster no existe en vt
                                                                                                                                                         else	rei."NCOMPANY" end end
                                                                                                                 else	1 end rei_ncompany,
+                                                                                                max(rei."DCOMPDATE") dcompdate,
                                                                                                 coalesce((sum(coalesce(rei."NCAPITAL", 0)) /
                                                                                                                         nullif(sum(coalesce((	select	sum(case	when	dp0."SADDSUINI" in ('1', '3')
                                                                                                                                                                                                                 then	coalesce(dp0."NCAPITAL", 0) 
@@ -549,7 +550,7 @@ def get_data(glue_context, connection):
                                                                                                                                                 (	select 	1
                                                                                                                                                         from	usvtimg01."PREMIUM_CE" pr0
                                                                                                                                                         where 	pr0."NRECEIPT" = PRE."NRECEIPT")
-                                                                                                                                --and		PRE."NDIGIT" = 0 --and pre."NBRANCH" = 57 --and pre."NRECEIPT" = 218557555
+                                                                                                                                and pre."NBRANCH" between 3 and 4 --57 --and pre."NRECEIPT" = 218557555
                                                                                                                                 and		pre."NDIGIT" = 0
                                                                                                                                 --and pre."NBRANCH" = 57 and pre."NRECEIPT" = 218557555
                                                                                                                                 AND 	CAST(PRE."DEFFECDATE" AS DATE) <= '12/31/2020'
@@ -621,149 +622,15 @@ def get_data(glue_context, connection):
                                                                                                 AND     cast(PCR."DSTARTDATE" as date) <= cast(CNM."DSTARTDATE" as date)
                                                                                                 AND     (PCR."DNULLDATE" IS NULL OR cast(PCR."DNULLDATE" as date) > cast(CNM."DSTARTDATE" as date))
                                                                                                 AND     PCR."NTYPE" = CNM."NTYPE"
-                                                                                group 	by 1,2,3,4,5 ) rea
+                                                                                group 	by 1,2,3,4,5) rea
                                                         join	usvtimg01."PREMIUM" pre on pre.ctid = rea.pre_id
-                                                        join 	(select 'LPG' cia, '-' sep) par on 1 = 1
-                                                        --5m21s (todos los ramos) EN DESARROLLO reaseguro
-                                                        --11.218 desarrollo 3  
-                                                 ) AS TMP        
+                                                        --5m21s (todos los ramos) EN DESARROLLO
+                                                 ) AS TMP            
                                                  '''
+
   DF_LPG_RBRSGRP_VTIME_SIN_REC_CON_REASEGURO = glue_context.read.format('jdbc').options(**connection).option("fetchsize",10000).option("dbtable",L_RBRSGRP_VTIME_LPG_SIN_REC_CON_REASEGURO).load()
             
-  L_RBRSGRP_VTIME_LPG_CON_REC_SIN_REASEGURO = '''
-                                                (
-                                                  select	'D' as INDDETREC,
-                                                                'RBRSGRP' as TABLAIFRS17,
-                                                                        pre."NRECEIPT" KRBRECPR,
-                                                                        '' DORDRSG, --excluido
-                                                                        '' DTPREG, --excluido
-                                                                        '' TIOCPROC, --excluido
-                                                                        '' TIOCFRM, --excluido
-                                                                        '' TIOCTO, --excluido
-                                                                        'PVG' KGIORIGM, --excluido
-                                                                        '' DTRATADO,
-                                                                        0 VTXCAPIT,
-                                                                        '' VTXPREM, --descartado
-                                                                        0 VTXCOMMD,
-                                                                        coalesce((	select	max(case	when	dp0."SADDSUINI" in ('1', '3')
-                                                                                                                                        then	coalesce(dp0."NCAPITAL", 0) 
-                                                                                                                                        else	0 end)
-                                                                                                from	usvtimg01."DETAIL_PRE" dp0
-                                                                                                where	dp0."NRECEIPT" = pre."NRECEIPT"
-                                                                                                and		dp0."NDIGIT" = pre."NDIGIT"
-                                                                                                and		dp0."STYPE_DETAI" in ('1','2','4','6')
-                                                                                                and		dp0."NBILL_ITEM" not in (4,5,9,97)
-                                                                                                and		dp0."NDET_CODE" =rea.ndet_code),0) VMTCAPIT,
-                                                                        coalesce((	select	sum(coalesce(dp0."NPREMIUM", 0) )
-                                                                                                from	usvtimg01."DETAIL_PRE" dp0
-                                                                                                where	dp0."NRECEIPT" = pre."NRECEIPT"
-                                                                                                and		dp0."NDIGIT" = pre."NDIGIT"
-                                                                                                and		dp0."STYPE_DETAI" in ('1','2','4','6')
-                                                                                                and		dp0."NBILL_ITEM" not in (4,5,9,97)
-                                                                                                and		dp0."NDET_CODE" =rea.ndet_code),0) VMTPREM,
-                                                                        0 VMTCOMMD, --no aplica
-                                                                        rea.ndet_code KRCTPCBT,
-                                                                        rea.npremium_100  * 
-                                                                                        (coalesce((	select 	"NSHARE"
-                                                                                                                from	usvtimg01."COINSURAN" coi
-                                                                                                                where	coi."SCERTYPE" = pre."SCERTYPE"
-                                                                                                                and     coi."NBRANCH" = pre."NBRANCH"
-                                                                                                                and     coi."NPRODUCT" = pre."NPRODUCT"
-                                                                                                                and     coi."NPOLICY" = pre."NPOLICY"
-                                                                                                                and 	coi."NCOMPANY" = 1
-                                                                                                                and     CAST(coi."DEFFECDATE" AS DATE) <= CAST(PRE."DEFFECDATE" AS DATE)
-                                                                                                                and     (coi."DNULLDATE" is null or CAST(coi."DNULLDATE" AS DATE) > CAST(PRE."DEFFECDATE" AS DATE))),100)/100) VMTRESG, --coaseguro sobre el 100% de retenci�n
-                                                                        1 DCODRSG, --LP el �nico en este caso
-                                                                        par.cia DCOMPA,
-                                                                        '' DMARCA, --excluido
-                                                                        '' DCDCORR --excluido
-                                                        from	(	select 	pre.ctid pre_id,
-                                                                                                dpr."NDET_CODE" ndet_code,
-                                                                                                sum(coalesce(DPR."NCAPITAL" * case when dpr."SADDSUINI" in ('1','3') then 1 else 0 end,0)) dpr_cap,
-                                                                                                sum(coalesce(case when DPR."STYPE_DETAI" in ('1','2','4','6') then dpr."NPREMIUM" else 0 end,0)) dpr_con,
-                                                                                                sum(coalesce(DPR."NCOMMISION",0)) dpr_com,
-                                                                                                sum(coalesce(dpr."NPREMIUM",0)) npremium_100
-                                                                                from 	(	select 	distinct pre.ctid pre_id
-                                                                                                        from	usvtimg01."PREMIUM" pre
-                                                                                                        join	usvtimg01."POLICY" pol
-                                                                                                                        on		pol."NBRANCH" = pre."NBRANCH"
-                                                                                                                        and		pol."NPOLICY" = pre."NPOLICY"
-                                                                                                                        and		pol."NPRODUCT" = pre."NPRODUCT"
-                                                                                                        join 	usvtimg01."PREMIUM_CE" prc
-                                                                                                                        on		prc."SCERTYPE" = pre."SCERTYPE"
-                                                                                                                        and		prc."NBRANCH" = pre."NBRANCH"
-                                                                                                                        and		prc."NPRODUCT" = pre."NPRODUCT"
-                                                                                                                        and		prc."NPOLICY" = pre."NPOLICY"
-                                                                                                                        and		prc."NRECEIPT" = PRE."NRECEIPT" 
-                                                                                                                        and 	prc."NCERTIF" is not null
-                                                                                                                        and		prc."STYPE_DETAI" in ('1','2','4','6')
-                                                                                                                        and		prc."NBILL_ITEM" not in (4,5,9,97)
-                                                                                                                        and 	prc."NDIGIT" = PRE."NDIGIT"
-                                                                                                                        and		0 =
-                                                                                                                                        case
-                                                                                                                                        when	NOT ("SPOLITYPE" = '2' AND pre."NBRANCH" = 57 AND pre."NPRODUCT" = 1)
-                                                                                                                                        then	case	when	EXISTS
-                                                                                                                                                                                        (	SELECT  1
-                                                                                                                                                                                                FROM	usvtimg01."REINSURAN" REI
-                                                                                                                                                                                                WHERE	REI."SCERTYPE" = pre."SCERTYPE" 
-                                                                                                                                                                                                AND     REI."NBRANCH" = pre."NBRANCH"
-                                                                                                                                                                                                and		REI."NPRODUCT" =pre."NPRODUCT" 
-                                                                                                                                                                                                AND 	REI."NPOLICY" = pre."NPOLICY"
-                                                                                                                                                                                                and		REI."NCERTIF" = case when "SPOLITYPE" = '3' then 0 else prc."NCERTIF"end
-                                                                                                                                                                                                and		REI."NMODULEC" = prc."NMODULEC" AND REI."NBRANCH_REI" = prc."NBRANCH_REI"
-                                                                                                                                                                                                and		CAST(REI."DEFFECDATE" as DATE) <= CAST(pre."DEFFECDATE" as DATE)
-                                                                                                                                                                                                and		(REI."DNULLDATE" IS NULL OR CAST(REI."DNULLDATE" as DATE) > CAST(pre."DEFFECDATE" as DATE)))
-                                                                                                                                                                        then	case	when	"SPOLITYPE" = '3'
-                                                                                                                                                                        then	2
-                                                                                                                                                                        else	1 end
-                                                                                                                                                                        else 	0 end 
-                                                                                                                                        when	("SPOLITYPE" = '2' AND pre."NBRANCH" = 57 AND pre."NPRODUCT" = 1)
-                                                                                                                                        then 	case	when	EXISTS
-                                                                                                                                                                                        (	SELECT	1
-                                                                                                                                                                                                FROM	usvtimg01."REINSURAN" REI
-                                                                                                                                                                                                WHERE	REI."SCERTYPE" = pre."SCERTYPE" 
-                                                                                                                                                                                                AND 	REI."NBRANCH" = pre."NBRANCH"
-                                                                                                                                                                                                AND		REI."NPRODUCT" =pre."NPRODUCT" 
-                                                                                                                                                                                                AND 	REI."NPOLICY" = pre."NPOLICY"
-                                                                                                                                                                                                AND		REI."NCERTIF" = coalesce(prc."NCERTIF",coalesce(pre."NCERTIF",0))
-                                                                                                                                                                                                AND		REI."NMODULEC" = prc."NMODULEC" 
-                                                                                                                                                                                                AND 	REI."NBRANCH_REI" = prc."NBRANCH_REI"
-                                                                                                                                                                                                AND		cast(REI."DEFFECDATE" as DATE) <= CAST(pre."DEFFECDATE" as DATE)
-                                                                                                                                                                                                AND		(REI."DNULLDATE" IS NULL OR CAST(REI."DNULLDATE" as DATE) > CAST(pre."DEFFECDATE" as DATE)))
-                                                                                                                                                                        then    1
-                                                                                                                                                                        else 	case 	when	EXISTS
-                                                                                                                                                                                                                        (   SELECT  1
-                                                                                                                                                                                                                                from	usvtimg01."REINSURAN" REI
-                                                                                                                                                                                                                                where	REI."SCERTYPE" = pre."SCERTYPE" AND REI."NBRANCH" = pre."NBRANCH"
-                                                                                                                                                                                                                                and		REI."NPRODUCT" = pre."NPRODUCT" AND REI."NPOLICY" = pre."NPOLICY"
-                                                                                                                                                                                                                                and		REI."NCERTIF" = 0 AND  REI."NMODULEC" = prc."NMODULEC"
-                                                                                                                                                                                                                                and		REI."NBRANCH_REI" = prc."NBRANCH_REI"
-                                                                                                                                                                                                                                and		cast(REI."DEFFECDATE" as DATE) <= CAST(pre."DEFFECDATE" as DATE)
-                                                                                                                                                                                                                                and		(REI."DNULLDATE" IS NULL OR CAST(REI."DNULLDATE" as DATE) > CAST(pre."DEFFECDATE" as DATE)))
-                                                                                                                                                                THEN    2
-                                                                                                                                                                ELSE    0 END END
-                                                                                                                                ELSE    0 END
-                                                                                                        WHERE 	PRE."NDIGIT" = 0 
-                                                                                                        AND 	CAST(PRE."DEFFECDATE" AS DATE) <= '12/31/2021'
-                                                                                                        AND 	(PRE."DEXPIRDAT" IS NULL OR CAST(PRE."DEXPIRDAT" AS DATE) >= '12/31/2021')
-                                                                                                        AND 	(PRE."DNULLDATE" IS NULL OR CAST(PRE."DNULLDATE" AS DATE) > '12/31/2021')
-                                                                                                        AND 	PRE."SSTATUSVA" NOT IN ('2','3') ) pr0
-                                                                                join	usvtimg01."PREMIUM" pre on pre.ctid = pr0.pre_id
-                                                                                join 	usvtimg01."DETAIL_PRE" dpr
-                                                                                                on		dpr."NRECEIPT" = PRE."NRECEIPT" 
-                                                                                                and 	dpr."NDIGIT" = PRE."NDIGIT"
-                                                                                                and		dpr."STYPE_DETAI" in ('1','2','4','6')
-                                                                                                and		dpr."NBILL_ITEM" not in (4,5,9,97)
-                                                                                group 	by 1,2 ) rea
-                                                        join	usvtimg01."PREMIUM" pre on pre.ctid = rea.pre_id
-                                                        join 	(select 'LPG' cia, '-' sep) par on 1 = 1
-                                                        --11m23s (todos los ramos) CON PRC SIN REASEGURO (Desarrollo)
-                                                        --48.351s (todos los ramos) CON PRC SIN REASEGURO (Producci�n)             
-                                                )AS TMP
-                                                '''
-  DF_LPG_RBRSGRP_VTIME_CON_REC_SIN_REASEGURO = glue_context.read.format('jdbc').options(**connection).option("fetchsize",10000).option("dbtable",L_RBRSGRP_VTIME_LPG_CON_REC_SIN_REASEGURO).load()
-  
-  DF_LPG_RBRSGRP_VTIME = DF_LPG_RBRSGRP_VTIME_SIN_REC_SIN_REASEGURO.union(DF_LPG_RBRSGRP_VTIME_SIN_REC_CON_REASEGURO).union(DF_LPG_RBRSGRP_VTIME_CON_REC_SIN_REASEGURO)
+  DF_LPG_RBRSGRP_VTIME = DF_LPG_RBRSGRP_VTIME_SIN_REC_SIN_REASEGURO.union(DF_LPG_RBRSGRP_VTIME_SIN_REC_CON_REASEGURO)
 
   DF_RBRSGRP = DF_LPG_RBRSGRP_INSUNIX.union(DF_LPG_RBRSGRP_VTIME)
 
