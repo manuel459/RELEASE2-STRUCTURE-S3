@@ -126,8 +126,8 @@ try:
             elif tipo_carga == 'HIS':
                 script_key = config['script_historico']
 
-                #OBTENER SCRIPTS ALMACENADOS EN S3
-                structure = execute_script(l_dic_config['GENERAL']['bucket']['artifact'], script_key)
+            #OBTENER SCRIPTS ALMACENADOS EN S3
+            structure = execute_script(l_dic_config['GENERAL']['bucket']['artifact'], script_key)
             
             #VALIDAR EL TIPO DE CARGA : INI = INICIAL | INC = INCREMENTAL
             if tipo_carga == 'INI':

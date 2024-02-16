@@ -19,19 +19,13 @@ spark = glueContext.spark_session
 job = Job(glueContext)
 job.init(args["JOB_NAME"], args)
 s3r = boto3.resource('s3')
+glue_client = boto3.client('glue')
 cliente_dynamodb = boto3.client("dynamodb")
 ssm = boto3.client('ssm', 'us-east-1')
+id = 'REASEGUROS'
+nombre_error = '-'
 
-def extract_config(l_configuraciones, nombre_tabla):
-    #CREAR UN DICCIONARIO PARA ESTABLECER LAS CONFIGURACIONES
-    l_dic_config = {}
-    
-    #Extraer las CONFIGURACIONES NECESARIAS segun la lista
-    for dominio in l_configuraciones:
-        config = cliente_dynamodb.get_item(TableName=nombre_tabla, Key={'NOMBRE_DOMINIO':{'S':str(dominio)}})
-        l_dic_config[config['Item']['NOMBRE_DOMINIO']['S']] = json.loads(config['Item']['ESTRUCTURA']['S'])
-    return l_dic_config
-
+#FUNCIÓN PARA EJECUTAR UN SCRIPT GUARDADO EN UN BUCKET S3
 def execute_script(name_bucket, name_object):
     path_temp = 'fileTemp.py'
     s3r.Object(name_bucket, name_object).download_file(path_temp)
@@ -42,6 +36,7 @@ def execute_script(name_bucket, name_object):
     spec.loader.exec_module(structure)
     return structure
 
+#EXTRACCION DE LAS CONFIGURACIONES PARA LOS AMBIENTES
 def get_ssm():
         parameter_name = "/configuracion/variable/entorno"
         response = ssm.get_parameter(
@@ -50,23 +45,72 @@ def get_ssm():
             )
         return response['Parameter']['Value']
 
+#EXTRACCION DE LAS CONFIGURACIONES Y RETORNARLAS EN UN DICCIONARIO DE DATOS
+def extract_config(l_configuraciones, nombre_tabla):
+    #CREAR UN DICCIONARIO PARA ESTABLECER LAS CONFIGURACIONES
+    l_dic_config = {}
+    
+    #Extraer las CONFIGURACIONES NECESARIAS segun la lista
+    for dominio in l_configuraciones:
+        config = cliente_dynamodb.get_item(TableName=nombre_tabla, Key={'NOMBRE_DOMINIO': {'S': str(dominio['DOMINIO'])}})
+        l_dic_config[config['Item']['NOMBRE_DOMINIO']['S']] = json.loads(config['Item'][dominio['COLUMNA']]['S'])
+       
+    return l_dic_config
+
+
 try:
     #-------------------------------------#
     #   EXTRAER VARIABLES DE ENTORNO
     #-------------------------------------#
     env = get_ssm()
+
+    #-------------------------------------#
+    #   OBTENER LA FECHA INICIO DEL JOB
+    #-------------------------------------#
+    job_name = f'fndtifrs17gluerecibos{env}02_test'
+    
+    response = glue_client.get_job_runs(JobName=job_name, MaxResults=1)
+    
+    last_run = response['JobRuns'][0]
+
+    last_start_time = last_run['StartedOn']
     #-------------------------------------#
     #   EXTRAER CONFIGURACIONES DYNAMODB
     #-------------------------------------#
     
     #CREAR UNA LISTA CON TODAS LAS CONFIGURACIONES NECESARIAS SEGUN EL DOMINIO
-    l_configuraciones = ["RECIBOS","GENERAL"]
+    l_configuraciones = [{ "DOMINIO": "GENERAL" , "COLUMNA": "ESTRUCTURA" }, { "DOMINIO": "RECIBOS" , "COLUMNA": "NEGOCIO" }]
     
     #NOMBRE DE LA TABLA DE CONFIGURACIONES
-    nombre_tabla = f'fndtifrs17dydb{env}01'
+    #nombre_tabla = f'fndtifrs17dydb{env}01'
+    nombre_tabla = f'TablaTestIFRS17'
 
     #EXTRAER CONFIGURACIONES
     l_dic_config = extract_config(l_configuraciones, nombre_tabla)
+
+    #--------------------------------------#
+    #  CONTROL DE EJECUCION DYNAMODB
+    #--------------------------------------#
+    
+    #EXTRAR LA FUNCION DE LA TRAZABILIDAD 
+    trazabilidad = execute_script(l_dic_config['GENERAL']['bucket']['artifact'],l_dic_config['GENERAL']['funciones']['log'])
+    
+    #EXTRAR EL TIPO DE CARGA DEL DYNAMODB
+    tipo_carga = l_dic_config['GENERAL']['tipoCarga']
+
+    #------------------------------------------------------------------------#
+    #  EJECUTAR LA TRAZABILIDAD
+    #------------------------------------------------------------------------#
+    #  Parametros
+    #  cliente_dynamodb: cliente,
+    #  id: nombre del dominio,
+    #  step: codigo 1 = Inicio del proceso - codigo 2 = Fin del proceso
+    #  number: Job Actual(Lectura = 0, Regla de negocio = 1, Estructura = 2) 
+    #  nombre_error : Captura el Error
+    #  last_start_time : Captura la fecha del proceso
+    #  tipo_carga : Tipo de carga INCREMENTAL O INICIAL
+    #------------------------------------------------------------------------#
+    trazabilidad.update_log(cliente_dynamodb, id, 1, 2, nombre_error,last_start_time,tipo_carga)
     
     #----------------------------------------------------------#
     #   EJECUTAR FUNCION QUE ESTRUCTURA LOS FILES IFRS17 A TXT
@@ -75,8 +119,7 @@ try:
     structure = execute_script(l_dic_config['GENERAL']['bucket']['artifact'], l_dic_config['GENERAL']['funciones']['structure'])
     
     #LLAMAR Y LANZAR LOS PARAMETROS A LA FUNCION generate_files
-    domain = 'RECIBOS'
-    structure.generate_files(l_dic_config, domain)
+    structure.generate_files(l_dic_config, id)
  
 except Exception as e:
     # Log the error for debugging purposes

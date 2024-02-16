@@ -116,9 +116,6 @@ try:
     #OBTENER LAS FUNCIONES ALMACENADAS EN S3
     structure = execute_script(l_dic_config['GENERAL']['bucket']['artifact'], l_dic_config['GENERAL']['funciones']['structure'])
     
-    print(l_dic_config)
-    print(l_dic_config['GENERAL']['funciones']['structure'])
-    
     #LLAMAR Y LANZAR LOS PARAMETROS A LA FUNCION generate_files
     structure.generate_files(l_dic_config, id)
     
