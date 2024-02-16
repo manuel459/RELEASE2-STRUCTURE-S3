@@ -5,6 +5,7 @@
         "path":"tmp/regla_negocio/Reaseguros/RN-REASEGUROS-OCCDRESS.parquet",
         "script_inicial":"lib/fndtifrs17gluereasegurosd01/regla_negocio/inicial/fndtifrs17gluereasegurosd01occdress.py",
         "script_incrimental":"lib/fndtifrs17gluereasegurosd01/regla_negocio/incremental/fndtifrs17gluereasegurosd01occdress.py",
+        "script_historico":"lib/fndtifrs17gluereasegurosd01/regla_negocio/historico/fndtifrs17gluereasegurosd01occdress.py",
         "flag":1,
         "tablas" : [
           { 
@@ -60,6 +61,7 @@
          "path":"tmp/regla_negocio/Reaseguros/RN-REASEGUROS-OBRESSEGURA.parquet",
          "script_inicial":"lib/fndtifrs17gluereasegurosd01/regla_negocio/inicial/fndtifrs17gluereasegurosd01obressegura.py",
          "script_incrimental":"lib/fndtifrs17gluereasegurosd01/regla_negocio/incremental/fndtifrs17gluereasegurosd01obressegura.py",
+         "script_historico":"lib/fndtifrs17gluereasegurosd01/regla_negocio/historico/fndtifrs17gluereasegurosd01obressegura.py",
          "flag":1,
          "tablas" : [
            { 
@@ -127,6 +129,7 @@
          "path":"tmp/regla_negocio/Reaseguros/RN-REASEGUROS-OBSTRATADOS.parquet",
          "script_inicial":"lib/fndtifrs17gluereasegurosd01/regla_negocio/inicial/fndtifrs17gluereasegurosd01obstratados.py",
          "script_incrimental":"lib/fndtifrs17gluereasegurosd01/regla_negocio/incremental/fndtifrs17gluereasegurosd01obstratados.py",
+         "script_historico":"lib/fndtifrs17gluereasegurosd01/regla_negocio/historico/fndtifrs17gluereasegurosd01obstratados.py",
          "flag":1,
          "tablas" : [
            { 
