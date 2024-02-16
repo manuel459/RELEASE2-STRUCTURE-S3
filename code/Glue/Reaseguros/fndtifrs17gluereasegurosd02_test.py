@@ -82,9 +82,6 @@ try:
     #NOMBRE DE LA TABLA DE CONFIGURACIONES
     #nombre_tabla = f'fndtifrs17dydb{env}01'
     nombre_tabla = f'TablaTestIFRS17'
-    
-    #CREAR UN DICCIONARIO PARA ESTABLECER LAS CONFIGURACIONES
-    l_dic_config = {}
 
     #EXTRAER CONFIGURACIONES
     l_dic_config = extract_config(l_configuraciones, nombre_tabla)
@@ -120,24 +117,27 @@ try:
     
     for config in l_dic_config['REASEGUROS']['path_file_tmp']:
         if config['flag'] == 1:
+
+            #VALIDAR EL TIPO DE CARGA : INI = INICIAL | INC = INCREMENTAL
+            if tipo_carga == 'INI':
+                script_key = config['script_inicial']
+            elif tipo_carga == 'INC':
+                script_key = config['script_incremental']
+            elif tipo_carga == 'HIS':
+                script_key = config['script_historico']
+
+                #OBTENER SCRIPTS ALMACENADOS EN S3
+                structure = execute_script(l_dic_config['GENERAL']['bucket']['artifact'], script_key)
             
             #VALIDAR EL TIPO DE CARGA : INI = INICIAL | INC = INCREMENTAL
             if tipo_carga == 'INI':
-                #OBTENER SCRIPTS ALMACENADOS EN S3
-                structure = execute_script(l_dic_config['GENERAL']['bucket']['artifact'], config['script_inicial'])
-
                 #LLAMAR Y LANZAR LOS PARAMETROS A LA FUNCION getData
                 L_DF_REASEGUROS = structure.get_data(glueContext, l_dic_config['GENERAL']['bucket']['artifact'] ,config['tablas'])
             
-            elif tipo_carga == 'INC':
-                #OBTENER SCRIPTS ALMACENADOS EN S3
-                structure = execute_script(l_dic_config['GENERAL']['bucket']['artifact'], config['script_incremental'])
-
+            elif tipo_carga in ['INC', 'HIS']:
                 #LLAMAR Y LANZAR LOS PARAMETROS A LA FUNCION getData
                 L_DF_REASEGUROS = structure.get_data(glueContext, l_dic_config['GENERAL']['bucket']['artifact'] ,config['tablas'], l_dic_config['GENERAL']['fechas']['dFecha_Inicio'], l_dic_config['GENERAL']['fechas']['dFecha_Fin'])
             
-            
-        
             #Trasformar a bit escrito en formato txt
             L_BUFFER_REASEGUROS = io.BytesIO()
             L_DF_REASEGUROS.toPandas().to_parquet(L_BUFFER_REASEGUROS, index=False)
