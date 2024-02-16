@@ -1,0 +1,22 @@
+{
+    "path_origen" :  "tmp/regla_negocio/Reaseguros",
+   "path_file_txt" : [
+                      {"sistema_origen": "PIG", 
+                       "path": "Dimensiones/Actual/Reaseguros/Q_ISXPPE-R-PRD-REASEGUROS"
+                      },
+                      {"sistema_origen": "PIV", 
+                       "path": "Dimensiones/Actual/Reaseguros/Q_ISXPPE-V-PRD-REASEGUROS"
+                      },
+                      {"sistema_origen": "PNV", 
+                       "path": "Dimensiones/Actual/Reaseguros/Q_INSPPE-V-PRD-REASEGUROS"
+                      },
+                      {"sistema_origen": "PVG",
+                       "path": "Dimensiones/Actual/Reaseguros/Q_VTMPPE-R-PRD-REASEGUROS"
+                      },
+                      {"sistema_origen": "PVV", 
+                       "path": "Dimensiones/Actual/Reaseguros/Q_VTMPPE-V-PRD-REASEGUROS"
+                      }
+                     ]
+}
+
+

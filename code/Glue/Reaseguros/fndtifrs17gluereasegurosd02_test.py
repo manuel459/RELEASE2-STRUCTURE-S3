@@ -22,8 +22,6 @@ cliente_dynamodb = boto3.client("dynamodb")
 ssm = boto3.client('ssm', 'us-east-1')
 id = 'REASEGUROS'
 nombre_error = '-'
-job_name = 'fndtifrs17gluereasegurod02_test'
-response = glue_client.get_job_runs(JobName=job_name, MaxResults=1)
 
 #FUNCIÓN PARA EJECUTAR UN SCRIPT GUARDADO EN UN BUCKET S3
 def execute_script(name_bucket, name_object):
@@ -35,7 +33,16 @@ def execute_script(name_bucket, name_object):
     #lee mi script
     spec.loader.exec_module(structure)
     return structure
-    
+
+#EXTRACCION DE LAS CONFIGURACIONES PARA LOS AMBIENTES
+def get_ssm():
+        parameter_name = "/configuracion/variable/entorno"
+        response = ssm.get_parameter(
+                Name=parameter_name,
+                WithDecryption=True  # Descifra el valor si es un SecureString
+            )
+        return response['Parameter']['Value']
+
 #EXTRACCION DE LAS CONFIGURACIONES Y RETORNARLAS EN UN DICCIONARIO DE DATOS
 def extract_config(l_configuraciones, nombre_tabla):
     #CREAR UN DICCIONARIO PARA ESTABLECER LAS CONFIGURACIONES
@@ -48,28 +55,22 @@ def extract_config(l_configuraciones, nombre_tabla):
        
     return l_dic_config
 
-last_run = response['JobRuns'][0]
-print("ID-GLUE")
-print(last_run)
-
-last_start_time = last_run['StartedOn']
-
-print(f"Last Start Time: {last_start_time}")
-
-#EXTRACCION DE LAS CONFIGURACIONES PARA LOS AMBIENTES 
-def get_ssm():
-        parameter_name = "/configuracion/variable/entorno"
-        response = ssm.get_parameter(
-                Name=parameter_name,
-                WithDecryption=True  # Descifra el valor si es un SecureString
-            )
-        return response['Parameter']['Value']
-
 try:
     #-------------------------------------#
     #   EXTRAER VARIABLES DE ENTORNO
     #-------------------------------------#
     env = get_ssm()
+    
+    #-------------------------------------#
+    #   OBTENER LA FECHA INICIO DEL JOB
+    #-------------------------------------#
+    job_name = f'fndtifrs17gluereaseguros{env}02_test'
+    
+    response = glue_client.get_job_runs(JobName=job_name, MaxResults=1)
+    
+    last_run = response['JobRuns'][0]
+
+    last_start_time = last_run['StartedOn']
     
     #-------------------------------------#
     #   EXTRAER CONFIGURACIONES DYNAMODB
@@ -79,7 +80,7 @@ try:
     l_configuraciones = [{ "DOMINIO": "GENERAL" , "COLUMNA": "ESTRUCTURA" }, { "DOMINIO": "REASEGUROS" , "COLUMNA": "NEGOCIO" }]
     
     #NOMBRE DE LA TABLA DE CONFIGURACIONES
-    
+    #nombre_tabla = f'fndtifrs17dydb{env}01'
     nombre_tabla = f'TablaTestIFRS17'
     
     #CREAR UN DICCIONARIO PARA ESTABLECER LAS CONFIGURACIONES
@@ -99,47 +100,66 @@ try:
     #EXTRAR EL TIPO DE CARGA DEL DYNAMODB
     tipo_carga = l_dic_config['GENERAL']['tipoCarga']
     
-    #EJECUTAR LA TRAXABILIDAD
+    #------------------------------------------------------------------------#
+    #  EJECUTAR LA TRAZABILIDAD
+    #------------------------------------------------------------------------#
+    #  Parametros
+    #  cliente_dynamodb: cliente, 
+    #  id: nombre del dominio,
+    #  step: codigo 1 = Inicio del proceso - codigo 2 = Fin del proceso
+    #  number: Job Actual(Lectura = 0, Regla de negocio = 1, Estructura = 2) 
+    #  nombre_error : Captura el Error
+    #  last_start_time : Captura la fecha del proceso
+    #  tipo_carga : Tipo de carga INCREMENTAL O INICIAL
+    #------------------------------------------------------------------------#
     trazabilidad.update_log(cliente_dynamodb, id, 1,1, nombre_error,last_start_time,tipo_carga)
     
     #--------------------------------------------------#
-    #    EJECUCIÓN DEL GRUPO DE INFORMACIÓN PRODUCTOS
+    #    EJECUCIÓN DEL GRUPO DE INFORMACIÓN REASEGUROS
     #--------------------------------------------------#
     
     for config in l_dic_config['REASEGUROS']['path_file_tmp']:
         if config['flag'] == 1:
             
-            print(config['script'])
-            print(config['tablas'])
-            
-            #OBTENER SCRIPTS ALMACENADOS EN S3
-            structure = execute_script(l_dic_config['GENERAL']['bucket']['artifact'], config['script'])
+            #VALIDAR EL TIPO DE CARGA : INI = INICIAL | INC = INCREMENTAL
+            if tipo_carga == 'INI':
+                #OBTENER SCRIPTS ALMACENADOS EN S3
+                structure = execute_script(l_dic_config['GENERAL']['bucket']['artifact'], config['script_inicial'])
 
-            #LLAMAR Y LANZAR LOS PARAMETROS A LA FUNCION getData
-            L_DF_REASEGUROS = structure.get_data(glueContext, l_dic_config['GENERAL']['bucket']['artifact'] ,config['tablas'],l_dic_config['GENERAL']['fechas']['dFecha_Inicio'] , l_dic_config['GENERAL']['fechas']['dFecha_Fin'])
+                #LLAMAR Y LANZAR LOS PARAMETROS A LA FUNCION getData
+                L_DF_REASEGUROS = structure.get_data(glueContext, l_dic_config['GENERAL']['bucket']['artifact'] ,config['tablas'])
             
-            print(L_DF_REASEGUROS)
+            elif tipo_carga == 'INC':
+                #OBTENER SCRIPTS ALMACENADOS EN S3
+                structure = execute_script(l_dic_config['GENERAL']['bucket']['artifact'], config['script_incremental'])
+
+                #LLAMAR Y LANZAR LOS PARAMETROS A LA FUNCION getData
+                L_DF_REASEGUROS = structure.get_data(glueContext, l_dic_config['GENERAL']['bucket']['artifact'] ,config['tablas'], l_dic_config['GENERAL']['fechas']['dFecha_Inicio'], l_dic_config['GENERAL']['fechas']['dFecha_Fin'])
+            
+            
         
-            if L_DF_REASEGUROS is not None:
-                #Trasformar a bit escrito en formato txt
-                L_BUFFER_REASEGUROS = io.BytesIO()
-                L_DF_REASEGUROS.toPandas().to_parquet(L_BUFFER_REASEGUROS, index=False)
-                L_BUFFER_REASEGUROS.seek(0)
+            #Trasformar a bit escrito en formato txt
+            L_BUFFER_REASEGUROS = io.BytesIO()
+            L_DF_REASEGUROS.toPandas().to_parquet(L_BUFFER_REASEGUROS, index=False)
+            L_BUFFER_REASEGUROS.seek(0)
                 
-                # Escribir el objeto Parquet en S3
-                s3_client.put_object(
-                    Bucket = l_dic_config['GENERAL']['bucket']['artifact'],
-                    Key = config['path'],
-                    Body=L_BUFFER_REASEGUROS.read()
-                    )
+            # Escribir el objeto Parquet en S3
+            s3_client.put_object(
+                Bucket = l_dic_config['GENERAL']['bucket']['artifact'],
+                Key = config['path'],
+                Body=L_BUFFER_REASEGUROS.read()
+                )
     
-    #EJECUTAR LA TRAZABILIDAD CAPTURANDO LOS TIEMPOS
+    #------------------------------------------------------------------------#
+    # EJECUTAR LA TRAZABILIDAD
+    #------------------------------------------------------------------------#
     trazabilidad.update_log(cliente_dynamodb, id, 2,1,nombre_error, last_start_time,tipo_carga)
 
 except Exception as e:
     # Log the error for debugging purposes
-    print(f"Error: {str(e)}")
+    print(f"Error Glue de Estructura del Dominio de Reaseguros: {str(e)}")
     nombre_error = str(e)
     trazabilidad.update_log(cliente_dynamodb, id, 2,1,nombre_error, last_start_time,tipo_carga)
+    sys.exit(1)
 
 job.commit()
