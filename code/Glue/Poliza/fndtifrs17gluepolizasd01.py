@@ -131,12 +131,14 @@ try:
             
             #VALIDAR EL TIPO DE CARGA : INI = INICIAL | INC = INCREMENTAL
             if tipo_carga == 'INI':
-                #OBTENER SCRIPTS ALMACENADOS EN S3
-                structure = execute_script(l_dic_config['GENERAL']['bucket']['artifact'], config['script_inicial'])
-                
+                script_key = config['script_inicial']
             elif tipo_carga == 'INC':
-                #OBTENER SCRIPTS ALMACENADOS EN S3
-                structure = execute_script(l_dic_config['GENERAL']['bucket']['artifact'], config['script_incremental'])
+                script_key = config['script_incremental']
+            elif tipo_carga == 'HIS':
+                script_key = config['script_historico']
+            
+            #OBTENER SCRIPTS ALMACENADOS EN S3
+            structure = execute_script(l_dic_config['GENERAL']['bucket']['artifact'], script_key)
             
             #LLAMAR Y LANZAR LOS PARAMETROS A LA FUNCION getData
             L_DF_POLIZAS = structure.get_data(glueContext, connection, l_dic_config['GENERAL']['fechas']['dFecha_Inicio'], l_dic_config['GENERAL']['fechas']['dFecha_Fin'] )

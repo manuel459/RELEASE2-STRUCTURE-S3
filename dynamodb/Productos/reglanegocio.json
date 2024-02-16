@@ -5,6 +5,7 @@
          "path":"tmp/regla_negocio/Productos/RN-PRODUCT-ARPRSAP.parquet",
          "script_inicial":"lib/fndtifrs17glueproductosd01/regla_negocio/inicial/fndtifrs17glueproductosd01arprsap.py",
          "script_incremental":"lib/fndtifrs17glueproductosd01/regla_negocio/incremental/fndtifrs17glueproductosd01arprsap.py",
+         "script_historico":"lib/fndtifrs17glueproductosd01/regla_negocio/historico/fndtifrs17glueproductosd01arprsap.py",
          "flag":1,
          "tablas":[
             {
@@ -107,6 +108,7 @@
          "path":"tmp/regla_negocio/Productos/RN-PRODUCT-ABPRODT.parquet",
          "script_inicial":"lib/fndtifrs17glueproductosd01/regla_negocio/inicial/fndtifrs17glueproductosd01abprodt.py",
          "script_incremental":"lib/fndtifrs17glueproductosd01/regla_negocio/incremental/fndtifrs17glueproductosd01abprodt.py",
+         "script_historico":"lib/fndtifrs17glueproductosd01/regla_negocio/historico/fndtifrs17glueproductosd01abprodt.py",
          "flag":1,
          "tablas":[
             {
@@ -193,6 +195,7 @@
          "path":"tmp/regla_negocio/Productos/RN-PRODUCT-ABPRCOB.parquet",
          "script_inicial":"lib/fndtifrs17glueproductosd01/regla_negocio/inicial/fndtifrs17glueproductosd01abprcob.py",
          "script_incremental":"lib/fndtifrs17glueproductosd01/regla_negocio/incremental/fndtifrs17glueproductosd01abprcob.py",
+         "script_historico":"lib/fndtifrs17glueproductosd01/regla_negocio/historico/fndtifrs17glueproductosd01abprcob.py",
          "flag":1,
          "tablas":[
             {
