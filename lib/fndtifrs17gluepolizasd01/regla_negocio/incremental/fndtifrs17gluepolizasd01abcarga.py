@@ -235,83 +235,74 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
    print('USINSUG01 EXITOSO')
    
    l_polizas_insunix_vida = f'''
-                            (
-                              SELECT 
-                                'D' INDDETREC, 
-                                'ABCARGA' TABLAIFRS17, 
-                                '' PK, --PENDIENTE
-                                '' DTPREG, --NO
-                                '' TIOCPROC, --NO
-                                COALESCE(CAST(CAST(DX.EFFECDATE AS DATE) AS VARCHAR), '') TIOCFRM, --PENDIENTE
-                                '' TIOCTO, --NO
-                                'PIV' KGIORIGM, 
-                                COALESCE(DX.BRANCH, 0) || '-' || COALESCE(DX.PRODUCT, 0) || '-' || COALESCE(DX.POLICY,0) || '-' || COALESCE(DX.CERTIF,0) KABAPOL, --FK
-                                '' KABUNRIS, --VALOR VACIO
-                                /*
-                                DE ACUERDO A JAOS EL DATO SE PUDIERA OBTENER EN BASE A LA PRIMERA COVERTURA PERO LOS SISTEMAS 
-                                NO TIENEN ESA INFORMACION DE MANERA DIRECTA EN LA TABLA DE RECARGOS Y DESCUENTOS
-                                (
-                                  SELECT C.COVER FROM USINSUV01.COVER C 
-                                  WHERE C.CERTYPE = '2' 
-                                  AND C.BRANCH = DX.BRANCH 
-                                  AND C.POLICY = DX.POLICY
-                                  AND C.CERTIF = DX.CERTIF 
-                                  AND C.COVER = 1
-                                  AND C.EFFECDATE <= DX.EFFECDATE 
-                                  AND (C.NULLDATE IS NULL OR C.NULLDATE > DX.EFFECDATE) 
-                                ),*/
-                                '' KGCTPCBT, 
-                                '' KACCDFDO, --VALOR VACIO
-                                COALESCE(DX.TYPE, '') KACTPCAG, 
-                                COALESCE (DX.CODE, 0) KACCDCAG, 
-                                COALESCE (DX.AMOUNT, 0) VMTCARGA, 
-                                COALESCE (CAST(CAST(DX.EFFECDATE AS DATE) AS VARCHAR), '') TULTMALT, 
-                                '' DUSRUPD, --NO
-                                'LPV' DCOMPA, 
-                                '' DMARCA, --NO
-                                '' DINCPRM, 
-                                CASE WHEN (DX.AMOUNT != 0 AND DX.AMOUNT IS NOT NULL) AND (CAST(DX.PERCENT AS INTEGER)= 0 AND DX.PERCENT IS NULL) 
-                                THEN 'IMPORTE' ELSE 'PORCENTAJE' END KACTPVCG, 
-                                '' DDURACAO, 
-                                '' KACTPCBB --VALOR VACIO 
-                                FROM
-                                (
-                                    SELECT 
-                                    DX.EFFECDATE, 
-                                    DX.TYPE, 
-                                    DX.CODE, 
-                                    DX.AMOUNT, 
-                                    DX.PERCENT, 
-                                    P.BRANCH, 
-                                    P.PRODUCT, 
-                                    P.POLICY, 
-                                    CERT.CERTIF 
-                                    FROM USINSUV01.POLICY P 
-                                    LEFT JOIN USINSUV01.CERTIFICAT CERT 
-                                    ON CERT.USERCOMP = P.USERCOMP 
-                                    AND CERT.COMPANY = P.COMPANY 
-                                    AND CERT.CERTYPE = P.CERTYPE 
-                                    AND CERT.BRANCH = P.BRANCH 
-                                    AND CERT.POLICY = P.POLICY  
-                                    AND CERT.PRODUCT = P.PRODUCT
-                                    LEFT JOIN USINSUV01.DISC_XPREM 
-                                     DX 
-                                    ON DX.USERCOMP = P.USERCOMP 
-                                    AND DX.COMPANY = P.COMPANY 
-                                    AND DX.CERTYPE = P.CERTYPE 
-                                    AND DX.BRANCH = P.BRANCH 
-                                    AND DX.POLICY = P.POLICY 
-                                    AND DX.CERTIF = CERT.CERTIF 
-                                    AND DX.EFFECDATE <= (CASE WHEN P.POLITYPE = '1' THEN P.EFFECDATE ELSE CERT.EFFECDATE END) 
-                                    AND (DX.NULLDATE IS NULL OR DX.NULLDATE > (CASE WHEN P.POLITYPE = '1' THEN P.EFFECDATE ELSE CERT.EFFECDATE END))
-                                    WHERE P.CERTYPE  = '2' AND P.STATUS_POL NOT IN ('2','3') 
-                                    -- JAOS
-                                    AND (
-                                          (P.POLITYPE = '1' AND P.COMPDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}')
-                                        or 
-                                          (P.POLITYPE <> '1' AND  CERT.COMPDATE BETWEEN  '{p_fecha_inicio}' AND '{p_fecha_fin}' )
-                                        )
-                                )DX /*SE QUITO EL UNION HASTA AQUI */ 
+                            (                              
+                              SELECT
+                              'D' INDDETREC, 
+                              'ABCARGA' TABLAIFRS17, 
+                              '' PK, --PENDIENTE
+                              '' DTPREG, --NO
+                              '' TIOCPROC, --NO
+                              COALESCE(CAST(CAST(DX.EFFECDATE AS DATE) AS VARCHAR), '') TIOCFRM, --PENDIENTE
+                              '' TIOCTO, --NO
+                              'PIV' KGIORIGM, 
+                              COALESCE(PC.BRANCH, 0) || '-' || COALESCE(PC.PRODUCT, 0) || '-' || COALESCE(PC.POLICY,0) || '-' || PC.CERTIF KABAPOL, --FK
+                              '' KABUNRIS, --VALOR VACIO
+                              '' KGCTPCBT, 
+                              '' KACCDFDO, --VALOR VACIO
+                              COALESCE(DX.TYPE, '') KACTPCAG, 
+                              DX.CURRENCY,
+                              COALESCE(DX.BRANCH, 0) || '-' || COALESCE(PC.PRODUCT, 0) || '-' || COALESCE(DX.CURRENCY, 0) || '-' || COALESCE(DX.CODE, 0) || '-' || COALESCE(DX.TYPE, '0') KACCDCAG,
+                              COALESCE (DX.AMOUNT, 0) VMTCARGA, 
+                              COALESCE (CAST(CAST(DX.EFFECDATE AS DATE) AS VARCHAR), '') TULTMALT, 
+                              '' DUSRUPD, --NO
+                              'LPV' DCOMPA, 
+                              '' DMARCA, --NO
+                              '' DINCPRM, 
+                              CASE WHEN (DX.AMOUNT != 0 AND DX.AMOUNT IS NOT NULL) AND (CAST(DX.PERCENT AS INTEGER)= 0 AND DX.PERCENT IS NULL) 
+                              THEN 'IMPORTE' ELSE 'PORCENTAJE' END KACTPVCG, 
+                              '' DDURACAO, 
+                              '' KACTPCBB --VALOR VACIO 
+                              FROM 
+                              (
+                              	SELECT 
+                              	P.USERCOMP, 
+                              	P.COMPANY, 
+                              	P.CERTYPE, 
+                              	P.BRANCH, 
+                              	P.PRODUCT, 
+                              	P.POLICY, 
+                              	CASE 
+                              		  WHEN P.POLITYPE = '1' THEN 0
+                                   	WHEN P.POLITYPE <> '1'THEN C.CERTIF
+                              	END CERTIF, --PARA POLIZAS INDV
+                              	CASE
+                              	    WHEN P.POLITYPE = '1'  THEN P.EFFECDATE 
+                              	    WHEN P.POLITYPE <> '1' THEN C.EFFECDATE 
+                              	END  EFFECDATE
+                              	FROM USINSUV01.POLICY P 
+                              	LEFT JOIN USINSUV01.CERTIFICAT C
+                              	ON  C.USERCOMP = P.USERCOMP 
+                              	AND C.COMPANY  = P.COMPANY 
+                              	AND C.CERTYPE  = P.CERTYPE 
+                              	AND C.BRANCH   = P.BRANCH 
+                              	AND C.POLICY   = P.POLICY  
+                              	AND C.PRODUCT  = P.PRODUCT
+                              	WHERE P.CERTYPE  = '2' AND P.STATUS_POL NOT IN ('2','3') 
+                              	AND (
+                              			(P.POLITYPE = '1' AND P.COMPDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}') 
+                              		OR 
+                              			(P.POLITYPE <> '1' AND  C.COMPDATE BETWEEN  '{p_fecha_inicio}'AND '{p_fecha_fin}')
+                              		)
+                              ) PC
+                               LEFT JOIN USINSUV01.DISC_XPREM DX 
+                              	    ON DX.USERCOMP = PC.USERCOMP 
+                              	    AND DX.COMPANY = PC.COMPANY 
+                              	    AND DX.CERTYPE = PC.CERTYPE 
+                              	    AND DX.BRANCH  = PC.BRANCH 
+                              	    AND DX.POLICY  = PC.POLICY 
+                              	    AND DX.CERTIF  = PC.CERTIF 
+                              	    AND DX.EFFECDATE <= PC.EFFECDATE
+                              	    AND (DX.NULLDATE IS NULL OR DX.NULLDATE > PC.EFFECDATE)	    
                             ) AS TMP
                             '''
    #Ejecutar consulta
