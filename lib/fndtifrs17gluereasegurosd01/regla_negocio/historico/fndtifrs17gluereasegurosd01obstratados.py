@@ -1,4 +1,6 @@
 def get_data(glue_context, bucket ,tablas, p_fecha_inicio, p_fecha_fin):
+ 
+ l_fecha_carga_inicial = '2021-12-31'
 
  l_obstratados_insunix_lpg = f'''
                                  select
@@ -40,8 +42,8 @@ def get_data(glue_context, bucket ,tablas, p_fecha_inicio, p_fecha_fin):
                                  '' AS VMTPRUN,
                                  '' AS KGCRAMO_SAP
                                  FROM CONTRPROC C --1995-08-01 - 2023-07-31
-                                 WHERE (C.EFFECDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
-                                 OR (C.NULLDATE IS NULL OR NULLDATE > '{p_fecha_inicio}'))
+                                 WHERE C.EFFECDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
+                                 AND NULLDATE < '{l_fecha_carga_inicial}')
                               '''
 #--------------------------------------------------------------------------------------------------------------------------# 
  l_obstratados_insunix_lpv = f'''
@@ -84,8 +86,8 @@ def get_data(glue_context, bucket ,tablas, p_fecha_inicio, p_fecha_fin):
                                  '' AS VMTPRUN,
                                  '' AS KGCRAMO_SAP
                                  FROM CONTRPROC C
-                                  WHERE (C.EFFECDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
-                                  OR (C.NULLDATE IS NULL OR NULLDATE > '{p_fecha_inicio}'))
+                                 WHERE C.EFFECDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
+                                 AND NULLDATE < '{l_fecha_carga_inicial}'
                              '''
 #--------------------------------------------------------------------------------------------------------------------------# 
  l_obstratados_vtime_lpg = f'''
@@ -128,8 +130,8 @@ def get_data(glue_context, bucket ,tablas, p_fecha_inicio, p_fecha_fin):
                                '' AS VMTPRUN,
                                '' AS KGCRAMO_SAP
                                FROM CONTRPROC C --2009-01-17 - 2023-03-30
-                                WHERE (CAST(C.DEFFECDATE AS DATE) BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
-                                OR (C.DNULLDATE IS NULL OR CAST(C.DNULLDATE AS DATE) > '{p_fecha_inicio}'))
+                               WHERE CAST(C.DEFFECDATE AS DATE) BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
+                               AND CAST(C.DNULLDATE AS DATE) < '{l_fecha_carga_inicial}'
                             '''
 #--------------------------------------------------------------------------------------------------------------------------#
  l_obstratados_vtime_lpv = f'''
@@ -172,8 +174,8 @@ def get_data(glue_context, bucket ,tablas, p_fecha_inicio, p_fecha_fin):
                                '' AS VMTPRUN,
                                '' AS KGCRAMO_SAP
                                FROM CONTRPROC C --2006-06-02 - 2017-08-14 
-                               WHERE (CAST(C.DEFFECDATE AS DATE) BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
-                                    OR (C.DNULLDATE IS NULL OR CAST(C.DNULLDATE AS DATE) > '{p_fecha_inicio}'))
+                               WHERE CAST(C.DEFFECDATE AS DATE) BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
+                               AND CAST(C.DNULLDATE AS DATE) > '{l_fecha_carga_inicial}'
                             '''
 #--------------------------------------------------------------------------------------------------------------------------#
  l_obstratados_insis_lpv = '''
