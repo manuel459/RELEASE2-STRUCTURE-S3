@@ -222,7 +222,9 @@ def get_data(glue_context, connection):
                                         ) AS TMP    
                                         '''
 
+    print("1-L_RBCOBRP_INSUNIX_LPG_INCENDIO")
     DF_RBCOBRP_LPG_INSUNIX_INCENDIO = glue_context.read.format('jdbc').options(**connection).option("fetchsize",10000).option("dbtable",L_RBCOBRP_INSUNIX_LPG_INCENDIO).load()
+    print("2-L_RBCOBRP_INSUNIX_LPG_INCENDIO")
 
     L_RBCOBRP_INSUNIX_LPG_OTROS_RAMOS = '''
                                         (
@@ -443,9 +445,12 @@ def get_data(glue_context, connection):
                                                 --16m13s (otros ramos)
                                         ) AS TMP 
                                         '''
+    print("1-L_RBCOBRP_INSUNIX_LPG_OTROS_RAMOS")
     DF_RBCOBRP_LPG_INSUNIX_OTRS_RAMOS = glue_context.read.format('jdbc').options(**connection).option("fetchsize",10000).option("dbtable",L_RBCOBRP_INSUNIX_LPG_OTROS_RAMOS).load()
-                                        
-    DF_RBCOBRP_LPG_INSUNIX =  DF_RBCOBRP_LPG_INSUNIX_INCENDIO.union(DF_RBCOBRP_LPG_INSUNIX_OTRS_RAMOS)                
+    print("2-L_RBCOBRP_INSUNIX_LPG_OTROS_RAMOS")
+
+    DF_RBCOBRP_LPG_INSUNIX =  DF_RBCOBRP_LPG_INSUNIX_INCENDIO.union(DF_RBCOBRP_LPG_INSUNIX_OTRS_RAMOS)
+    print("UNION INCENCIO - RAMOS - INSUNIXLPG")
 
     L_RBCOBRP_INSUNIX_LPV = '''
                             (
@@ -738,9 +743,12 @@ def get_data(glue_context, connection):
                                 --7m55s (ramo 42) - 104 registros; existen casos en que no hay capital o primas asociado a los registros (puede ser por el ambiente)
                             ) AS TMP
                             '''
+    print("1-L_RBCOBRP_INSUNIX_LPV")
     DF_RBCOBRP_LPV_INSUNIX = glue_context.read.format('jdbc').options(**connection).option("fetchsize",10000).option("dbtable",L_RBCOBRP_INSUNIX_LPV).load()
+    print("2-L_RBCOBRP_INSUNIX_LPV")
        
     L_DF_RBCOBRP_INSUNIX = DF_RBCOBRP_LPG_INSUNIX.union(DF_RBCOBRP_LPV_INSUNIX)
+    print("UNION INSUNIXLPV - INSUNIXLPG")
 
     L_RBCOBRP_VTIME_LPG = '''
                             (
@@ -852,7 +860,9 @@ def get_data(glue_context, connection):
                             ) AS TMP    
                             '''
 
+    print("1-L_RBCOBRP_VTIME_LPG")
     DF_LPG_VTIME = glue_context.read.format('jdbc').options(**connection).option("fetchsize",10000).option("dbtable",L_RBCOBRP_VTIME_LPG).load()
+    print("2-L_RBCOBRP_VTIME_LPG")
        
     L_RBCOBRP_VTIME_LPV = '''
                             (
@@ -964,11 +974,14 @@ def get_data(glue_context, connection):
                                 --31.224s (todos los ramos)
                             ) AS TMP     
                             '''
-
+    print("1-L_RBCOBRP_VTIME_LPV")
     DF_LPV_VTIME = glue_context.read.format('jdbc').options(**connection).option("fetchsize",10000).option("dbtable",L_RBCOBRP_VTIME_LPV).load()
+    print("2-L_RBCOBRP_VTIME_LPV")
 
     L_DF_RBCOBRP_VTIME = DF_LPG_VTIME.union(DF_LPV_VTIME)
+    print("UNION VTIMELPV - VTIMELPG")
 
     L_DF_RBCOBRP = L_DF_RBCOBRP_INSUNIX.union(L_DF_RBCOBRP_VTIME)
+    print("L_DF_RBCOBRP FINAL")
 
     return L_DF_RBCOBRP

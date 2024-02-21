@@ -31,9 +31,8 @@ def get_data(glue_context, bucket ,tablas):
                                   'LPG' AS DCOMPA,
                                   '' AS DMARCA
                                   FROM CONTR_COMP CC
-                                  WHERE (CC.EFFECDATE >= '{l_fecha_carga_inicial}'
+                                  WHERE (CC.EFFECDATE <= '{l_fecha_carga_inicial}'
                                   OR (CC.NULLDATE IS NULL OR CC.NULLDATE > '{l_fecha_carga_inicial}'))
-                                  
                                '''
 
 #--------------------------------------------------------------------------------------------------------------------------# 
@@ -65,7 +64,7 @@ def get_data(glue_context, bucket ,tablas):
                                 'LPV' AS DCOMPA,
                                 '' AS DMARCA
                                 FROM CONTR_COMP CC 
-                                WHERE (CC.EFFECDATE >= '{l_fecha_carga_inicial}'
+                                WHERE (CC.EFFECDATE <= '{l_fecha_carga_inicial}'
                                   OR (CC.NULLDATE IS NULL OR CC.NULLDATE > '{l_fecha_carga_inicial}'))
                              '''
 #--------------------------------------------------------------------------------------------------------------------------# 
@@ -95,7 +94,7 @@ def get_data(glue_context, bucket ,tablas):
                                'LPG' AS DCOMPA,
                                '' AS DMARCA
                                FROM PART_CONTR PC
-                               WHERE (CAST(PC.DEFFECDATE AS DATE) >= '{l_fecha_carga_inicial}'
+                               WHERE (CAST(PC.DEFFECDATE AS DATE) <= '{l_fecha_carga_inicial}'
                                     OR (PC.DNULLDATE IS NULL OR CAST(PC.DNULLDATE AS DATE) > '{l_fecha_carga_inicial}'))
                              '''
 #--------------------------------------------------------------------------------------------------------------------------# 
@@ -125,7 +124,7 @@ def get_data(glue_context, bucket ,tablas):
                                'LPV' AS DCOMPA,
                                '' AS DMARCA
                                FROM PART_CONTR PC 
-                               WHERE (CAST(PC.DEFFECDATE AS DATE) >= '{l_fecha_carga_inicial}'
+                               WHERE (CAST(PC.DEFFECDATE AS DATE) <= '{l_fecha_carga_inicial}'
                                     OR (PC.DNULLDATE IS NULL OR CAST(PC.DNULLDATE AS DATE) > '{l_fecha_carga_inicial}'))
                             '''
 #--------------------------------------------------------------------------------------------------------------------------#
@@ -151,7 +150,7 @@ def get_data(glue_context, bucket ,tablas):
                                 'LPV' AS DCOMPA,
                                 '' AS DMARCA
                                 FROM RI_TREATY_REINSURERS RTR
-                                WHERE (CAST(RTR.ACTIVE_FROM AS DATE) >= '{l_fecha_carga_inicial}'
+                                WHERE (CAST(RTR.ACTIVE_FROM AS DATE) <= '{l_fecha_carga_inicial}'
                                     OR (RTR.ACTIVE_TO IS NULL OR CAST(RTR.ACTIVE_TO AS DATE) > '{l_fecha_carga_inicial}'))
                             '''
   #--------------------------------------------------------------------------------------------------------------------------#
