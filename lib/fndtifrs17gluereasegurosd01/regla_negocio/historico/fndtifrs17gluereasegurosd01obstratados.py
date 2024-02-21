@@ -1,6 +1,4 @@
-def get_data(glue_context, bucket ,tablas):
-    
- l_fecha_carga_inicial = '2021-12-31'
+def get_data(glue_context, bucket ,tablas, p_fecha_inicio, p_fecha_fin):
 
  l_obstratados_insunix_lpg = f'''
                                  select
@@ -42,52 +40,52 @@ def get_data(glue_context, bucket ,tablas):
                                  '' AS VMTPRUN,
                                  '' AS KGCRAMO_SAP
                                  FROM CONTRPROC C --1995-08-01 - 2023-07-31
-                                 WHERE (C.EFFECDATE >= '{l_fecha_carga_inicial}'
-                                        OR (C.NULLDATE IS NULL OR NULLDATE > '{l_fecha_carga_inicial}'))
+                                 WHERE (C.EFFECDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
+                                 OR (C.NULLDATE IS NULL OR NULLDATE > '{p_fecha_inicio}'))
                               '''
 #--------------------------------------------------------------------------------------------------------------------------# 
  l_obstratados_insunix_lpv = f'''
-                             select
-                             'D' AS INDDETREC,
-                             'OBTRATADOS' AS TABLAIFRS17,
-                             '' AS PK,
-                             '' AS DTPREG,
-                             '' AS TIOCPROC,
-                             coalesce(CAST(C.EFFECDATE AS STRING),'') AS TIOCFRM,
-                             '' AS TIOCTO,
-                             'PIV' AS KGIORIGM,
-                             CAST(C.NUMBER AS STRING) ||'-'|| C.branch  AS DCDINTTRA,
-                             '' AS DCDTRAT_SO,
-                             '' AS DDESCDTRA,
-                             '' AS DDESABRTRA,
-                             coalesce(CAST(C.STARTDAT AS STRING),'') AS TINICIO,
-                             coalesce(CAST(C.EXPIRDAT AS STRING),'') AS TTERMO,
-                             coalesce(CAST(C.YEAR_CONTR AS STRING),'') AS DANOTRAT,
-                             coalesce(CAST(C.TYPE AS STRING),'') AS KOCTPRESS,
-                             '' AS KOCTPFRC,
-                             '' AS KOCVLDFRC,
-                             '' AS KOCTPTRT,
-                             '' AS KOCTPDUR,
-                             '' AS KOCTPOBJ,
-                             '' AS KOCSIT,
-                             '' AS DCDTRAT,
-                             'LPV' AS DCOMPA,
-                             '' AS DMARCA,
-                             '' AS KOCSCOPE,
-                             '' AS KOCIDFAC,
-                             '' AS KOCTPRNP,
-                             '' AS KACSEGM,
-                             '' AS KOCMOEDA,
-                             '' AS DINDPMAX,
-                             '' AS VMTMAXTR,
-                             '' AS VMTPLENO,
-                             '' AS VMTPDEDT,
-                             '' AS KOCGRCBT,
-                             '' AS VMTPRUN,
-                             '' AS KGCRAMO_SAP
-                             FROM CONTRPROC C
-                             WHERE (C.EFFECDATE >= '{l_fecha_carga_inicial}'
-                                    OR (C.NULLDATE IS NULL OR NULLDATE > '{l_fecha_carga_inicial}'))
+                                 select
+                                 'D' AS INDDETREC,
+                                 'OBTRATADOS' AS TABLAIFRS17,
+                                 '' AS PK,
+                                 '' AS DTPREG,
+                                 '' AS TIOCPROC,
+                                 coalesce(CAST(C.EFFECDATE AS STRING),'') AS TIOCFRM,
+                                 '' AS TIOCTO,
+                                 'PIV' AS KGIORIGM,
+                                 CAST(C.NUMBER AS STRING) ||'-'|| C.branch  AS DCDINTTRA,
+                                 '' AS DCDTRAT_SO,
+                                 '' AS DDESCDTRA,
+                                 '' AS DDESABRTRA,
+                                 coalesce(CAST(C.STARTDAT AS STRING),'') AS TINICIO,
+                                 coalesce(CAST(C.EXPIRDAT AS STRING),'') AS TTERMO,
+                                 coalesce(CAST(C.YEAR_CONTR AS STRING),'') AS DANOTRAT,
+                                 coalesce(CAST(C.TYPE AS STRING),'') AS KOCTPRESS,
+                                 '' AS KOCTPFRC,
+                                 '' AS KOCVLDFRC,
+                                 '' AS KOCTPTRT,
+                                 '' AS KOCTPDUR,
+                                 '' AS KOCTPOBJ,
+                                 '' AS KOCSIT,
+                                 '' AS DCDTRAT,
+                                 'LPV' AS DCOMPA,
+                                 '' AS DMARCA,
+                                 '' AS KOCSCOPE,
+                                 '' AS KOCIDFAC,
+                                 '' AS KOCTPRNP,
+                                 '' AS KACSEGM,
+                                 '' AS KOCMOEDA,
+                                 '' AS DINDPMAX,
+                                 '' AS VMTMAXTR,
+                                 '' AS VMTPLENO,
+                                 '' AS VMTPDEDT,
+                                 '' AS KOCGRCBT,
+                                 '' AS VMTPRUN,
+                                 '' AS KGCRAMO_SAP
+                                 FROM CONTRPROC C
+                                  WHERE (C.EFFECDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
+                                  OR (C.NULLDATE IS NULL OR NULLDATE > '{p_fecha_inicio}'))
                              '''
 #--------------------------------------------------------------------------------------------------------------------------# 
  l_obstratados_vtime_lpg = f'''
@@ -130,8 +128,8 @@ def get_data(glue_context, bucket ,tablas):
                                '' AS VMTPRUN,
                                '' AS KGCRAMO_SAP
                                FROM CONTRPROC C --2009-01-17 - 2023-03-30
-                               WHERE (CAST(C.DEFFECDATE AS DATE) >= '{l_fecha_carga_inicial}'
-                                    OR (C.DNULLDATE IS NULL OR CAST(C.DNULLDATE AS DATE) > '{l_fecha_carga_inicial}'))
+                                WHERE (CAST(C.DEFFECDATE AS DATE) BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
+                                OR (C.DNULLDATE IS NULL OR CAST(C.DNULLDATE AS DATE) > '{p_fecha_inicio}'))
                             '''
 #--------------------------------------------------------------------------------------------------------------------------#
  l_obstratados_vtime_lpv = f'''
@@ -174,51 +172,51 @@ def get_data(glue_context, bucket ,tablas):
                                '' AS VMTPRUN,
                                '' AS KGCRAMO_SAP
                                FROM CONTRPROC C --2006-06-02 - 2017-08-14 
-                               WHERE (CAST(C.DEFFECDATE AS DATE) >= '{l_fecha_carga_inicial}'
-                                    OR (C.DNULLDATE IS NULL OR CAST(C.DNULLDATE AS DATE) > '{l_fecha_carga_inicial}'))
+                               WHERE (CAST(C.DEFFECDATE AS DATE) BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
+                                    OR (C.DNULLDATE IS NULL OR CAST(C.DNULLDATE AS DATE) > '{p_fecha_inicio}'))
                             '''
 #--------------------------------------------------------------------------------------------------------------------------#
  l_obstratados_insis_lpv = '''
-                            select 
-                            'D' AS INDDETREC,
-                            'OBTRATADOS' AS TABLAIFRS17,
-                            '' AS PK,
-                            '' AS DTPREG,
-                            '' AS TIOCPROC,
-                            CAST(RT.START_DATE AS DATE) AS TIOCFRM,
-                            '' AS TIOCTO,
-                            'PNV' AS KGIORIGM,
-                            RT.TREATY_ID  AS DCDINTTRA,
-                            '' AS DCDTRAT_SO,
-                            '' AS DDESCDTRA,
-                            '' AS DDESABRTRA,
-                            CAST(RT.START_DATE AS DATE) AS TINICIO,
-                            CAST(RT.END_DATE   AS DATE) AS TTERMO,
-                            '' AS DANOTRAT,
-                            RT.TREATY_SUBTYPE AS KOCTPRESS,
-                            '' AS KOCTPFRC,
-                            '' AS KOCVLDFRC,
-                            '' AS KOCTPTRT,
-                            '' AS KOCTPDUR,
-                            '' AS KOCTPOBJ,
-                            '' AS KOCSIT,
-                            '' AS DCDTRAT,
-                            'LPV' AS DCOMPA,
-                            '' AS DMARCA,
-                            '' AS KOCSCOPE,
-                            '' AS KOCIDFAC,
-                            '' AS KOCTPRNP,
-                            '' AS KACSEGM,
-                            '' AS KOCMOEDA,
-                            '' AS DINDPMAX,
-                            '' AS VMTMAXTR,
-                            '' AS VMTPLENO,
-                            '' AS VMTPDEDT,
-                            '' AS KOCGRCBT,
-                            '' AS VMTPRUN,
-                            '' AS KGCRAMO_SAP
-                            FROM RI_TREATY RT --1995-01-01 - 2021-01-01
-                        '''
+                              select 
+                              'D' AS INDDETREC,
+                              'OBTRATADOS' AS TABLAIFRS17,
+                              '' AS PK,
+                              '' AS DTPREG,
+                              '' AS TIOCPROC,
+                              CAST(RT.START_DATE AS DATE) AS TIOCFRM,
+                              '' AS TIOCTO,
+                              'PNV' AS KGIORIGM,
+                              RT.TREATY_ID  AS DCDINTTRA,
+                              '' AS DCDTRAT_SO,
+                              '' AS DDESCDTRA,
+                              '' AS DDESABRTRA,
+                              CAST(RT.START_DATE AS DATE) AS TINICIO,
+                              CAST(RT.END_DATE   AS DATE) AS TTERMO,
+                              '' AS DANOTRAT,
+                              RT.TREATY_SUBTYPE AS KOCTPRESS,
+                              '' AS KOCTPFRC,
+                              '' AS KOCVLDFRC,
+                              '' AS KOCTPTRT,
+                              '' AS KOCTPDUR,
+                              '' AS KOCTPOBJ,
+                              '' AS KOCSIT,
+                              '' AS DCDTRAT,
+                              'LPV' AS DCOMPA,
+                              '' AS DMARCA,
+                              '' AS KOCSCOPE,
+                              '' AS KOCIDFAC,
+                              '' AS KOCTPRNP,
+                              '' AS KACSEGM,
+                              '' AS KOCMOEDA,
+                              '' AS DINDPMAX,
+                              '' AS VMTMAXTR,
+                              '' AS VMTPLENO,
+                              '' AS VMTPDEDT,
+                              '' AS KOCGRCBT,
+                              '' AS VMTPRUN,
+                              '' AS KGCRAMO_SAP
+                              FROM RI_TREATY RT --1995-01-01 - 2021-01-01
+                           '''
   #--------------------------------------------------------------------------------------------------------------------------#
 
  spark = glue_context.spark_session
