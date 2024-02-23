@@ -222,7 +222,9 @@ def get_data(glue_context, connection):
                                         ) AS TMP    
                                         '''
 
+    print("1-L_RBCOBRP_INSUNIX_LPG_INCENDIO")
     DF_RBCOBRP_LPG_INSUNIX_INCENDIO = glue_context.read.format('jdbc').options(**connection).option("fetchsize",10000).option("dbtable",L_RBCOBRP_INSUNIX_LPG_INCENDIO).load()
+    print("2-L_RBCOBRP_INSUNIX_LPG_INCENDIO")
 
     L_RBCOBRP_INSUNIX_LPG_OTROS_RAMOS = '''
                                         (
@@ -234,7 +236,7 @@ def get_data(glue_context, connection):
                                                         '' TIOCPROC, --excluido
                                                         dpr.compdate TIOCFRM, --excluido
                                                         '' TIOCTO, --excluido
-                                                        '' KGIORIGM, --excluido
+                                                        'PIG' KGIORIGM, --excluido
                                                         '' VTXPREM, --excluido
                                                         dpr.premium_cob + --existen registros de primas con comisi�n
                                                             case	when	not exists --valida que el certificado 0 no haya sido considerado en las operaciones para evitar duplicar sus primas asociadas
@@ -443,9 +445,12 @@ def get_data(glue_context, connection):
                                                 --16m13s (otros ramos)
                                         ) AS TMP 
                                         '''
+    print("1-L_RBCOBRP_INSUNIX_LPG_OTROS_RAMOS")
     DF_RBCOBRP_LPG_INSUNIX_OTRS_RAMOS = glue_context.read.format('jdbc').options(**connection).option("fetchsize",10000).option("dbtable",L_RBCOBRP_INSUNIX_LPG_OTROS_RAMOS).load()
-                                        
-    DF_RBCOBRP_LPG_INSUNIX =  DF_RBCOBRP_LPG_INSUNIX_INCENDIO.union(DF_RBCOBRP_LPG_INSUNIX_OTRS_RAMOS)                
+    print("2-L_RBCOBRP_INSUNIX_LPG_OTROS_RAMOS")
+
+    DF_RBCOBRP_LPG_INSUNIX =  DF_RBCOBRP_LPG_INSUNIX_INCENDIO.union(DF_RBCOBRP_LPG_INSUNIX_OTRS_RAMOS)
+    print("UNION INCENCIO - RAMOS - INSUNIXLPG")
 
     L_RBCOBRP_INSUNIX_LPV = '''
                             (
@@ -459,7 +464,7 @@ def get_data(glue_context, connection):
                                         '' TIOCTO, --excluido
                                         'PIV' KGIORIGM, --excluido
                                         '' VTXPREM, --excluido
-                                        dpr.premium_cob + --existen registros de primas con comisi�n
+                                        dpr.premium_cob + --existen registros de primas con comision
                                             case	when	not exists --valida que el certificado 0 no haya sido considerado en las operaciones para evitar duplicar sus primas asociadas
                                                             (	select	1
                                                                 from	usinsuv01.detail_pre dp0
@@ -510,7 +515,7 @@ def get_data(glue_context, connection):
                                                             and 	dp0.company = pre.company
                                                             and 	dp0.receipt = pre.receipt
                                                             and		dp0.code = dpr.code
-                                                            and		dp0.bill_item = 5),0) + --prima der. emisi�n (nivel_1)
+                                                            and		dp0.bill_item = 5),0) + --prima der. emision (nivel_1)
                                                 --se procede a distribuir las primas en el certificado 0 si es que el certificado en dpr es diferente a 0
                                                 --(si el certificado es 0, ya fue calculado en nivel_1)
                                                 case	when	not exists --valida que el certificado 0 no haya sido considerado en las operaciones para evitar duplicar sus primas asociadas
@@ -528,7 +533,7 @@ def get_data(glue_context, connection):
                                                                                 and 	dp0.company = pre.company
                                                                                 and 	dp0.receipt = pre.receipt
                                                                                 and		dp0.certif = 0
-                                                                                and		dp0.bill_item = 5),0) --solo interesa los casos con el monto asociado al der. emisi�n
+                                                                                and		dp0.bill_item = 5),0) --solo interesa los casos con el monto asociado al der. emision
                                                                     *	(coalesce(dpr.premium / nullif(SUM(dpr.premium) OVER (partition by dpr.pre_id),0),0)))
                                                         else 	0 end) VMTENCG,
                                         (	dpr.premium_imp + --prima impuestos a nivel del certificado/cobertura (nivel_1a)
@@ -609,12 +614,12 @@ def get_data(glue_context, connection):
                                                     from	usinsuv01.acc_autom2 acc
                                                     where	ctid =
                                                             coalesce(
-                                                                (   select  min(ctid) --b�squeda normal en acc_autom2(ramo;producto;concepto 1 para todos, excepto incendio)
+                                                                (   select  min(ctid) --busqueda normal en acc_autom2(ramo;producto;concepto 1 para todos, excepto incendio)
                                                                     from    usinsuv01.acc_autom2 abe
                                                                     where   abe.branch = pre.branch
                                                                     and 	abe.product = pre.product
                                                                     and 	abe.concept_fac = 1),
-                                                                (   select  min(ctid) --b�squeda igual a anterior, pero en caso el producto no exista en acc_autom2 (error LP)
+                                                                (   select  min(ctid) --busqueda igual a anterior, pero en caso el producto no exista en acc_autom2 (error LP)
                                                                     from    usinsuv01.acc_autom2 abe
                                                                     where   abe.branch = pre.branch
                                                                     and 	abe.concept_fac = 1))),0) KGCRAMO_SAP
@@ -732,15 +737,18 @@ def get_data(glue_context, connection):
                                             and 	(pre.expirdat is null or cast(pre.expirdat as date) >= '12/31/2020')
                                             and 	(pre.nulldate is null or cast(pre.nulldate as date) > '12/31/2020')
                                             and 	pre.statusva not in ('2','3')
-                                            group 	by 1,2,3) dpr
+                                            group 	by 1,2,3,4) dpr
                                 join	usinsuv01.premium pre on pre.ctid = dpr.pre_id
                                 join 	(select 'LPV' cia, '-' sep) par on 1 = 1
                                 --7m55s (ramo 42) - 104 registros; existen casos en que no hay capital o primas asociado a los registros (puede ser por el ambiente)
                             ) AS TMP
                             '''
+    print("1-L_RBCOBRP_INSUNIX_LPV")
     DF_RBCOBRP_LPV_INSUNIX = glue_context.read.format('jdbc').options(**connection).option("fetchsize",10000).option("dbtable",L_RBCOBRP_INSUNIX_LPV).load()
+    print("2-L_RBCOBRP_INSUNIX_LPV")
        
     L_DF_RBCOBRP_INSUNIX = DF_RBCOBRP_LPG_INSUNIX.union(DF_RBCOBRP_LPV_INSUNIX)
+    print("UNION INSUNIXLPV - INSUNIXLPG")
 
     L_RBCOBRP_VTIME_LPG = '''
                             (
@@ -750,7 +758,7 @@ def get_data(glue_context, connection):
                                         coalesce(dpr.ndet_code,0) KRCTPCBT,
                                         '' DTPREG, --excluido
                                         '' TIOCPROC, --excluido
-                                        dpr."DCOMPDATE" TIOCFRM, --excluido
+                                        cast (cast (dpr."DCOMPDATE" as date) as varchar) TIOCFRM, --excluido
                                         '' TIOCTO, --excluido
                                         'PVG' KGIORIGM, --excluido
                                         '' VTXPREM, --excluido
@@ -852,7 +860,9 @@ def get_data(glue_context, connection):
                             ) AS TMP    
                             '''
 
+    print("1-L_RBCOBRP_VTIME_LPG")
     DF_LPG_VTIME = glue_context.read.format('jdbc').options(**connection).option("fetchsize",10000).option("dbtable",L_RBCOBRP_VTIME_LPG).load()
+    print("2-L_RBCOBRP_VTIME_LPG")
        
     L_RBCOBRP_VTIME_LPV = '''
                             (
@@ -862,7 +872,7 @@ def get_data(glue_context, connection):
                                         coalesce(dpr.ndet_code,0) KRCTPCBT,
                                         '' DTPREG, --excluido
                                         '' TIOCPROC, --excluido
-                                        DPR."DCOMPDATE" TIOCFRM, --excluido
+                                       CAST ( CAST (DPR."DCOMPDATE" AS DATE) AS VARCHAR) TIOCFRM, --excluido
                                         '' TIOCTO, --excluido
                                         'PVV' KGIORIGM, --excluido
                                         '' VTXPREM, --excluido
@@ -964,11 +974,14 @@ def get_data(glue_context, connection):
                                 --31.224s (todos los ramos)
                             ) AS TMP     
                             '''
-
+    print("1-L_RBCOBRP_VTIME_LPV")
     DF_LPV_VTIME = glue_context.read.format('jdbc').options(**connection).option("fetchsize",10000).option("dbtable",L_RBCOBRP_VTIME_LPV).load()
+    print("2-L_RBCOBRP_VTIME_LPV")
 
     L_DF_RBCOBRP_VTIME = DF_LPG_VTIME.union(DF_LPV_VTIME)
+    print("UNION VTIMELPV - VTIMELPG")
 
     L_DF_RBCOBRP = L_DF_RBCOBRP_INSUNIX.union(L_DF_RBCOBRP_VTIME)
+    print("L_DF_RBCOBRP FINAL")
 
     return L_DF_RBCOBRP

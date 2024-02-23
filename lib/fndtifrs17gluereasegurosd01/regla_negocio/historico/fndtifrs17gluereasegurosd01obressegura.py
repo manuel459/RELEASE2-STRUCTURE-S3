@@ -1,5 +1,5 @@
 
-def get_data(glue_context, bucket ,tablas):
+def get_data(glue_context, bucket ,tablas, p_fecha_inicio, p_fecha_fin):
  
  l_fecha_carga_inicial = '2021-12-31'
 
@@ -31,8 +31,8 @@ def get_data(glue_context, bucket ,tablas):
                                   'LPG' AS DCOMPA,
                                   '' AS DMARCA
                                   FROM CONTR_COMP CC
-                                  WHERE (CC.EFFECDATE <= '{l_fecha_carga_inicial}'
-                                  OR (CC.NULLDATE IS NULL OR CC.NULLDATE > '{l_fecha_carga_inicial}'))
+                                  WHERE CC.EFFECDATE BETWEEN  '{p_fecha_inicio}' AND  '{p_fecha_fin}'
+                                  AND CC.NULLDATE < '{l_fecha_carga_inicial}'
                                '''
 
 #--------------------------------------------------------------------------------------------------------------------------# 
@@ -64,8 +64,8 @@ def get_data(glue_context, bucket ,tablas):
                                 'LPV' AS DCOMPA,
                                 '' AS DMARCA
                                 FROM CONTR_COMP CC 
-                                WHERE (CC.EFFECDATE <= '{l_fecha_carga_inicial}'
-                                  OR (CC.NULLDATE IS NULL OR CC.NULLDATE > '{l_fecha_carga_inicial}'))
+                                WHERE CC.EFFECDATE BETWEEN  '{p_fecha_inicio}' AND  '{p_fecha_fin}'
+                                AND CC.NULLDATE < '{l_fecha_carga_inicial}'
                              '''
 #--------------------------------------------------------------------------------------------------------------------------# 
  l_obressegura_vtime_lpg = f'''
@@ -94,8 +94,8 @@ def get_data(glue_context, bucket ,tablas):
                                'LPG' AS DCOMPA,
                                '' AS DMARCA
                                FROM PART_CONTR PC
-                               WHERE (CAST(PC.DEFFECDATE AS DATE) <= '{l_fecha_carga_inicial}'
-                                    OR (PC.DNULLDATE IS NULL OR CAST(PC.DNULLDATE AS DATE) > '{l_fecha_carga_inicial}'))
+                               WHERE (CAST(PC.DEFFECDATE AS DATE) BETWEEN  '{p_fecha_inicio}' AND  '{p_fecha_fin}'
+                               AND CAST(PC.DNULLDATE AS DATE) < '{l_fecha_carga_inicial}'
                              '''
 #--------------------------------------------------------------------------------------------------------------------------# 
  l_obressegura_vtime_lpv = f'''
@@ -124,8 +124,8 @@ def get_data(glue_context, bucket ,tablas):
                                'LPV' AS DCOMPA,
                                '' AS DMARCA
                                FROM PART_CONTR PC 
-                               WHERE (CAST(PC.DEFFECDATE AS DATE) <= '{l_fecha_carga_inicial}'
-                                    OR (PC.DNULLDATE IS NULL OR CAST(PC.DNULLDATE AS DATE) > '{l_fecha_carga_inicial}'))
+                               WHERE (CAST(PC.DEFFECDATE AS DATE) BETWEEN  '{p_fecha_inicio}' AND  '{p_fecha_fin}'
+                               AND CAST(PC.DNULLDATE AS DATE) < '{l_fecha_carga_inicial}'
                             '''
 #--------------------------------------------------------------------------------------------------------------------------#
  l_obressegura_insis_lpv = f'''
@@ -150,8 +150,8 @@ def get_data(glue_context, bucket ,tablas):
                                 'LPV' AS DCOMPA,
                                 '' AS DMARCA
                                 FROM RI_TREATY_REINSURERS RTR
-                                WHERE (CAST(RTR.ACTIVE_FROM AS DATE) <= '{l_fecha_carga_inicial}'
-                                    OR (RTR.ACTIVE_TO IS NULL OR CAST(RTR.ACTIVE_TO AS DATE) > '{l_fecha_carga_inicial}'))
+                                WHERE (CAST(RTR.ACTIVE_FROM AS DATE) BETWEEN  '{p_fecha_inicio}' AND  '{p_fecha_fin}'
+                                AND CAST(RTR.ACTIVE_TO AS DATE) < '{l_fecha_carga_inicial}'
                             '''
   #--------------------------------------------------------------------------------------------------------------------------#
 

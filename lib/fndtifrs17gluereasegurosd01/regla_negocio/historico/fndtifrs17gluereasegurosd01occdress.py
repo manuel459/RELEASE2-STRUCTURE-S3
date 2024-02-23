@@ -1,4 +1,4 @@
-def get_data(glue_context, bucket ,tablas):
+def get_data(glue_context, bucket ,tablas, p_fecha_inicio, p_fecha_fin):
 
  l_occdress_insunix_lpg = '''
                          select
@@ -15,7 +15,7 @@ def get_data(glue_context, bucket ,tablas):
                                    WHERE c.CLIENT = EVI.SCOD_INX),'') as DCODIGO,
                          '' as DDESC,
                          '' as KOICDRESS
-                         FROM COMPANY C --1994-02-16 - 2023-08-04
+                         FROM COMPANY C --1994-02-16 - 2023-08-04 {'p_fecha_inicio}'}
                       '''
 #--------------------------------------------------------------------------------------------------------------------------# 
  l_occdress_insunix_lpv = '''
@@ -91,6 +91,8 @@ def get_data(glue_context, bucket ,tablas):
  l_df_occdress = None
   
  print(tablas)
+ print(p_fecha_inicio)
+ print(p_fecha_fin)
   
  for tabla in tablas:
     print('Aqui esta la lista de tablas:',tabla['lista'])

@@ -22,7 +22,7 @@ s3r = boto3.resource('s3')
 glue_client = boto3.client('glue')
 cliente_dynamodb = boto3.client("dynamodb")
 ssm = boto3.client('ssm', 'us-east-1')
-id = 'REASEGUROS'
+id = 'RECIBOS'
 nombre_error = '-'
 
 #FUNCIÓN PARA EJECUTAR UN SCRIPT GUARDADO EN UN BUCKET S3
@@ -118,9 +118,21 @@ try:
     #OBTENER LAS FUNCIONES ALMACENADAS EN S3
     structure = execute_script(l_dic_config['GENERAL']['bucket']['artifact'], l_dic_config['GENERAL']['funciones']['structure'])
     
+    print(l_dic_config['GENERAL']['bucket']['artifact'])
+    print(l_dic_config['GENERAL']['funciones']['structure'])
     #LLAMAR Y LANZAR LOS PARAMETROS A LA FUNCION generate_files
     structure.generate_files(l_dic_config, id)
+
+    #------------------------------------------------------------------------#        
+    # EJECUTAR LA TRAZABILIDAD
+    #------------------------------------------------------------------------#
+    trazabilidad.update_log(cliente_dynamodb, id, 2,2,nombre_error, last_start_time,tipo_carga)
  
 except Exception as e:
     # Log the error for debugging purposes
-    print(f"Error en el GLUE: {str(e)}")
+    print(f"Error Glue Regla de Negocio del Dominio de Recibos: {str(e)}")
+    nombre_error = str(e)
+    trazabilidad.update_log(cliente_dynamodb, id, 2,1,nombre_error, last_start_time,tipo_carga)
+    sys.exit(1)
+
+job.commit()

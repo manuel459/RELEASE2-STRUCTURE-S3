@@ -442,7 +442,7 @@ def get_data(glue_context, connection):
                                                                         where 	pre.usercomp = 1
                                                                         and 	pre.company = 1
                                                                         and 	pre.branch <> 1 --excluyendo incendio, probar con otros ramos
-                                                                        and     pre.branch between  3 and 5 --Luego quitar este filtro
+                                                                        and     pre.branch between 24 and 65 --Luego quitar este filtro
                                                                         and 	cast(pre.effecdate as date) <= '12/31/2020'
                                                                         and 	(pre.expirdat is null or cast(pre.expirdat as date) >= '12/31/2020')
                                                                         and 	(pre.nulldate is null or cast(pre.nulldate as date) > '12/31/2020')
@@ -1177,7 +1177,7 @@ def get_data(glue_context, connection):
                                                                                                         and 	dp0.company = pre.company
                                                                                                         and 	dp0.receipt = pre.receipt
                                                                                                         and		dp0.certif = 0
-                                                                                                        and		dp0.bill_item <> 9),0) --se suma la ditribuci�n por la matriz en caso el certificado dpr no sea 0 
+                                                                                                        and		dp0.bill_item <> 9),0) --se suma la ditribuci n por la matriz en caso el certificado dpr no sea 0 
                                                                                                 *	(coalesce(dpr.premium / nullif(SUM(dpr.premium) OVER (partition by dpr.pre_id),0),0))
                                                                 else 	0 end VMTCOMR,
                                         (	dpr.premium_recdes + --prima recargos/descuentos a nivel del certificado/cobertura (nivel_1a)
@@ -1200,7 +1200,7 @@ def get_data(glue_context, connection):
                                                                                 and 	dp0.company = pre.company
                                                                                 and 	dp0.receipt = pre.receipt
                                                                                 and		dp0.certif = dpr.certif
-                                                                                and		dp0.bill_item = 5),0) + --prima der. emisi�n (nivel_1)
+                                                                                and		dp0.bill_item = 5),0) + --prima der. emisi n (nivel_1)
                                                                 --se procede a distribuir las primas en el certificado 0 si es que el certificado en dpr es diferente a 0
                                                                 --(si el certificado es 0, ya fue calculado en nivel_1)
                                                                 case	when	coalesce(dpr.certif,0) <> 0
@@ -1210,7 +1210,7 @@ def get_data(glue_context, connection):
                                                                                                                                 and 	dp0.company = pre.company
                                                                                                                                 and 	dp0.receipt = pre.receipt
                                                                                                                                 and		dp0.certif = 0
-                                                                                                                                and		dp0.bill_item = 5),0) --solo interesa los casos con el monto asociado al der. emisi�n
+                                                                                                                                and		dp0.bill_item = 5),0) --solo interesa los casos con el monto asociado al der. emisi n
                                                                                                         *	(coalesce(dpr.premium / nullif(SUM(dpr.premium) OVER (partition by dpr.pre_id),0),0)))
                                                                                 else 	0 end) VMTENCG,
                                         coalesce((	select	sum(coalesce(dp0.premium,0))
@@ -1295,7 +1295,7 @@ def get_data(glue_context, connection):
                                                                                                                 and		dp0.bill_item = 4),0) --solo interesa los casos con el monto asociado al concepto rgc
                                                                                         *	(coalesce(dpr.premium / nullif(SUM(dpr.premium) OVER (partition by dpr.pre_id),0),0)))
                                                                 else 	0 end VMTCOMCB,
-                                        dpr.commision + --existen registros de primas con comisi�n
+                                        dpr.commision + --existen registros de primas con comisi n
                                                 case	when	coalesce(dpr.certif,0) <> 0
                                                                 then	(	coalesce((	select	sum(coalesce(dp0.commision,0))
                                                                                                                 from	usinsuv01.detail_pre dp0
@@ -1326,7 +1326,7 @@ def get_data(glue_context, connection):
                                                                                                                 and 	dp0.company = pre.company
                                                                                                                 and 	dp0.receipt = pre.receipt
                                                                                                                 and		dp0.certif = 0
-                                                                                                                and		dp0.bill_item = 97),0) --solo interesa los casos con el monto asociado al der. emisi�n
+                                                                                                                and		dp0.bill_item = 97),0) --solo interesa los casos con el monto asociado al der. emisi n
                                                                                         *	(coalesce(dpr.premium / nullif(SUM(dpr.premium) OVER (partition by dpr.pre_id),0),0)))
                                                                                         else 	0 end VMTCSFR,
                                         '' VMTIMPSL, --descartado
@@ -1355,7 +1355,7 @@ def get_data(glue_context, connection):
                                                                                                                         and		dp0.certif = 0),0)
                                                                                                 *	(coalesce(dpr.premium / nullif(SUM(dpr.premium) OVER (partition by dpr.pre_id),0),0)))
                                                                         else 	0 end) *
-                                                        (coalesce(coi.share,100) / 100) VMTCOSEG, --c�lculo coaseguro retenido
+                                                        (coalesce(coi.share,100) / 100) VMTCOSEG, --c lculo coaseguro retenido
                                         (	coalesce((	select	sum(coalesce(dp0.premium,0))
                                                                         from	usinsuv01.detail_pre dp0
                                                                         where	dp0.usercomp = pre.usercomp
@@ -1372,7 +1372,7 @@ def get_data(glue_context, connection):
                                                                                                                 and 	dp0.company = pre.company
                                                                                                                 and 	dp0.receipt = pre.receipt
                                                                                                                 and		dp0.certif = 0
-                                                                                                                and		dp0.bill_item = 97),0) --solo interesa los casos con el monto asociado al der. emisi�n
+                                                                                                                and		dp0.bill_item = 97),0) --solo interesa los casos con el monto asociado al der. emisi n
                                                                                         *	(coalesce(dpr.premium / nullif(SUM(dpr.premium) OVER (partition by dpr.pre_id),0),0)))
                                                                                         else 	0 end) *
                                                 (coalesce(coi.share,100) / 100) VMTCSTFC,
@@ -1396,7 +1396,7 @@ def get_data(glue_context, connection):
                                                                                                                         and		dp0.certif = 0),0)
                                                                                                 *	(coalesce(dpr.premium / nullif(SUM(dpr.premium) OVER (partition by dpr.pre_id),0),0)))
                                                                         else 	0 end) *
-                                                        (coalesce(coi.share,100) / 100) * 1 VMTRESSG,--c�lculo coaseguro retenido; aparte, no hay reaseguros para INX LPV
+                                                        (coalesce(coi.share,100) / 100) * 1 VMTRESSG,--c lculo coaseguro retenido; aparte, no hay reaseguros para INX LPV
                                         '' VMTCMCCS, --descartado
                                         '' DUSRUPD, --excluido
                                         '' VMTCOMFD, --descartado
@@ -1530,7 +1530,7 @@ def get_data(glue_context, connection):
                                                                                                         else 0 end) premium_recdes, --de la prima contable, los recargos y descuentos
                                                                                 SUM(case	when dpr.type_detai in ('1','3','4') and dpr.bill_item not in (4,5,9,97)
                                                                                                         then coalesce(dpr.commision,0)
-                                                                                                        else 0 end) commision --comisi�n
+                                                                                                        else 0 end) commision --comisi n
                                                                 from	usinsuv01.premium pre
                                                                 join	usinsuv01.detail_pre dpr
                                                                                 on		dpr.usercomp = pre.usercomp
@@ -1546,7 +1546,7 @@ def get_data(glue_context, connection):
                                                                 group 	by 1,2) dpr
                                 join	usinsuv01.premium pre on pre.ctid = dpr.pre_id
                                 join 	(select 'LPV' cia, '-' sep) par on 1 = 1
-                                left 	join usinsuv01.coinsuran coi --se valid� que saque la cantidad debida de registros con/sin el join a esta tabla (solo la retenci�n)
+                                left 	join usinsuv01.coinsuran coi --se valid  que saque la cantidad debida de registros con/sin el join a esta tabla (solo la retenci n)
                                                 on 		coi.usercomp = pre.usercomp
                                                 and     coi.company = pre.company
                                                 and     coi.certype = pre.certype
@@ -1570,7 +1570,7 @@ def get_data(glue_context, connection):
                                                                 '' PK, 
                                                                 '' DTPREG, --excluido
                                                                 '' TIOCPROC, --excluido
-                                                                pre."DCOMPDATE"  TIOCFRM, --excluido
+                                                                CAST (pre."DCOMPDATE" AS DATE ) TIOCFRM, --excluido
                                                                 '' TIOCTO, --excluido
                                                                 '' KRITPREG, --PENDIENTE 01
                                                                 'PVG' KGIORIGM, --excluido
@@ -2130,7 +2130,7 @@ def get_data(glue_context, connection):
                                                         --Tiempos desarrollo:
                                                         --7.842s (ramo 57)
                                                         --11m25s (otros ramos)
-                                                        --Tiempos producci�n:
+                                                        --Tiempos producci n:
                                                         --2m33s (ramo 57)      
                                                  ) AS TMP  
                                                 '''
@@ -2144,7 +2144,7 @@ def get_data(glue_context, connection):
                                                 '' PK, 
                                                 '' DTPREG, --excluido
                                                 '' TIOCPROC, --excluido
-                                                pre."DCOMPDATE"  TIOCFRM, --excluido
+                                                CAST (pre."DCOMPDATE" AS DATE ) TIOCFRM,
                                                 '' TIOCTO, --excluido
                                                 '' KRITPREG, --PENDIENTE 01
                                                 'PVG' KGIORIGM, --excluido
@@ -2662,7 +2662,7 @@ def get_data(glue_context, connection):
                                                                                                                                 (	select 	1
                                                                                                                                         from	usvtimg01."PREMIUM_CE" pr0
                                                                                                                                         where 	pr0."NRECEIPT" = PRE."NRECEIPT")
-                                                                                                                and 	PRE."NDIGIT" = 0 and pre."NBRANCH" = 57 --between 1 and 50
+                                                                                                                and 	PRE."NDIGIT" = 0 and pre."NBRANCH"between 61 and 69
                                         --									and pre."NRECEIPT" = 224782516
                                                                                                                 AND 	CAST(PRE."DEFFECDATE" AS DATE) <= '12/31/2018'
                                                                                                                 AND 	(PRE."DEXPIRDAT" IS NULL OR CAST(PRE."DEXPIRDAT" AS DATE) >= '12/31/2018')
@@ -2687,10 +2687,10 @@ def get_data(glue_context, connection):
                                                                                                                                 and		prc."NBILL_ITEM" not in (4,5,9,97)
                                                                                                                                 and 	prc."NDIGIT" = PRE."NDIGIT"
                                                                                                                 WHERE 	PRE."NDIGIT" = 0 
-                                                                                                                AND 	PRE."NBRANCH" <> 57 
-                                                                                                                AND 	CAST(PRE."DEFFECDATE" AS DATE) <= '12/31/2020'
-                                                                                                                AND 	(PRE."DEXPIRDAT" IS NULL OR CAST(PRE."DEXPIRDAT" AS DATE) >= '12/31/2020')
-                                                                                                                AND 	(PRE."DNULLDATE" IS NULL OR CAST(PRE."DNULLDATE" AS DATE) > '12/31/2020')
+                                                                                                                AND 	PRE."NBRANCH" between 61 and 69
+                                                                                                                AND 	CAST(PRE."DEFFECDATE" AS DATE) <= '12/31/2018'
+                                                                                                                AND 	(PRE."DEXPIRDAT" IS NULL OR CAST(PRE."DEXPIRDAT" AS DATE) >= '12/31/2018')
+                                                                                                                AND 	(PRE."DNULLDATE" IS NULL OR CAST(PRE."DNULLDATE" AS DATE) > '12/31/2018')
                                                                                                                 AND 	PRE."SSTATUSVA" NOT IN ('2','3')
                                                                                                                 group 	by 1,2,3,4) prc
                                                                                                         on		prc.pre_id = dpr.pre_id
@@ -2704,10 +2704,11 @@ def get_data(glue_context, connection):
                                         --Tiempos desarrollo:
                                         --7.842s (ramo 57)
                                         --11m25s (otros ramos)
-                                        --Tiempos producci�n:
+                                        --Tiempos producci n:
                                         --2m33s (ramo 57)          
                                          ) AS TMP
                                         '''
+ 
     DF_LPG_VTIME_OTROS_RAMOS = glue_context.read.format('jdbc').options(**connection).option("fetchsize",10000).option("dbtable",L_RBRECPR_VTIME_LPG_OTROS_RAMOS).load()
 
     DF_LPG_VTIME = DF_LPG_VTIME_MULTIRIESGO_INCENDIO.union(DF_LPG_VTIME_OTROS_RAMOS)
@@ -2719,7 +2720,7 @@ def get_data(glue_context, connection):
                                         '' PK, 
                                         '' DTPREG, --excluido
                                         '' TIOCPROC, --excluido
-                                        pre."DCOMPDATE"  TIOCFRM, --excluido
+                                        CAST (pre."DCOMPDATE" AS DATE) TIOCFRM, --excluido
                                         '' TIOCTO, --excluido
                                         '' KRITPREG, --PENDIENTE 01
                                         'PVV' KGIORIGM, --excluido
@@ -3154,7 +3155,7 @@ def get_data(glue_context, connection):
                                 join 	usvtimv01."PREMIUM" pre on pre.ctid = prc.pre_id
                                 join 	(select 'LPV' cia, '-' sep) par on 1 = 1
                                 --462ms (desarrollo: todos los ramos)
-                                -- (producci�n: todos los ramos)
+                                -- (producci n: todos los ramos)
                              ) AS TMP   
                              '''
 
@@ -3170,7 +3171,7 @@ def get_data(glue_context, connection):
                                                 '' PK,
                                                 '' DTPREG,
                                                 '' TIOCPROC,
-                                                A."ISSUE_DATE" TIOCFRM,
+                                                CAST (CAST (A."ISSUE_DATE" AS DATE)AS VARCHAR) TIOCFRM,
                                                 '' TIOCTO,
                                                 '' KRITPREG,
                                                 'PNV' KGIORIGM,
