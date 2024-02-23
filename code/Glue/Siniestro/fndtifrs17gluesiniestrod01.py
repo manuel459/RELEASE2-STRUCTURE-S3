@@ -64,7 +64,7 @@ try:
     #-------------------------------------#
     #   OBTENER LA FECHA INICIO DEL JOB
     #-------------------------------------#
-    job_name = f'fndtifrs17gluesiniestos{env}01_test'
+    job_name = f'fndtifrs17gluesiniestro{env}01_test'
     
     response = glue_client.get_job_runs(JobName=job_name, MaxResults=1)
     

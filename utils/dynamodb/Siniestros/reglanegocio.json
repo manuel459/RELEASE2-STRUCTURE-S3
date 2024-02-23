@@ -2,7 +2,7 @@
     "path_file_tmp":[
         {
            "nombre_tabla":"SBCOSSEG",
-           "path":"tmp/regla_negocio/Siniestro/RN-SINIESTRO-SBCOSSEG.parquet",
+           "path":"tmp/regla_negocio/Siniestros/RN-SINIESTRO-SBCOSSEG.parquet",
            "script_inicial":"lib/fndtifrs17gluesiniestrod01/regla_negocio/inicial/fndtifrs17gluesiniestrod01sbcosseg.py",
            "script_incremental":"lib/fndtifrs17gluesiniestrod01/regla_negocio/incremental/fndtifrs17gluesiniestrod01sbcosseg.py",
            "script_historico":"lib/fndtifrs17gluesiniestrod01/regla_negocio/historico/fndtifrs17gluesiniestrod01sbcosseg.py",
@@ -10,19 +10,19 @@
         },
         {
            "nombre_tabla":"SBHISPR",
-           "path":"tmp/regla_negocio/Siniestro/RN-SINIESTRO-SBHISPR.parquet",
+           "path":"tmp/regla_negocio/Siniestros/RN-SINIESTRO-SBHISPR.parquet",
            "script_inicial":"lib/fndtifrs17gluesiniestrod01/regla_negocio/inicial/fndtifrs17gluesiniestrod01sbhispr.py",
            "script_incremental":"lib/fndtifrs17gluesiniestrod01/regla_negocio/incremental/fndtifrs17gluesiniestrod01sbhispr.py",
            "script_historico":"lib/fndtifrs17gluesiniestrod01/regla_negocio/historico/fndtifrs17gluesiniestrod01sbhispr.py",
-           "flag":1
+           "flag":0
         },
         {
            "nombre_tabla":"SBSIN",
-           "path":"tmp/regla_negocio/Siniestro/RN-SINIESTRO-SBSIN.parquet",
+           "path":"tmp/regla_negocio/Siniestros/RN-SINIESTRO-SBSIN.parquet",
            "script_inicial":"lib/fndtifrs17gluesiniestrod01/regla_negocio/inicial/fndtifrs17gluesiniestrod01sbsin.py",
            "script_incremental":"lib/fndtifrs17gluesiniestrod01/regla_negocio/incremental/fndtifrs17gluesiniestrod01sbsin.py",
            "script_historico":"lib/fndtifrs17gluesiniestrod01/regla_negocio/historico/fndtifrs17gluesiniestrod01sbsin.py",
-           "flag":1
+           "flag":0
         }
      ]
 }
