@@ -569,9 +569,9 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                 )
                               ) A
                                 ON  L."SCERTYPE"  = A."SCERTYPE"
-                                AND L."NBRANCH"   = A."NBRANCH"
+                                AND L."NBRANCH"   = A."NBRANCH" 
                                 AND L."NPRODUCT"  = A."NPRODUCT"
-                                AND L."NPOLICY"   = A."NPOLICY"
+                                AND L."NPOLICY"   = A."NPOLICY" 
                                 AND L."NCERTIF"   = A."NCERTIF"  
                                 AND L."DEFFECDATE" <= A."DSTARTDATE" 
                                 AND (L."DNULLDATE" IS NULL OR L."DNULLDATE" > A."DSTARTDATE") 

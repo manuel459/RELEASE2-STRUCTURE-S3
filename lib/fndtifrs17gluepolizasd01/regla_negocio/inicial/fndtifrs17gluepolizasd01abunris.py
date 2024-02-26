@@ -1234,7 +1234,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                     'PVG' KGIORIGM,                                                                               -- Indicador
                                     aut."NBRANCH" || '-' ||  PC."NPRODUCT" || '-' || aut."NPOLICY" ||  '-' || aut."NCERTIF" KABAPOL,                      -- Numero de Poliza
                                     /*(select "RISKTYPEL"  from USBI01."IFRS170_T_RAMOS_POR_TIPO_RIESGO" where "BRANCHCOM" = aut."NBRANCH" and "SOURCESCHEMA" = 'usvtimg01')*/ 'AUT' KACTPRIS ,     -- Codigo del Tipo de riesgo
-                                    coalesce(trim(aut."SREGIST"),'') || '-' || coalesce(trim(aut."SCHASSIS"),'')  DUNIRIS,        -- Codigo de Unidad de riesgo
+                                    coalesce(trim(aut."SREGIST"),'') /*|| '-' || coalesce(trim(aut."SCHASSIS"),'')*/  DUNIRIS,        -- Codigo de Unidad de riesgo
                                     coalesce(cast(cast(aut."DSTARTDATE"as date)as varchar),'')  TINCRIS,                          -- Fecha de inicio del riesgo
                                     coalesce(cast(aut."DEXPIRDAT" as varchar),'')  TVENCRI,                                       -- Fecha de vencimiento del riesgo
                                     '' as TSITRIS,                                                  -- Fecha de estado de la unidad del riesgo
@@ -1561,7 +1561,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
 
       L_ABUNRIS_INSIS_V = f'''
                             (
-                             select 
+                            (select 
                               'D' AS INDDETREC,
                               'ABUNRIS' AS TABLAIFRS17,
                               '' PK,                                                          
@@ -1633,6 +1633,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                               '' as DINREGFL                              
                              from  usinsiv01."INSURED_OBJECT" io 
                              where cast(io."REGISTRATION_DATE" as date)  between  '{p_fecha_inicio}' AND '{p_fecha_fin}'
+                            )
                             ) AS TMP
                            '''
     

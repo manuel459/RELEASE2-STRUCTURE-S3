@@ -70,6 +70,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                           '' AS DFACMULT,
                           VMTCAPIN,                     
 						              VMTPREIN,
+                          '' AS KABTRTAB_2,
                           '' AS DINDESES,
                           '' AS DINDMOTO,
                           '' AS KACSALIN,
@@ -254,515 +255,517 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
   print("ABCOBAP INSUNIX LPG EXITOSO")
 
   l_abcobap_insunix_lpv = f'''
-                          (SELECT 
-                          'D' AS INDDETREC,
-                          'ABCOBAP' AS TABLAIFRS17,
-                          '' AS PK,
-                          '' AS DTPREG,
-                          '' AS TIOCPROC,
-                          TIOCFRM,
-                          '' AS TIOCTO,
-                          'PIV' AS KGIORIGM,
-                          KABAPOL,
-                          '' AS KABUNRIS,
-                          KGCTPCBT,
-                          TINICIO,
-                          TTERMO,
-                          '' AS TSITCOB,
-                          '' AS KACSITCB,
-                          '' AS VMTPRMSP,
-                          VMTCOMR,
-                          '' AS VMTBOMAT,
-                          '' AS VTXBOMAT,
-                          '' AS VMTBOCOM,
-                          '' AS VTXBOCOM,
-                          '' AS VMTDECOM,
-                          '' AS VTXDECOM,
-                          '' AS VMTDETEC,
-                          '' AS VTXDETEC,
-                          '' AS VMTAGRAV,
-                          '' AS VTXAGRAV,
-                          '' AS VMTPRMTR,
-                          '' AS VMTPRLIQ,
-                          VMTPRMBR,
-                          VTXCOB,
-                          VCAPITAL,
-                          '' AS VTXCAPIT,
-                          '' AS KACTPIDX,
-                          '' AS VTXINDX,
-                          'LPV' AS DCOMPA,
-                          '' AS DMARCA,
-                          '' AS TDACECOB,
-                          '' AS TDCANCOB,
-                          '' AS TDCRICOB,
-                          TDRENOVA,
-                          '' AS TDVENTRA,
-                          '' AS DHORAINI,
-                          VMTPREMC,
-                          '' AS VMIBOMAT,
-                          '' AS VMIBOCOM,
-                          '' AS VMIDECOM,
-                          '' AS VMIDETEC,
-                          '' AS VMIRPMSP,
-                          '' AS VMIPRMBR,
-                          '' AS VMICOMR,
-                          '' AS VMIPRLIQ,
-                          '' AS VMICMNQP,
-                          '' AS VMIPRMTR,
-                          '' AS VMIAGRAV,
-                          '' AS KACTIPCB,
-                          '' AS VMTCAPLI,
-                          '' AS KACTRARE,
-                          '' AS KACFMCAL,
-                          '' AS DFACMULT,
-                          VMTCAPIN,
-                          VMTPREIN,
-                          '' AS DINDESES,
-                          '' AS DINDMOTO,
-                          '' AS KACSALIN,
-                          '' AS VMTSALMD,
-                          '' AS VTXLMRES,
-                          '' AS VTXEQUIP,
-                          '' AS VTXPRIOR,
-                          '' AS VTXCONTR,
-                          '' AS VTXESPEC,
-                          '' AS DCAPMORT,
-                          VMTPRRES,
-                          '' AS DIDADETAR,
-                          '' AS DIDADLIMCOBA,
-                          '' AS KACTPDUR,
-                          '' AS KGCRAMO_SAP,
-                          '' AS KACTCOMP,
-                          '' AS KACINDTX,
-                          '' AS KACCALIDA,
-                          '' AS DNCABCALP,
-                          '' AS DINDNIVEL,
-                          '' AS DURCOB,
-                          '' AS DURPAGCOB,
-                          '' AS KACTPDURCB,
-                          '' AS DINCOBINDX,
-                          '' AS KACGRCBT,
-                          '' AS KABTRTAB_2,
-                          '' AS VTXAJTBUA,
-                          '' AS VMTCAPREM
-                          --,MODULEC
-                          FROM(
-                                  SELECT 
-                                  COALESCE (CAST(C.EFFECDATE AS VARCHAR),'')  AS TIOCFRM,
-                                  COALESCE(C.BRANCH, 0) || '-'|| C.PRODUCT || '-' ||  COALESCE(C.POLICY, 0)|| '-' || COALESCE(C.CERTIF, 0)  AS KABAPOL,
-                                  '' AS KABUNRIS,
-                                  COALESCE((SELECT COALESCE(CAST(GLC.COVERGEN AS VARCHAR), '0') || '-' || COALESCE(GLC.CURRENCY, 0)  FROM 
-                                          (SELECT GC.USERCOMP,
-                          				GC.COMPANY,
-                          				GC.BRANCH,
-                          				GC.PRODUCT,
-                          				GC.CURRENCY,
-                          				GC.MODULEC,
-                          				GC.COVER,
-                          				GC.EFFECDATE,
-                          				GC.NULLDATE,
-                          				GC.COVERGEN
-                          				FROM USINSUV01.GEN_COVER GC
-                          				UNION 
-                          				SELECT LC.USERCOMP,
-                          				LC.COMPANY,
-                          				LC.BRANCH,
-                          				LC.PRODUCT,
-                          				LC.CURRENCY,
-                          				0 AS MODULEC,
-                          				LC.COVER,
-                          				LC.EFFECDATE,
-                          				LC.NULLDATE,
-                          				LC.COVERGEN
-                          				FROM USINSUV01.LIFE_COVER LC) GLC 
-                                          WHERE GLC.USERCOMP = C.USERCOMP 
-                                          AND GLC.COMPANY = C.COMPANY 
-                                          AND GLC.BRANCH = C.BRANCH 
-                                          AND GLC.PRODUCT = C.PRODUCT 
-                                          AND GLC.CURRENCY = C.CURRENCY
-                                          AND GLC.MODULEC = C.MODULEC
-                                          AND GLC.COVER = C.COVER 
-                                          AND GLC.EFFECDATE <= (CASE WHEN C.POLITYPE = '1' THEN C.EFFECDATE_POL ELSE C.EFFECDATE_CERT END)
-                                          AND (GLC.NULLDATE IS NULL OR GLC.NULLDATE > (CASE WHEN C.POLITYPE = '1' THEN C.EFFECDATE_POL ELSE C.EFFECDATE_CERT END)) LIMIT 1), '0') AS KGCTPCBT,
-                                  COALESCE (CAST(C.EFFECDATE AS VARCHAR),'')  AS TINICIO,
-                                  COALESCE (CAST(C.NULLDATE AS VARCHAR),'') AS TTERMO,
-                                  COALESCE(C.PREMIUM, 0) AS VMTCOMR,
-                                  COALESCE(C.PREMIUM,  0) AS VMTPRMBR,
-                                  COALESCE(C.RATECOVE, 0) AS VTXCOB, --TASA APLICAR A LA COBERTURA
-                                  COALESCE(CAST(C.CAPITAL AS VARCHAR), '0') AS VCAPITAL,-- IMPORTE DE CAPITAL ASEGURADO EN EL CERTIFICADO                         
-                                  'LPV' AS DCOMPA,
-                                  '' AS DMARCA,
-                                  '' AS TDACECOB,
-                                  '' AS TDCANCOB,
-                                  '' AS TDCRICOB,
-                                  COALESCE(CAST (C.EFFECDATE AS VARCHAR),'') AS TDRENOVA,
-                                  '' AS TDVENTRA,
-                                  '' AS DHORAINI,
-                                  COALESCE(CAST(( (SELECT COALESCE(CO.SHARE, 0) 
-                                                FROM USINSUV01.COINSURAN CO
-                                                WHERE CO.USERCOMP = C.USERCOMP 
-                                                AND CO.COMPANY = C.COMPANY 
-                                                AND CO.CERTYPE = C.CERTYPE
-                                                AND CO.BRANCH = C.BRANCH 
-                                                AND CO.POLICY = C.POLICY
-                                                AND CO.COMPANYC = 12
-                                                AND CO.EFFECDATE <= C.EFFECDATE
-                                                AND (CO.NULLDATE IS NULL OR CO.NULLDATE > C.EFFECDATE)) * C.PREMIUM) AS VARCHAR), '100') AS VMTPREMC,                       
-                                  COALESCE(C.CAPITALI, 0) AS VMTCAPIN,
-                                  COALESCE((SELECT COV.PREMIUM FROM USINSUV01.COVER COV 
-                                         LEFT JOIN USINSUV01.CERTIFICAT CERT                           
-                                         ON COV.USERCOMP = CERT.USERCOMP 
-                                         AND COV.COMPANY  = CERT.COMPANY  
-                                         AND COV.CERTYPE  = CERT.CERTYPE 
-                                         AND COV.BRANCH   = CERT.BRANCH 
-                                         AND COV.POLICY   = CERT.POLICY
-                                         AND COV.CERTIF   = CERT.CERTIF
-                                         AND COV.CURRENCY = C.CURRENCY 
-                                         AND COV.COVER    = C.COVER
-                                         AND COV.MODULEC  = C.MODULEC
-                                         AND COV.EFFECDATE <= CERT.DATE_ORIGI
-                                         AND (COV.NULLDATE IS NULL OR COV.NULLDATE > CERT.DATE_ORIGI) LIMIT 1),
-                                         (SELECT COV.PREMIUM FROM USINSUV01.COVER COV 
-                                         LEFT JOIN USINSUV01.CERTIFICAT CERT                           
-                                         ON  COV.USERCOMP = CERT.USERCOMP 
-                                         AND COV.COMPANY  = CERT.COMPANY  
-                                         AND COV.CERTYPE  = CERT.CERTYPE 
-                                         AND COV.BRANCH   = CERT.BRANCH 
-                                         AND COV.POLICY   = CERT.POLICY
-                                         AND COV.CERTIF   = CERT.CERTIF
-                                         AND COV.CURRENCY = C.CURRENCY 
-                                         AND COV.COVER    = C.COVER
-                                         AND COV.MODULEC  = C.MODULEC
-                                         LEFT JOIN USINSUV01.POLICY POL
-                                         ON  POL.USERCOMP = CERT.USERCOMP 
-                                         AND POL.COMPANY  = CERT.COMPANY  
-                                         AND POL.CERTYPE  = CERT.CERTYPE
-                                         AND POL.BRANCH   = CERT.BRANCH 
-                                         AND POL.POLICY   = CERT.POLICY                                    
-                                         AND COV.EFFECDATE <= POL.DATE_ORIGI
-                                         AND (COV.NULLDATE IS NULL OR COV.NULLDATE > POL.DATE_ORIGI) LIMIT 1)) AS VMTPREIN,
-                                  COALESCE((COALESCE ((SELECT (SUM(R.SHARE/100)) * C.PREMIUM  
-                                                    FROM USINSUV01.REINSURAN R 
-                                                    WHERE R.USERCOMP = C.USERCOMP 
-                                                    AND R.COMPANY = C.COMPANY 
-                                                    AND R.CERTYPE = C.CERTYPE  
-                                                    AND R.BRANCH = C.BRANCH
-                                                    AND R.POLICY = C.POLICY
-                                                    AND R.CERTIF = C.CERTIF 
-                                                    AND R.EFFECDATE <= C.EFFECDATE
-                                                    AND (R.NULLDATE IS NULL OR R.NULLDATE > C.EFFECDATE)
-                                                    AND R.TYPE <> 1),
-                                                    (SELECT (SUM(R.SHARE/100)) * C.PREMIUM  FROM USINSUV01.REINSURAN R 
-                                                    WHERE R.USERCOMP = C.USERCOMP 
-                                                    AND R.COMPANY = C.COMPANY 
-                                                    AND R.CERTYPE = C.CERTYPE  
-                                                    AND R.BRANCH = C.BRANCH
-                                                    AND R.POLICY = C.POLICY
-                                                    AND R.CERTIF = 0
-                                                    AND R.EFFECDATE <= C.EFFECDATE
-                                                    AND (R.NULLDATE IS NULL OR R.NULLDATE > C.EFFECDATE)
-                                                    AND R.TYPE <> 1))), 0) AS VMTPRRES
-                                  --,C.MODULEC
-                                  FROM 
-                                  ( 
-                                    (SELECT
-                                     C.USERCOMP, C.COMPANY, C.CERTYPE, C.BRANCH, C.CURRENCY, C.COVER, C.EFFECDATE,        
-                                     C.NULLDATE,C.POLICY, C.CERTIF, C.PREMIUM, C.RATECOVE, C.CAPITAL, C.CAPITALI, C.MODULEC,
-                                     POL.PRODUCT,POL.POLITYPE,POL.EFFECDATE AS EFFECDATE_POL,CERT.EFFECDATE AS EFFECDATE_CERT,
-                                     CASE
-                                     WHEN POL.POLITYPE = '1' --INDIVIDUAL
-                                     THEN 
-                                        CASE
-                                        WHEN (C.EFFECDATE <= POL.EFFECDATE AND
-                                             (C.NULLDATE IS NULL OR
-                                              C.NULLDATE > POL.EFFECDATE)) THEN 1
-                                        ELSE 
-                                            CASE
-                                            WHEN EXISTS (SELECT 1
-                                                      FROM USINSUV01.COVER COV1
-                                                      WHERE COV1.CERTYPE = C.CERTYPE
-                                                      AND COV1.USERCOMP = C.USERCOMP
-                                                      AND COV1.COMPANY = C.COMPANY
-                                                      AND COV1.BRANCH = C.BRANCH
-                                                      --AND 	COV1.PRODUCT  = C.PRODUCT
-                                                      AND COV1.MODULEC  = C.MODULEC
-                                                      AND COV1.POLICY   = C.POLICY
-                                                      AND COV1.CERTIF   = C.CERTIF
-                                                      AND COV1.CURRENCY = C.CURRENCY
-                                                      AND COV1.COVER    = C.COVER
-                                                      AND COV1.EFFECDATE <= POL.EFFECDATE
-                                                      AND (COV1.NULLDATE IS NULL
-                                                      OR COV1.NULLDATE > POL.EFFECDATE)) THEN 0
-                                            ELSE 
-                                                CASE
-                                                WHEN C.NULLDATE = (SELECT MAX(COV1.NULLDATE)
-                                                                FROM USINSUV01.COVER COV1
-                                                                WHERE COV1.USERCOMP = C.USERCOMP
-                                                                AND COV1.CERTYPE = C.CERTYPE
-                                                                AND COV1.COMPANY = C.COMPANY
-                                                                AND COV1.BRANCH = C.BRANCH
-                                                                --AND 	  COV1.PRODUCT  = C.PRODUCT
-                                                                AND COV1.MODULEC = C.MODULEC
-                                                                AND COV1.POLICY = C.POLICY
-                                                                AND COV1.CERTIF = C.CERTIF
-                                                                AND COV1.CURRENCY = C.CURRENCY
-                                                                AND COV1.COVER = C.COVER) THEN 1
-                                                ELSE 0
-                                                END
-                                            END
-                                        END
-                                        ELSE 
-                                            CASE
-                                            WHEN (C.EFFECDATE <= CERT.EFFECDATE AND (C.NULLDATE IS NULL OR C.NULLDATE > CERT.EFFECDATE)) THEN 1
-                                            ELSE 
-                                            CASE
-                                            WHEN EXISTS (SELECT  1
-                                                         FROM USINSUV01.COVER COV1
-                                                         WHERE COV1.CERTYPE = C.CERTYPE
-                                                         AND COV1.USERCOMP = C.USERCOMP
-                                                         AND COV1.COMPANY = C.COMPANY
-                                                         AND COV1.BRANCH = C.BRANCH
-                                                         --AND 	COV1.PRODUCT  = C.PRODUCT
-                                                         AND COV1.MODULEC = C.MODULEC
-                                                         AND COV1.POLICY = C.POLICY
-                                                         AND COV1.CERTIF = C.CERTIF
-                                                         AND COV1.CURRENCY = C.CURRENCY
-                                                         AND COV1.COVER = C.COVER
-                                                         AND COV1.EFFECDATE <= CERT.EFFECDATE
-                                                         AND (COV1.NULLDATE IS NULL
-                                                         OR COV1.NULLDATE > CERT.EFFECDATE)) THEN 0
-                                            ELSE CASE
-                                                 WHEN C.NULLDATE = (SELECT
-                                                     MAX(COV1.NULLDATE)
-                                                   FROM USINSUV01.COVER COV1
-                                                   WHERE COV1.USERCOMP = C.USERCOMP
-                                                   AND COV1.CERTYPE = C.CERTYPE
-                                                   AND COV1.COMPANY = C.COMPANY
-                                                   AND COV1.BRANCH = C.BRANCH
-                                                   --AND 	  COV1.PRODUCT  = C.PRODUCT
-                                                   AND COV1.MODULEC = C.MODULEC
-                                                   AND COV1.POLICY = C.POLICY
-                                                   AND COV1.CERTIF = C.CERTIF
-                                                   AND COV1.CURRENCY = C.CURRENCY
-                                                   AND COV1.COVER = C.COVER) THEN 1
-                                                 ELSE 0
-                                            END
-                                            END
-                                        END
-                                     END FLAG
-                                     FROM USINSUV01.COVER C
-                                     LEFT JOIN USINSUV01.CERTIFICAT CERT ON C.USERCOMP = CERT.USERCOMP AND C.COMPANY = CERT.COMPANY AND C.CERTYPE = CERT.CERTYPE AND C.BRANCH = CERT.BRANCH AND C.POLICY = CERT.policy AND C.CERTIF = CERT.CERTIF
-                                     JOIN USINSUV01.POLICY POL ON POL.USERCOMP = C.USERCOMP AND POL.COMPANY = C.COMPANY AND POL.CERTYPE = C.CERTYPE AND POL.BRANCH = C.BRANCH AND POL.POLICY = C.POLICY
-                                     WHERE C.CERTYPE = '2'
-                                     AND POL.STATUS_POL NOT IN ('2', '3')
-                                     AND ((POL.POLITYPE = '1' -- INDIVIDUAL 
-                                           AND POL.EXPIRDAT >= '2021-12-31'
-                                         AND (POL.NULLDATE IS NULL OR POL.NULLDATE > '2021-12-31'))
-                                     OR (POL.POLITYPE <> '1' -- COLECTIVAS 
-                                         AND CERT.EXPIRDAT >= '2021-12-31'
-                                     AND (CERT.NULLDATE IS NULL OR CERT.NULLDATE > '2021-12-31')))
-                                     AND POL.EFFECDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}')
-                                  
-                                  UNION /*SE QUITO EL UNION DESDE AQUI */
-                          
-                                   (SELECT
-                                    C.USERCOMP, C.COMPANY, C.CERTYPE, C.BRANCH, C.CURRENCY, C.COVER, C.EFFECDATE,        
-                                    C.NULLDATE,C.POLICY, C.CERTIF, C.PREMIUM, C.RATECOVE, C.CAPITAL, C.CAPITALI, C.MODULEC AS MODULO,
-                                    POL.PRODUCT,POL.POLITYPE,POL.EFFECDATE AS EFFECDATE_POL,CERT.EFFECDATE AS EFFECDATE_CERT,
-                                    CASE
-                                    WHEN POL.POLITYPE = '1' --INDIVIDUAL
-                                    THEN CASE
-                                    WHEN (C.EFFECDATE <= POL.EFFECDATE AND
-                                    (C.NULLDATE IS NULL OR
-                                    C.NULLDATE > POL.EFFECDATE)) THEN 1
-                                    ELSE CASE
-                                     WHEN EXISTS (SELECT
-                                          1
-                                        FROM USINSUV01.COVER COV1
-                                        WHERE COV1.CERTYPE = C.CERTYPE
-                                        AND COV1.USERCOMP = C.USERCOMP
-                                        AND COV1.COMPANY = C.COMPANY
-                                        AND COV1.BRANCH = C.BRANCH
-                                        --AND 	COV1.PRODUCT  = C.PRODUCT
-                                        AND COV1.MODULEC = C.MODULEC
-                                        AND COV1.POLICY = C.POLICY
-                                        AND COV1.CERTIF = C.CERTIF
-                                        AND COV1.CURRENCY = C.CURRENCY
-                                        AND COV1.COVER = C.COVER
-                                        AND COV1.EFFECDATE <= POL.EFFECDATE
-                                        AND (COV1.NULLDATE IS NULL
-                                        OR COV1.NULLDATE > POL.EFFECDATE)) THEN 0
-                                     ELSE CASE
-                                         WHEN C.NULLDATE = (SELECT
-                                              MAX(COV1.NULLDATE)
-                                            FROM USINSUV01.COVER COV1
-                                            WHERE COV1.USERCOMP = C.USERCOMP
-                                            AND COV1.CERTYPE = C.CERTYPE
-                                            AND COV1.COMPANY = C.COMPANY
-                                            AND COV1.BRANCH = C.BRANCH
-                                            --AND 	  COV1.PRODUCT  = C.PRODUCT
-                                            AND COV1.MODULEC = C.MODULEC
-                                            AND COV1.POLICY = C.POLICY
-                                            AND COV1.CERTIF = C.CERTIF
-                                            AND COV1.CURRENCY = C.CURRENCY
-                                            AND COV1.COVER = C.COVER) THEN 1
-                                         ELSE 0
-                                       END
-                                    END
-                                     END
-                                     ELSE CASE
-                                       WHEN (C.EFFECDATE <= CERT.EFFECDATE AND
-                                       (C.NULLDATE IS NULL OR
-                                       C.NULLDATE > CERT.EFFECDATE)) THEN 1
-                                     ELSE CASE
-                                      WHEN EXISTS (SELECT  1
-                                        FROM USINSUV01.COVER COV1
-                                        WHERE COV1.CERTYPE = C.CERTYPE
-                                        AND COV1.USERCOMP = C.USERCOMP
-                                        AND COV1.COMPANY = C.COMPANY
-                                        AND COV1.BRANCH = C.BRANCH
-                                        --AND 	COV1.PRODUCT  = C.PRODUCT
-                                        AND COV1.MODULEC = C.MODULEC
-                                        AND COV1.POLICY = C.POLICY
-                                        AND COV1.CERTIF = C.CERTIF
-                                        AND COV1.CURRENCY = C.CURRENCY
-                                        AND COV1.COVER = C.COVER
-                                        AND COV1.EFFECDATE <= CERT.EFFECDATE
-                                        AND (COV1.NULLDATE IS NULL
-                                        OR COV1.NULLDATE > CERT.EFFECDATE)) THEN 0
-                                      ELSE CASE
-                                          WHEN C.NULLDATE = (SELECT
-                                              MAX(COV1.NULLDATE)
-                                            FROM USINSUV01.COVER COV1
-                                            WHERE COV1.USERCOMP = C.USERCOMP
-                                            AND COV1.CERTYPE = C.CERTYPE
-                                            AND COV1.COMPANY = C.COMPANY
-                                            AND COV1.BRANCH = C.BRANCH
-                                            --AND 	  COV1.PRODUCT  = C.PRODUCT
-                                            AND COV1.MODULEC = C.MODULEC
-                                            AND COV1.POLICY = C.POLICY
-                                            AND COV1.CERTIF = C.CERTIF
-                                            AND COV1.CURRENCY = C.CURRENCY
-                                            AND COV1.COVER = C.COVER) THEN 1
-                                          ELSE 0
-                                        END
-                                    END
-                                    END
-                                    END FLAG
-                                    FROM USINSUV01.COVER C
-                                    LEFT JOIN USINSUV01.CERTIFICAT CERT ON C.USERCOMP = CERT.USERCOMP AND C.COMPANY = CERT.COMPANY AND C.CERTYPE = CERT.CERTYPE AND C.BRANCH = CERT.BRANCH AND C.POLICY = CERT.policy AND C.CERTIF = CERT.CERTIF
-                                    JOIN USINSUV01.POLICY POL ON POL.USERCOMP = C.USERCOMP AND POL.COMPANY = C.COMPANY AND POL.CERTYPE = C.CERTYPE AND POL.BRANCH = C.BRANCH AND POL.POLICY = C.POLICY
-                                    WHERE POL.CERTYPE  = '2' 
-                                    AND POL.STATUS_POL NOT IN ('2', '3') 
-                                    AND (((POL.POLITYPE = '1' AND  POL.EXPIRDAT < '{l_fecha_carga_inicial}' OR POL.NULLDATE < '{l_fecha_carga_inicial}')
-                                    AND EXISTS (SELECT 1 FROM  USINSUV01.CLAIM CLA    
-                                                JOIN  USINSUV01.CLAIM_HIS CLH ON CLH.USERCOMP = CLA.USERCOMP AND CLH.COMPANY = CLA.COMPANY AND CLH.BRANCH = CLA.BRANCH AND CLH.CLAIM = CLA.CLAIM
-                                                WHERE CLA.BRANCH = POL.BRANCH AND CLA.POLICY = POL.POLICY AND TRIM(CLH.OPER_TYPE) IN (SELECT CAST(TCL.OPERATION AS VARCHAR(2))
-                                        		                                                                                          FROM 	USINSUG01.TAB_CL_OPE TCL
-                                        		                                                                                          WHERE  (TCL.RESERVE = 1 OR TCL.AJUSTES = 1 OR TCL.PAY_AMOUNT = 1)) 
-                                                                                                                                      AND   CLH.OPERDATE >= '{l_fecha_carga_inicial}')))                                                                                                                                        
-                                    AND POL.EFFECDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}')
-                                                                              
-                                  UNION
-                          
-                                   (SELECT
-                                   C.USERCOMP, C.COMPANY, C.CERTYPE, C.BRANCH, C.CURRENCY, C.COVER, C.EFFECDATE,        
-                                   C.NULLDATE,C.POLICY, C.CERTIF, C.PREMIUM, C.RATECOVE, C.CAPITAL, C.CAPITALI, C.MODULEC AS MODULO,
-                                   POL.PRODUCT,POL.POLITYPE,POL.EFFECDATE AS EFFECDATE_POL,CERT.EFFECDATE AS EFFECDATE_CERT,
-                                   CASE
-                                   WHEN POL.POLITYPE = '1' --INDIVIDUAL
-                                   THEN CASE
-                                   WHEN (C.EFFECDATE <= POL.EFFECDATE AND
-                                    (C.NULLDATE IS NULL OR
-                                    C.NULLDATE > POL.EFFECDATE)) THEN 1
-                                   ELSE CASE
-                                      WHEN EXISTS (SELECT
-                                          1
-                                        FROM USINSUV01.COVER COV1
-                                        WHERE COV1.CERTYPE = C.CERTYPE
-                                        AND COV1.USERCOMP = C.USERCOMP
-                                        AND COV1.COMPANY = C.COMPANY
-                                        AND COV1.BRANCH = C.BRANCH
-                                        --AND 	COV1.PRODUCT  = C.PRODUCT
-                                        AND COV1.MODULEC = C.MODULEC
-                                        AND COV1.POLICY = C.POLICY
-                                        AND COV1.CERTIF = C.CERTIF
-                                        AND COV1.CURRENCY = C.CURRENCY
-                                        AND COV1.COVER = C.COVER
-                                        AND COV1.EFFECDATE <= POL.EFFECDATE
-                                        AND (COV1.NULLDATE IS NULL
-                                        OR COV1.NULLDATE > POL.EFFECDATE)) THEN 0
-                                      ELSE CASE
-                                          WHEN C.NULLDATE = (SELECT
-                                              MAX(COV1.NULLDATE)
-                                            FROM USINSUV01.COVER COV1
-                                            WHERE COV1.USERCOMP = C.USERCOMP
-                                            AND COV1.CERTYPE = C.CERTYPE
-                                            AND COV1.COMPANY = C.COMPANY
-                                            AND COV1.BRANCH = C.BRANCH
-                                            --AND 	  COV1.PRODUCT  = C.PRODUCT
-                                            AND COV1.MODULEC = C.MODULEC
-                                            AND COV1.POLICY = C.POLICY
-                                            AND COV1.CERTIF = C.CERTIF
-                                            AND COV1.CURRENCY = C.CURRENCY
-                                            AND COV1.COVER = C.COVER) THEN 1
-                                          ELSE 0
-                                        END
-                                    END
-                                   END
-                                   ELSE CASE
-                                       WHEN (C.EFFECDATE <= CERT.EFFECDATE AND
-                                       (C.NULLDATE IS NULL OR
-                                       C.NULLDATE > CERT.EFFECDATE)) THEN 1
-                                   ELSE CASE
-                                      WHEN EXISTS (SELECT  1
-                                        FROM USINSUV01.COVER COV1
-                                        WHERE COV1.CERTYPE = C.CERTYPE
-                                        AND COV1.USERCOMP = C.USERCOMP
-                                        AND COV1.COMPANY = C.COMPANY
-                                        AND COV1.BRANCH = C.BRANCH
-                                        --AND 	COV1.PRODUCT  = C.PRODUCT
-                                        AND COV1.MODULEC = C.MODULEC
-                                        AND COV1.POLICY = C.POLICY
-                                        AND COV1.CERTIF = C.CERTIF
-                                        AND COV1.CURRENCY = C.CURRENCY
-                                        AND COV1.COVER = C.COVER
-                                        AND COV1.EFFECDATE <= CERT.EFFECDATE
-                                        AND (COV1.NULLDATE IS NULL
-                                        OR COV1.NULLDATE > CERT.EFFECDATE)) THEN 0
-                                      ELSE CASE
-                                          WHEN C.NULLDATE = (SELECT
-                                              MAX(COV1.NULLDATE)
-                                            FROM USINSUV01.COVER COV1
-                                            WHERE COV1.USERCOMP = C.USERCOMP
-                                            AND COV1.CERTYPE = C.CERTYPE
-                                            AND COV1.COMPANY = C.COMPANY
-                                            AND COV1.BRANCH = C.BRANCH
-                                            --AND 	  COV1.PRODUCT  = C.PRODUCT
-                                            AND COV1.MODULEC = C.MODULEC
-                                            AND COV1.POLICY = C.POLICY
-                                            AND COV1.CERTIF = C.CERTIF
-                                            AND COV1.CURRENCY = C.CURRENCY
-                                            AND COV1.COVER = C.COVER) THEN 1
-                                          ELSE 0
-                                        END
-                                    END
-                                   END
-                                   END FLAG
-                                   FROM USINSUV01.COVER C
-                                   LEFT JOIN USINSUV01.CERTIFICAT CERT ON C.USERCOMP = CERT.USERCOMP AND C.COMPANY = CERT.COMPANY AND C.CERTYPE = CERT.CERTYPE AND C.BRANCH = CERT.BRANCH AND C.POLICY = CERT.policy AND C.CERTIF = CERT.CERTIF
-                                   JOIN USINSUV01.POLICY POL ON POL.USERCOMP = C.USERCOMP AND POL.COMPANY = C.COMPANY AND POL.CERTYPE = C.CERTYPE AND POL.BRANCH = C.BRANCH AND POL.POLICY = C.POLICY
-                                   WHERE POL.CERTYPE  = '2' 
-                                   AND POL.STATUS_POL NOT IN ('2', '3')
-                                   AND (((POL.POLITYPE <> '1' AND CERT.EXPIRDAT < '{l_fecha_carga_inicial}'  OR  CERT.NULLDATE < '{l_fecha_carga_inicial}') 
-                                   AND EXISTS (SELECT 1 FROM  USINSUV01.CLAIM CLA    
-                                               JOIN  USINSUV01.CLAIM_HIS CLH  ON CLA.USERCOMP = CLH.USERCOMP AND CLA.COMPANY = CLH.COMPANY AND CLA.BRANCH = CLH.BRANCH  AND CLH.CLAIM = CLA.CLAIM
-                                               WHERE CLA.BRANCH   = CERT.BRANCH
-                                               AND   CLA.POLICY   = CERT.POLICY
-                                               AND   CLA.CERTIF   = CERT.CERTIF
-                                               AND   TRIM(CLH.OPER_TYPE) IN (SELECT CAST(TCL.OPERATION AS VARCHAR(2)) FROM  USINSUG01.TAB_CL_OPE TCL WHERE (TCL.RESERVE = 1 OR TCL.AJUSTES = 1 OR TCL.PAY_AMOUNT = 1)) AND  CLH.OPERDATE >= '{l_fecha_carga_inicial}')))
-                                   AND POL.EFFECDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}')/*SE QUITO EL UNION HASTA AQUI */) 
-                          C WHERE C.FLAG = 1) T ) AS TMP '''
+                          ( select 
+                            'd' as inddetrec,
+                            'abcobap' as tablaifrs17,
+                            '' as pk,
+                            '' as dtpreg,
+                            '' as tiocproc,
+                            tiocfrm,
+                            '' as tiocto,
+                            'piv' as kgiorigm,
+                            kabapol,
+                            '' as kabunris,
+                            kgctpcbt,
+                            tinicio,
+                            ttermo,
+                            '' as tsitcob,
+                            '' as kacsitcb,
+                            '' as vmtprmsp,
+                            vmtcomr,
+                            '' as vmtbomat,
+                            '' as vtxbomat,
+                            '' as vmtbocom,
+                            '' as vtxbocom,
+                            '' as vmtdecom,
+                            '' as vtxdecom,
+                            '' as vmtdetec,
+                            '' as vtxdetec,
+                            '' as vmtagrav,
+                            '' as vtxagrav,
+                            '' as vmtprmtr,
+                            '' as vmtprliq,
+                            vmtprmbr,
+                            vtxcob,
+                            vcapital,
+                            '' as vtxcapit,
+                            '' as kactpidx,
+                            '' as vtxindx,
+                            'lpv' as dcompa,
+                            '' as dmarca,
+                            '' as tdacecob,
+                            '' as tdcancob,
+                            '' as tdcricob,
+                            tdrenova,
+                            '' as tdventra,
+                            '' as dhoraini,
+                            vmtpremc,
+                            '' as vmibomat,
+                            '' as vmibocom,
+                            '' as vmidecom,
+                            '' as vmidetec,
+                            '' as vmirpmsp,
+                            '' as vmiprmbr,
+                            '' as vmicomr,
+                            '' as vmiprliq,
+                            '' as vmicmnqp,
+                            '' as vmiprmtr,
+                            '' as vmiagrav,
+                            '' as kactipcb,
+                            '' as vmtcapli,
+                            '' as kactrare,
+                            '' as kacfmcal,
+                            '' as dfacmult,
+                            vmtcapin,
+                            vmtprein,
+                            '' as kabtrtab_2,
+                            '' as dindeses,
+                            '' as dindmoto,
+                            '' as kacsalin,
+                            '' as vmtsalmd,
+                            '' as vtxlmres,
+                            '' as vtxequip,
+                            '' as vtxprior,
+                            '' as vtxcontr,
+                            '' as vtxespec,
+                            '' as dcapmort,
+                            vmtprres,
+                            '' as didadetar,
+                            '' as didadlimcoba,
+                            '' as kactpdur,
+                            '' as kgcramo_sap,
+                            '' as kactcomp,
+                            '' as kacindtx,
+                            '' as kaccalida,
+                            '' as dncabcalp,
+                            '' as dindnivel,
+                            '' as durcob,
+                            '' as durpagcob,
+                            '' as kactpdurcb,
+                            '' as dincobindx,
+                            '' as kacgrcbt,
+                            '' as kabtrtab_2,
+                            '' as vtxajtbua,
+                            '' as vmtcaprem
+                            --,modulec
+                            from(   select 
+                                    coalesce (cast(c.effecdate as varchar),'')  as tiocfrm,
+                                    coalesce(c.branch, 0) || '-'|| c.product || '-' ||  coalesce(c.policy, 0)|| '-' || coalesce(c.certif, 0)  as kabapol,
+                                    '' as kabunris,
+                                    coalesce(coalesce(   (select 	coalesce(gco.covergen, 0) || '-' || coalesce(gco.currency, 0) || '-g' 
+                                                          from 	usinsug01.gen_cover gco
+                                                          where	gco.usercomp = 1
+                                                          and	gco.company    = 1
+                                                          and	gco.branch     = c.branch
+                                                          and	gco.product    = c.product
+                                                          and gco.currency = c.currency
+                                                          and gco.modulec  = c.modulec
+                                                          and gco.cover    = c.cover
+                                                          and gco.effecdate <= c.effecdate
+                                                          and (gco.nulldate is null or gco.nulldate > c.effecdate)
+                                                          and (( select distinct pro.brancht
+	                                     	                         from usinsuv01.product pro
+	                                                               where pro.usercomp = gco.usercomp 
+	                                                               and pro.company    = gco.company 
+	                                                               and pro.branch     = gco.branch 
+	                                                               and pro.product    = gco.product 
+                                                                 and pro.nulldate is null)) not in ('1', '5') limit 1), 
+                                                        ( select 	coalesce(lco.covergen, 0) || '-' || coalesce(lco.currency, 0) || '-l' 
+                                                          from 	usinsug01.life_cover lco
+                                                          where	lco.usercomp = 1
+                                                          and	lco.company    = 1
+                                                          and	lco.branch     = c.branch
+                                                          and	lco.product    = c.product
+                                                          and lco.currency   = c.currency
+                                                          and lco.cover      = c.cover
+                                                          and lco.effecdate <= c.effecdate
+                                                          and (lco.nulldate is null or lco.nulldate > c.effecdate)
+                                                          and ((  select distinct pro.brancht
+			                                                            from usinsuv01.product pro
+			                                                            where pro.usercomp = lco.usercomp 
+			                                                            and pro.company    = lco.company 
+			                                                            and pro.branch     = lco.branch 
+			                                                            and pro.product    = lco.product 
+			                                                            and pro.nulldate is null) in ('1', '5')) limit 1 )), cast(c.cover as varchar)) as kgctpcbt,
+                                    coalesce (cast(c.effecdate as varchar),'')  as tinicio,
+                                    coalesce (cast(c.nulldate as varchar),'') as ttermo,
+                                    coalesce(c.premium, 0) as vmtcomr,
+                                    coalesce(c.premium,  0) as vmtprmbr,
+                                    coalesce(c.ratecove, 0) as vtxcob, --tasa aplicar a la cobertura
+                                    coalesce(cast(c.capital as varchar), '0') as vcapital,-- importe de capital asegurado en el certificado                         
+                                    'lpv' as dcompa,
+                                    '' as dmarca,
+                                    '' as tdacecob,
+                                    '' as tdcancob,
+                                    '' as tdcricob,
+                                    coalesce(cast (c.effecdate as varchar),'') as tdrenova,
+                                    '' as tdventra,
+                                    '' as dhoraini,
+                                    coalesce(cast(( (select coalesce(co.share, 0) 
+                                                     from usinsuv01.coinsuran co
+                                                     where co.usercomp = c.usercomp 
+                                                     and co.company = c.company 
+                                                     and co.certype = c.certype
+                                                     and co.branch = c.branch 
+                                                     and co.policy = c.policy
+                                                     and co.companyc = 12
+                                                     and co.effecdate <= c.effecdate
+                                                     and (co.nulldate is null or co.nulldate > c.effecdate)) * c.premium) as varchar), '100') as vmtpremc,                       
+                                    coalesce(c.capitali, 0) as vmtcapin,
+                                    coalesce((select cov.premium from usinsuv01.cover cov 
+                                              left join usinsuv01.certificat cert                           
+                                              on cov.usercomp = cert.usercomp 
+                                              and cov.company  = cert.company  
+                                              and cov.certype  = cert.certype 
+                                              and cov.branch   = cert.branch 
+                                              and cov.policy   = cert.policy
+                                              and cov.certif   = cert.certif
+                                              and cov.currency = c.currency 
+                                              and cov.cover    = c.cover
+                                              and cov.modulec  = c.modulec
+                                              and cov.effecdate <= cert.date_origi
+                                              and (cov.nulldate is null or cov.nulldate > cert.date_origi) limit 1),
+                                              (select cov.premium from usinsuv01.cover cov 
+                                               left join usinsuv01.certificat cert                           
+                                               on  cov.usercomp = cert.usercomp 
+                                               and cov.company  = cert.company  
+                                               and cov.certype  = cert.certype 
+                                               and cov.branch   = cert.branch 
+                                               and cov.policy   = cert.policy
+                                               and cov.certif   = cert.certif
+                                               and cov.currency = c.currency 
+                                               and cov.cover    = c.cover
+                                               and cov.modulec  = c.modulec
+                                               left join usinsuv01.policy pol
+                                               on  pol.usercomp = cert.usercomp 
+                                               and pol.company  = cert.company  
+                                               and pol.certype  = cert.certype
+                                               and pol.branch   = cert.branch 
+                                               and pol.policy   = cert.policy                                    
+                                               and cov.effecdate <= pol.date_origi
+                                               and (cov.nulldate is null or cov.nulldate > pol.date_origi) limit 1)) as vmtprein,
+                                    coalesce((coalesce ((select (sum(r.share/100)) * c.premium  
+                                                         from usinsuv01.reinsuran r 
+                                                         where r.usercomp = c.usercomp 
+                                                         and r.company = c.company 
+                                                         and r.certype = c.certype  
+                                                         and r.branch = c.branch
+                                                         and r.policy = c.policy
+                                                         and r.certif = c.certif 
+                                                         and r.effecdate <= c.effecdate
+                                                         and (r.nulldate is null or r.nulldate > c.effecdate)
+                                                         and r.type <> 1),
+                                                         (select (sum(r.share/100)) * c.premium  from usinsuv01.reinsuran r 
+                                                          where r.usercomp = c.usercomp 
+                                                          and r.company = c.company 
+                                                          and r.certype = c.certype  
+                                                          and r.branch = c.branch
+                                                          and r.policy = c.policy
+                                                          and r.certif = 0
+                                                          and r.effecdate <= c.effecdate
+                                                          and (r.nulldate is null or r.nulldate > c.effecdate)
+                                                          and r.type <> 1))), 0) as vmtprres
+                                    --,c.modulec
+                                    from 
+                                    ( 
+                                      (select
+                                       c.usercomp, c.company, c.certype, c.branch, c.currency, c.cover, c.effecdate,        
+                                       c.nulldate,c.policy, c.certif, c.premium, c.ratecove, c.capital, c.capitali, c.modulec,
+                                       pol.product,pol.politype,pol.effecdate as effecdate_pol,cert.effecdate as effecdate_cert,
+                                       case
+                                       when pol.politype = '1' --individual
+                                       then 
+                                          case
+                                          when (c.effecdate <= pol.effecdate and
+                                               (c.nulldate is null or
+                                                c.nulldate > pol.effecdate)) then 1
+                                          else 
+                                              case
+                                              when exists (select 1
+                                                        from usinsuv01.cover cov1
+                                                        where cov1.certype = c.certype
+                                                        and cov1.usercomp = c.usercomp
+                                                        and cov1.company = c.company
+                                                        and cov1.branch = c.branch
+                                                        --and 	cov1.product  = c.product
+                                                        and cov1.modulec  = c.modulec
+                                                        and cov1.policy   = c.policy
+                                                        and cov1.certif   = c.certif
+                                                        and cov1.currency = c.currency
+                                                        and cov1.cover    = c.cover
+                                                        and cov1.effecdate <= pol.effecdate
+                                                        and (cov1.nulldate is null
+                                                        or cov1.nulldate > pol.effecdate)) then 0
+                                              else 
+                                                  case
+                                                  when c.nulldate = (select max(cov1.nulldate)
+                                                                  from usinsuv01.cover cov1
+                                                                  where cov1.usercomp = c.usercomp
+                                                                  and cov1.certype = c.certype
+                                                                  and cov1.company = c.company
+                                                                  and cov1.branch = c.branch
+                                                                  --and 	  cov1.product  = c.product
+                                                                  and cov1.modulec = c.modulec
+                                                                  and cov1.policy = c.policy
+                                                                  and cov1.certif = c.certif
+                                                                  and cov1.currency = c.currency
+                                                                  and cov1.cover = c.cover) then 1
+                                                  else 0
+                                                  end
+                                              end
+                                          end
+                                          else 
+                                              case
+                                              when (c.effecdate <= cert.effecdate and (c.nulldate is null or c.nulldate > cert.effecdate)) then 1
+                                              else 
+                                              case
+                                              when exists (select  1
+                                                           from usinsuv01.cover cov1
+                                                           where cov1.certype = c.certype
+                                                           and cov1.usercomp = c.usercomp
+                                                           and cov1.company = c.company
+                                                           and cov1.branch = c.branch
+                                                           --and 	cov1.product  = c.product
+                                                           and cov1.modulec = c.modulec
+                                                           and cov1.policy = c.policy
+                                                           and cov1.certif = c.certif
+                                                           and cov1.currency = c.currency
+                                                           and cov1.cover = c.cover
+                                                           and cov1.effecdate <= cert.effecdate
+                                                           and (cov1.nulldate is null
+                                                           or cov1.nulldate > cert.effecdate)) then 0
+                                              else case
+                                                   when c.nulldate = (select
+                                                       max(cov1.nulldate)
+                                                     from usinsuv01.cover cov1
+                                                     where cov1.usercomp = c.usercomp
+                                                     and cov1.certype = c.certype
+                                                     and cov1.company = c.company
+                                                     and cov1.branch = c.branch
+                                                     --and 	  cov1.product  = c.product
+                                                     and cov1.modulec = c.modulec
+                                                     and cov1.policy = c.policy
+                                                     and cov1.certif = c.certif
+                                                     and cov1.currency = c.currency
+                                                     and cov1.cover = c.cover) then 1
+                                                   else 0
+                                              end
+                                              end
+                                          end
+                                       end flag
+                                       from usinsuv01.cover c
+                                       left join usinsuv01.certificat cert on c.usercomp = cert.usercomp and c.company = cert.company and c.certype = cert.certype and c.branch = cert.branch and c.policy = cert.policy and c.certif = cert.certif
+                                       join usinsuv01.policy pol on pol.usercomp = c.usercomp and pol.company = c.company and pol.certype = c.certype and pol.branch = c.branch and pol.policy = c.policy
+                                       where c.certype = '2'
+                                       and pol.status_pol not in ('2', '3')
+                                       and ((pol.politype = '1' -- individual 
+                                             and pol.expirdat >= '{p_fecha_carga_inicial}'
+                                           and (pol.nulldate is null or pol.nulldate > '{p_fecha_carga_inicial}'))
+                                       or (pol.politype <> '1' -- colectivas 
+                                           and cert.expirdat >= '{p_fecha_carga_inicial}'
+                                       and (cert.nulldate is null or cert.nulldate > '{p_fecha_carga_inicial}')))
+                                       and pol.effecdate between '{p_fecha_inicio}' and '{p_fecha_fin}')
+                                    
+                                    union /*se quito el union desde aqui */
+                            
+                                     (select
+                                      c.usercomp, c.company, c.certype, c.branch, c.currency, c.cover, c.effecdate,        
+                                      c.nulldate,c.policy, c.certif, c.premium, c.ratecove, c.capital, c.capitali, c.modulec as modulo,
+                                      pol.product,pol.politype,pol.effecdate as effecdate_pol,cert.effecdate as effecdate_cert,
+                                      case
+                                      when pol.politype = '1' --individual
+                                      then case
+                                      when (c.effecdate <= pol.effecdate and
+                                      (c.nulldate is null or
+                                      c.nulldate > pol.effecdate)) then 1
+                                      else case
+                                       when exists (select
+                                            1
+                                          from usinsuv01.cover cov1
+                                          where cov1.certype = c.certype
+                                          and cov1.usercomp = c.usercomp
+                                          and cov1.company = c.company
+                                          and cov1.branch = c.branch
+                                          --and 	cov1.product  = c.product
+                                          and cov1.modulec = c.modulec
+                                          and cov1.policy = c.policy
+                                          and cov1.certif = c.certif
+                                          and cov1.currency = c.currency
+                                          and cov1.cover = c.cover
+                                          and cov1.effecdate <= pol.effecdate
+                                          and (cov1.nulldate is null
+                                          or cov1.nulldate > pol.effecdate)) then 0
+                                       else case
+                                           when c.nulldate = (select
+                                                max(cov1.nulldate)
+                                              from usinsuv01.cover cov1
+                                              where cov1.usercomp = c.usercomp
+                                              and cov1.certype = c.certype
+                                              and cov1.company = c.company
+                                              and cov1.branch = c.branch
+                                              --and 	  cov1.product  = c.product
+                                              and cov1.modulec = c.modulec
+                                              and cov1.policy = c.policy
+                                              and cov1.certif = c.certif
+                                              and cov1.currency = c.currency
+                                              and cov1.cover = c.cover) then 1
+                                           else 0
+                                         end
+                                      end
+                                       end
+                                       else case
+                                         when (c.effecdate <= cert.effecdate and
+                                         (c.nulldate is null or
+                                         c.nulldate > cert.effecdate)) then 1
+                                       else case
+                                        when exists (select  1
+                                          from usinsuv01.cover cov1
+                                          where cov1.certype = c.certype
+                                          and cov1.usercomp = c.usercomp
+                                          and cov1.company = c.company
+                                          and cov1.branch = c.branch
+                                          --and 	cov1.product  = c.product
+                                          and cov1.modulec = c.modulec
+                                          and cov1.policy = c.policy
+                                          and cov1.certif = c.certif
+                                          and cov1.currency = c.currency
+                                          and cov1.cover = c.cover
+                                          and cov1.effecdate <= cert.effecdate
+                                          and (cov1.nulldate is null
+                                          or cov1.nulldate > cert.effecdate)) then 0
+                                        else case
+                                            when c.nulldate = (select
+                                                max(cov1.nulldate)
+                                              from usinsuv01.cover cov1
+                                              where cov1.usercomp = c.usercomp
+                                              and cov1.certype = c.certype
+                                              and cov1.company = c.company
+                                              and cov1.branch = c.branch
+                                              --and 	  cov1.product  = c.product
+                                              and cov1.modulec = c.modulec
+                                              and cov1.policy = c.policy
+                                              and cov1.certif = c.certif
+                                              and cov1.currency = c.currency
+                                              and cov1.cover = c.cover) then 1
+                                            else 0
+                                          end
+                                      end
+                                      end
+                                      end flag
+                                      from usinsuv01.cover c
+                                      left join usinsuv01.certificat cert on c.usercomp = cert.usercomp and c.company = cert.company and c.certype = cert.certype and c.branch = cert.branch and c.policy = cert.policy and c.certif = cert.certif
+                                      join usinsuv01.policy pol on pol.usercomp = c.usercomp and pol.company = c.company and pol.certype = c.certype and pol.branch = c.branch and pol.policy = c.policy
+                                      where pol.certype  = '2' 
+                                      and pol.status_pol not in ('2', '3') 
+                                      and (((pol.politype = '1' and  pol.expirdat < '{p_fecha_carga_inicial}' or pol.nulldate < '{p_fecha_carga_inicial}')
+                                      and exists (select 1 from  usinsuv01.claim cla    
+                                                  join  usinsuv01.claim_his clh on clh.usercomp = cla.usercomp and clh.company = cla.company and clh.branch = cla.branch and clh.claim = cla.claim
+                                                  where cla.branch = pol.branch and cla.policy = pol.policy and trim(clh.oper_type) in (select cast(tcl.operation as varchar(2))
+                                          		                                                                                          from 	usinsug01.tab_cl_ope tcl
+                                          		                                                                                          where  (tcl.reserve = 1 or tcl.ajustes = 1 or tcl.pay_amount = 1)) 
+                                                                                                                                        and   clh.operdate >= '{p_fecha_carga_inicial}')))                                                                                                                                        
+                                      and pol.effecdate between '{p_fecha_inicio}' and '{p_fecha_fin}')
+                                                                                
+                                    union
+                            
+                                     (select
+                                     c.usercomp, c.company, c.certype, c.branch, c.currency, c.cover, c.effecdate,        
+                                     c.nulldate,c.policy, c.certif, c.premium, c.ratecove, c.capital, c.capitali, c.modulec as modulo,
+                                     pol.product,pol.politype,pol.effecdate as effecdate_pol,cert.effecdate as effecdate_cert,
+                                     case
+                                     when pol.politype = '1' --individual
+                                     then case
+                                     when (c.effecdate <= pol.effecdate and
+                                      (c.nulldate is null or
+                                      c.nulldate > pol.effecdate)) then 1
+                                     else case
+                                        when exists (select
+                                            1
+                                          from usinsuv01.cover cov1
+                                          where cov1.certype = c.certype
+                                          and cov1.usercomp = c.usercomp
+                                          and cov1.company = c.company
+                                          and cov1.branch = c.branch
+                                          --and 	cov1.product  = c.product
+                                          and cov1.modulec = c.modulec
+                                          and cov1.policy = c.policy
+                                          and cov1.certif = c.certif
+                                          and cov1.currency = c.currency
+                                          and cov1.cover = c.cover
+                                          and cov1.effecdate <= pol.effecdate
+                                          and (cov1.nulldate is null
+                                          or cov1.nulldate > pol.effecdate)) then 0
+                                        else case
+                                            when c.nulldate = (select
+                                                max(cov1.nulldate)
+                                              from usinsuv01.cover cov1
+                                              where cov1.usercomp = c.usercomp
+                                              and cov1.certype = c.certype
+                                              and cov1.company = c.company
+                                              and cov1.branch = c.branch
+                                              --and 	  cov1.product  = c.product
+                                              and cov1.modulec = c.modulec
+                                              and cov1.policy = c.policy
+                                              and cov1.certif = c.certif
+                                              and cov1.currency = c.currency
+                                              and cov1.cover = c.cover) then 1
+                                            else 0
+                                          end
+                                      end
+                                     end
+                                     else case
+                                         when (c.effecdate <= cert.effecdate and
+                                         (c.nulldate is null or
+                                         c.nulldate > cert.effecdate)) then 1
+                                     else case
+                                        when exists (select  1
+                                          from usinsuv01.cover cov1
+                                          where cov1.certype = c.certype
+                                          and cov1.usercomp = c.usercomp
+                                          and cov1.company = c.company
+                                          and cov1.branch = c.branch
+                                          --and 	cov1.product  = c.product
+                                          and cov1.modulec = c.modulec
+                                          and cov1.policy = c.policy
+                                          and cov1.certif = c.certif
+                                          and cov1.currency = c.currency
+                                          and cov1.cover = c.cover
+                                          and cov1.effecdate <= cert.effecdate
+                                          and (cov1.nulldate is null
+                                          or cov1.nulldate > cert.effecdate)) then 0
+                                        else case
+                                            when c.nulldate = (select
+                                                max(cov1.nulldate)
+                                              from usinsuv01.cover cov1
+                                              where cov1.usercomp = c.usercomp
+                                              and cov1.certype = c.certype
+                                              and cov1.company = c.company
+                                              and cov1.branch = c.branch
+                                              --and 	  cov1.product  = c.product
+                                              and cov1.modulec = c.modulec
+                                              and cov1.policy = c.policy
+                                              and cov1.certif = c.certif
+                                              and cov1.currency = c.currency
+                                              and cov1.cover = c.cover) then 1
+                                            else 0
+                                          end
+                                      end
+                                     end
+                                     end flag
+                                     from usinsuv01.cover c
+                                     left join usinsuv01.certificat cert on c.usercomp = cert.usercomp and c.company = cert.company and c.certype = cert.certype and c.branch = cert.branch and c.policy = cert.policy and c.certif = cert.certif
+                                     join usinsuv01.policy pol on pol.usercomp = c.usercomp and pol.company = c.company and pol.certype = c.certype and pol.branch = c.branch and pol.policy = c.policy
+                                     where pol.certype  = '2' 
+                                     and pol.status_pol not in ('2', '3')
+                                     and (((pol.politype <> '1' and cert.expirdat < '{p_fecha_carga_inicial}'  or  cert.nulldate < '{p_fecha_carga_inicial}') 
+                                     and exists (select 1 from  usinsuv01.claim cla    
+                                                 join  usinsuv01.claim_his clh  on cla.usercomp = clh.usercomp and cla.company = clh.company and cla.branch = clh.branch  and clh.claim = cla.claim
+                                                 where cla.branch   = cert.branch
+                                                 and   cla.policy   = cert.policy
+                                                 and   cla.certif   = cert.certif
+                                                 and   trim(clh.oper_type) in (select cast(tcl.operation as varchar(2)) from  usinsug01.tab_cl_ope tcl where (tcl.reserve = 1 or tcl.ajustes = 1 or tcl.pay_amount = 1)) and  clh.operdate >= '{p_fecha_carga_inicial}')))
+                                     and pol.effecdate between '{p_fecha_inicio}' and '{p_fecha_fin}')/*se quito el union hasta aqui */) 
+                            c where c.flag = 1) t) as tmp '''
  
   l_df_abcobap_insunix_lpv = glue_context.read.format('jdbc').options(**connection).option("dbtable", l_abcobap_insunix_lpv).load()
   
@@ -770,8 +773,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
   #-------------------------------------------------------------------------------------------------------------------------------#
 
   l_abcobap_vtime_lpg = f'''
-                        (
-                          SELECT 
+                        ( SELECT 
                           'D' AS INDDETREC,
                           'ABCOBAP' AS TABLAIFRS17,
                           '' AS PK,
@@ -834,6 +836,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                           '' AS DFACMULT,
                           VMTCAPIN,
                           VMTPREIN,
+                          '' AS KABTRTAB_2,
                           '' AS DINDESES,
                           '' AS DINDMOTO,
                           '' AS KACSALIN,
@@ -868,82 +871,111 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                 SELECT 
                                 COALESCE(CAST(CAST(C."DEFFECDATE" AS DATE) AS VARCHAR),'') AS TIOCFRM,
                                 C."NBRANCH" ||'-'|| C."NPRODUCT" ||'-'|| C."NPOLICY" ||'-'|| C."NCERTIF" AS KABAPOL,
-                                COALESCE(COALESCE((SELECT CAST(GLC."NCOVERGEN" AS VARCHAR)
-                                          FROM /*USBI01.IFRS170_V_GEN_LIFE_COVER_VTIMELPG*/
-                                          (SELECT GC."NBRANCH",
-                                          GC."NPRODUCT",
-                                          GC."NMODULEC",
-                                          GC."NCOVER",
-                                          GC."DEFFECDATE",
-                                          GC."DNULLDATE",
-                                          GC."NCOVERGEN",
-                                          GC."NCURRENCY"
-                                          FROM USVTIMG01."GEN_COVER" GC
-                                          UNION ALL
-                                          SELECT LC."NBRANCH",
-                                          LC."NPRODUCT",
-                                          LC."NMODULEC",
-                                          LC."NCOVER",
-                                          LC."DEFFECDATE",
-                                          LC."DNULLDATE",
-                                          LC."NCOVERGEN",
-                                          LC."NCURRENCY"
-                                          FROM USVTIMG01."LIFE_COVER" LC)  GLC 
-                                          WHERE GLC."NBRANCH" = C."NBRANCH" 
-                                          AND   GLC."NPRODUCT"  = C."NPRODUCT"
-                                          AND   GLC."NMODULEC"  = C."NMODULEC"
-                                          AND   GLC."NCOVER"    = C."NCOVER"
-                                          AND   GLC."DEFFECDATE" <= (case when C."SPOLITYPE" = '1' then C."POL_DSTARTDATE" else C."CERT_DSTARTDATE" end) 
-                                          AND (GLC."DNULLDATE" IS NULL OR GLC."DNULLDATE" > (case when C."SPOLITYPE" = '1' then C."POL_DSTARTDATE" else C."CERT_DSTARTDATE" end) )), 
-                                          (select CAST(GLC."NCOVERGEN" as VARCHAR) /*USBI01.IFRS170_V_GEN_LIFE_COVER_VTIMELPG*/
-                                              from (SELECT GC."NBRANCH",
-                                              GC."NPRODUCT",
-                                              GC."NMODULEC",
-                                              GC."NCOVER",
-                                              GC."DEFFECDATE",
-                                              GC."DNULLDATE",
-                                              GC."NCOVERGEN",
-                                              GC."NCURRENCY"
-                                              FROM USVTIMG01."GEN_COVER" GC
-                                              UNION ALL
-                                              SELECT LC."NBRANCH",
-                                              LC."NPRODUCT",
-                                              LC."NMODULEC",
-                                              LC."NCOVER",
-                                              LC."DEFFECDATE",
-                                              LC."DNULLDATE",
-                                              LC."NCOVERGEN",
-                                              LC."NCURRENCY"
-                                              FROM USVTIMG01."LIFE_COVER" LC)  GLC 
-                                              WHERE GLC."NBRANCH" = C."NBRANCH" 
-                                              AND   GLC."NPRODUCT"  = C."NPRODUCT"
-                                              AND   GLC."NMODULEC"  = C."NMODULEC"
-                                              AND   GLC."NCOVER"    = C."NCOVER"
-                                              and   GLC."DNULLDATE" = (SELECT MAX("DNULLDATE")
-                                                            FROM /*USBI01.IFRS170_V_GEN_LIFE_COVER_VTIMELPG*/
-                                                            (SELECT GC."NBRANCH",
-                                                            GC."NPRODUCT",
-                                                            GC."NMODULEC",
-                                                            GC."NCOVER",
-                                                            GC."DEFFECDATE",
-                                                            GC."DNULLDATE",
-                                                            GC."NCOVERGEN",
-                                                            GC."NCURRENCY"
-                                                            FROM USVTIMG01."GEN_COVER" GC
-                                                            UNION ALL
-                                                            SELECT LC."NBRANCH",
-                                                            LC."NPRODUCT",
-                                                            LC."NMODULEC",
-                                                            LC."NCOVER",
-                                                            LC."DEFFECDATE",
-                                                            LC."DNULLDATE",
-                                                            LC."NCOVERGEN",
-                                                            LC."NCURRENCY"
-                                                            FROM USVTIMG01."LIFE_COVER" LC)  GLC 
-                                                            WHERE GLC."NBRANCH" = C."NBRANCH" 
-                                                            AND   GLC."NPRODUCT"  = C."NPRODUCT"
-                                                            AND   GLC."NMODULEC"  = C."NMODULEC"
-                                                            AND   GLC."NCOVER"    = C."NCOVER"))), ('-'||cast(C."NCOVER" as VARCHAR))) AS KGCTPCBT,
+                                COALESCE( COALESCE((SELECT CAST(GLC."NCOVERGEN" AS VARCHAR)
+                                                    FROM /*USBI01.IFRS170_V_GEN_LIFE_COVER_VTIMELPG*/
+                                                    ( SELECT 
+                                                      GC."NBRANCH",
+                                                      GC."NPRODUCT",
+                                                      GC."NMODULEC",
+                                                      GC."NCOVER",
+                                                      GC."DEFFECDATE",
+                                                      GC."DNULLDATE",
+                                                      GC."NCURRENCY",
+                                                      CAST(GC."NCOVERGEN" AS VARCHAR) || '-g' "NCOVERGEN"
+								                                      FROM USVTIMG01."GEN_COVER" GC 
+								                                      WHERE EXISTS ( SELECT DISTINCT "NCOVERGEN" FROM USVTIMG01."GEN_COVER" GCO
+							 	                                     		             WHERE GCO."NCOVERGEN" = GCO."NCOVERGEN"
+							 	                                     		             AND   GCO."NBRANCH" <> 21 )
+								                                     		        
+                                                      UNION
+								                                     		         
+								                                      SELECT 
+								                                      LC."NBRANCH",
+		                                                  LC."NPRODUCT",
+		                                                  LC."NMODULEC",
+		                                                  LC."NCOVER",
+		                                                  LC."DEFFECDATE",
+		                                                  LC."DNULLDATE",
+		                                                  LC."NCURRENCY",
+		                                                  CAST(LC."NCOVERGEN" AS VARCHAR) || '-L' "NCOVERGEN"
+								                                      FROM USVTIMG01."LIFE_COVER" LC
+								                                      WHERE EXISTS (( SELECT	DISTINCT "NCOVERGEN" FROM USVTIMG01."LIFE_COVER" LCO
+								                                      			          WHERE  LCO."NCOVERGEN" = LCO."NCOVERGEN"
+								                                      			          AND    LCO."NBRANCH"   = 21)))  GLC
+                                                      WHERE GLC."NBRANCH"   = C."NBRANCH" 
+                                                      AND   GLC."NPRODUCT"  = C."NPRODUCT"
+                                                      AND   GLC."NMODULEC"  = C."NMODULEC"
+                                                      AND   GLC."NCOVER"    = C."NCOVER"
+                                                      AND   GLC."DEFFECDATE" <= (CASE WHEN C."SPOLITYPE" = '1' THEN C."POL_DSTARTDATE" ELSE C."CERT_DSTARTDATE" END) 
+                                                      AND   (GLC."DNULLDATE" IS NULL OR GLC."DNULLDATE" > (CASE WHEN C."SPOLITYPE" = '1' THEN C."POL_DSTARTDATE" ELSE C."CERT_DSTARTDATE" END))), ( SELECT CAST(GLC."NCOVERGEN" AS VARCHAR) /*USBI01.IFRS170_V_GEN_LIFE_COVER_VTIMELPG*/
+                                                                                                                                                                                                    FROM 
+                                                                                                                                                                                                    (SELECT 
+                                                                                                                                                                                                     GC."NBRANCH",
+                                                                                                                                                                                                     GC."NPRODUCT",
+                                                                                                                                                                                                     GC."NMODULEC",
+                                                                                                                                                                                                     GC."NCOVER",
+                                                                                                                                                                                                     GC."DEFFECDATE",
+                                                                                                                                                                                                     GC."DNULLDATE",
+                                                                                                                                                                                                     GC."NCURRENCY",
+                                                                                                                                                                                                     CAST(GC."NCOVERGEN" AS VARCHAR) || '-g' "NCOVERGEN"
+								                                                                                                                                                                                     FROM USVTIMG01."GEN_COVER" GC 
+								                                                                                                                                                                                     WHERE EXISTS ( SELECT DISTINCT "NCOVERGEN" FROM USVTIMG01."GEN_COVER" GCO
+							 	                                                                                                                                                                             	       	              WHERE GCO."NCOVERGEN" = GCO."NCOVERGEN"
+							 	                                                                                                                                                                             	       	              AND   GCO."NBRANCH" <> 21 )
+								                                                                                                                                                                             		     
+                                                                                                                                                                                                     UNION
+								                                                                                                                                                                             		     
+                                                                                                                                                                                                     SELECT 
+								                                                                                                                                                                                     LC."NBRANCH",
+		                                                                                                                                                                                                 LC."NPRODUCT",
+		                                                                                                                                                                                                 LC."NMODULEC",
+		                                                                                                                                                                                                 LC."NCOVER",
+		                                                                                                                                                                                                 LC."DEFFECDATE",
+		                                                                                                                                                                                                 LC."DNULLDATE",
+		                                                                                                                                                                                                 LC."NCURRENCY",
+		                                                                                                                                                                                                 CAST(LC."NCOVERGEN" AS VARCHAR) || '-l' "NCOVERGEN"
+								                                                                                                                                                                                     FROM USVTIMG01."LIFE_COVER" LC
+								                                                                                                                                                                                     WHERE EXISTS (( SELECT	DISTINCT "NCOVERGEN" FROM USVTIMG01."LIFE_COVER" LCO
+								                                                                                                                                                                            	       		             WHERE  LCO."NCOVERGEN" = LCO."NCOVERGEN"
+								                                                                                                                                                                            	                       AND    LCO."NBRANCH" = 21)))  GLC 
+                                                                                                                                                                                                    WHERE GLC."NBRANCH"   = C."NBRANCH" 
+                                                                                                                                                                                                    AND   GLC."NPRODUCT"  = C."NPRODUCT"
+                                                                                                                                                                                                    AND   GLC."NMODULEC"  = C."NMODULEC"
+                                                                                                                                                                                                    AND   GLC."NCOVER"    = C."NCOVER"
+                                                                                                                                                                                                    AND   GLC."DNULLDATE" = ( SELECT MAX("DNULLDATE") FROM /*USBI01.IFRS170_V_GEN_LIFE_COVER_VTIMELPG*/
+                                                                                                                                                                                                                              (SELECT 
+                                                                                                                                                                                                                               GC."NBRANCH",
+                                                                                                                                                                                                                               GC."NPRODUCT",
+                                                                                                                                                                                                                               GC."NMODULEC",
+                                                                                                                                                                                                                               GC."NCOVER",
+                                                                                                                                                                                                                               GC."DEFFECDATE",
+                                                                                                                                                                                                                               GC."DNULLDATE",
+                                                                                                                                                                                                                               GC."NCURRENCY",
+                                                                                                                                                                                                                               CAST(GC."NCOVERGEN" AS VARCHAR) || '-g' "NCOVERGEN"
+								                                                                                                                                                                                                               FROM USVTIMG01."GEN_COVER" GC 
+								                                                                                                                                                                                                               WHERE EXISTS ( SELECT DISTINCT "NCOVERGEN" FROM USVTIMG01."GEN_COVER" GCO
+							 	                                                                                                                                                                             	                                 	              WHERE GCO."NCOVERGEN" = GCO."NCOVERGEN"
+							 	                                                                                                                                                                             	                                 	              AND   GCO."NBRANCH" <> 21 )
+								                                                                                                                                                                             		        
+                                                                                                                                                                                                                               UNION
+								                                                                                                                                                                             		         
+								                                                                                                                                                                                                               SELECT 
+								                                                                                                                                                                                                               LC."NBRANCH",
+		                                                                                                                                                                                                                           LC."NPRODUCT",
+		                                                                                                                                                                                                                           LC."NMODULEC",
+		                                                                                                                                                                                                                           LC."NCOVER",
+		                                                                                                                                                                                                                           LC."DEFFECDATE",
+		                                                                                                                                                                                                                           LC."DNULLDATE",
+		                                                                                                                                                                                                                           LC."NCURRENCY",
+		                                                                                                                                                                                                                           CAST(LC."NCOVERGEN" AS VARCHAR) || '-l' "NCOVERGEN"
+								                                                                                                                                                                                                               FROM USVTIMG01."LIFE_COVER" LC
+								                                                                                                                                                                                                               WHERE EXISTS (( SELECT	DISTINCT "NCOVERGEN" FROM USVTIMG01."LIFE_COVER" LCO
+								                                                                                                                                                                            	                                 		             WHERE  LCO."NCOVERGEN" = LCO."NCOVERGEN"
+								                                                                                                                                                                            	                                 		             AND    LCO."NBRANCH" = 21)))  GLC 
+                                                                                                                                                                                                                               WHERE GLC."NBRANCH"   = C."NBRANCH" 
+                                                                                                                                                                                                                               AND   GLC."NPRODUCT"  = C."NPRODUCT"
+                                                                                                                                                                                                                               AND   GLC."NMODULEC"  = C."NMODULEC"
+                                                                                                                                                                                                                               AND   GLC."NCOVER"    = C."NCOVER"))), ('-'||CAST(C."NCOVER" AS VARCHAR))) AS KGCTPCBT,
                                 COALESCE(CAST(CAST(C."DEFFECDATE" AS DATE) AS VARCHAR),'') AS TINICIO,
                                 COALESCE(CAST(CAST(C."DNULLDATE" AS DATE) AS VARCHAR),'') AS TTERMO,
                                 COALESCE(C."NPREMIUM_O",0) AS VMTCOMR,
@@ -1099,7 +1131,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                     AND CERT."DEXPIRDAT" >= '{l_fecha_carga_inicial}' 
                                     AND (CERT."DNULLDATE" IS NULL OR CERT."DNULLDATE" > '{l_fecha_carga_inicial}')))
                                     AND POL."DSTARTDATE" BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}') 
-                                    
+                                  /*
                                   UNION
 
                                   ( SELECT
@@ -1231,7 +1263,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                            AND CLA."NBRANCH"  = POL."NBRANCH" 
                                            AND CLA."NPRODUCT" = POL."NPRODUCT"
                                            AND CLA."NPOLICY"  = POL."NPOLICY"  
-                                           AND CLA."NCERTIF"  = CERT."NCERTIF"))))))
+                                           AND CLA."NCERTIF"  = CERT."NCERTIF"))))))*/
                                 ) C WHERE FLAG = 1
                           ) COVER                                            
                         ) AS TMP'''
@@ -1304,6 +1336,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                           '' AS DFACMULT,
                           VMTCAPIN, 
                           VMTPREIN,
+                          '' AS KABTRTAB_2,
                           '' AS DINDESES,
                           '' AS DINDMOTO,
                           '' AS KACSALIN,
@@ -1625,6 +1658,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                       '' AS DFACMULT, --NO
                       TRUNC(GRC."INSURED_VALUE", 0)  AS VMTCAPIN,
                       TRUNC(GRC."ANNUAL_PREMIUM", 0) AS VMTPREIN,
+                      '' AS KABTRTAB_2,
                       '' AS DINDESES,    --NO
                       '' AS DINDMOTO,    --NO
                       '' AS KACSALIN,    --NO
@@ -1655,12 +1689,12 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                       '' AS VMTCAPREM   --NO
                       FROM USINSIV01."GEN_RISK_COVERED" GRC
                       JOIN USINSIV01."POLICY" POL ON POL."POLICY_ID" = GRC."POLICY_ID" AND POL."INSR_TYPE" = GRC."INSR_TYPE"
-                      WHERE (POL."INSR_END" >= '{l_fecha_carga_inicial}'
-                                    OR  (POL."INSR_END" < '{l_fecha_carga_inicial}' AND EXISTS (
+                      WHERE (P."INSR_END" >= '{l_fecha_carga_inicial}'
+                                    OR  (P."INSR_END" < '{l_fecha_carga_inicial}' AND EXISTS (
                         	      	                              		           SELECT 1 FROM USINSIV01."CLAIM" C
                         	      	                              		           JOIN USINSIV01."CLAIM_OBJECTS" CO ON CO."CLAIM_ID" = C."CLAIM_ID" AND CO."POLICY_ID" = C."POLICY_ID"
                         	      	                              		           JOIN USINSIV01."CLAIM_RESERVE_HISTORY" CRH ON CO."CLAIM_ID" = CRH."CLAIM_ID" AND CO."REQUEST_ID" = CO."REQUEST_ID" AND CO."CLAIM_OBJ_SEQ" = CRH."CLAIM_OBJECT_SEQ"
-                        	      	                              		           WHERE C."POLICY_ID" = POL."POLICY_ID"
+                        	      	                              		           WHERE C."POLICY_ID" = P."POLICY_ID"
                         	      	                              		           AND "OP_TYPE" IN ('REG','EST','CLC','PAYMCONF','PAYMINV')
                         	      	                              		           AND CAST(CRH."REGISTRATION_DATE" AS DATE) >= '{l_fecha_carga_inicial}'
                         	      	                                                    ))

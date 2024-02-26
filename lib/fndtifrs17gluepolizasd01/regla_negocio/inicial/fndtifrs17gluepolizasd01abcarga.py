@@ -33,7 +33,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                               '' KGCTPCBT, 
                               '' KACCDFDO, --VALOR VACIO
                               COALESCE(DXP."SDISEXPRI" , '') KACTPCAG,
-                              DXP."NDISC_CODE" KACCDCAG, 
+                              COALESCE(DXP."NBRANCH",0) || '-' || COALESCE(DXP."NPRODUCT",0) || '-' || COALESCE(DXP."NDISC_CODE", 0) KACCDCAG, 
                               DXP."NAMOUNT" VMTCARGA, 
                               COALESCE(CAST(CAST(DXP."DEFFECDATE" AS DATE) AS VARCHAR), '') TULTMALT, 
                               '' DUSRUPD, --NO
@@ -125,7 +125,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                              '' KGCTPCBT, 
                              '' KACCDFDO, --VALOR VACIO
                              COALESCE(DXP."SDISEXPRI" , '') KACTPCAG,
-                             DXP."NDISC_CODE" KACCDCAG, 
+                             COALESCE(DXP."NBRANCH", 0) || '-' || COALESCE(DXP."NPRODUCT",0) || '-' || DXP."NDISC_CODE" KACCDCAG, 
                              DXP."NAMOUNT" VMTCARGA, 
                              COALESCE(CAST(CAST(DXP."DEFFECDATE" AS DATE) AS VARCHAR), '') TULTMALT, 
                              '' DUSRUPD, --NO
@@ -210,7 +210,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                   '' KGCTPCBT,  --VALOR VACIO
                                   '' KACCDFDO,  -- VALOR VACIO
                                   COALESCE(DXP.TYPE, '') KACTPCAG,
-                                  COALESCE(DXP.CODE, 0) KACCDCAG,
+                                  COALESCE(DXP.BRANCH, 0) || '-' || COALESCE(DXP.PRODUCT,0) || '-' || COALESCE(DXP.SUB_PRODUCT,0) || '-' || DXP.CURRENCY || '-' || COALESCE(DXP.CODE, 0) || '-' || COALESCE(DXP.TYPE, '0') KACCDCAG,
                                   COALESCE(DXP.AMOUNT, 0) VMTCARGA,
                                   COALESCE(CAST(CAST(DXP.EFFECDATE AS DATE) AS VARCHAR),'') TULTMALT,
                                   '' DUSRUPD,   --NO
@@ -230,7 +230,9 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                      DX.TYPE, 
                                      DX.CODE, 
                                      DX.AMOUNT, 
-                                     DX.PERCENT, P.* 
+                                     DX.PERCENT,
+                                     DX.CURRENCY,
+                                     P.* 
                                      FROM
                                      (
 	                                     SELECT  
@@ -365,7 +367,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                                    AND TRIM(CLH.OPER_TYPE) IN (SELECT CAST(TCL.OPERATION AS VARCHAR(2)) 
                                                                                FROM  USINSUG01.TAB_CL_OPE TCL 
                                                                                WHERE (TCL.RESERVE = 1 OR TCL.AJUSTES = 1 OR TCL.PAY_AMOUNT = 1)) AND CLH.OPERDATE >= '{l_fecha_carga_inicial}')))
-                                       AND P.EFFECDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'/*SE QUITO EL COMENTARIO DEL FILTRO */
+                                       AND P.EFFECDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'/*SE QUITO EL COMENTARIO DEL FILTRO */)
 	                                    ) P
                                      LEFT JOIN USINSUG01.DISC_XPREM DX 
                                      ON DX.USERCOMP = P.USERCOMP 
@@ -384,7 +386,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
    print('USINSUG01 EXITOSO')
    
    l_polizas_insunix_vida = f'''
-                            (SELECT 
+                            ( SELECT 
                               'D' INDDETREC, 
                               'ABCARGA' TABLAIFRS17, 
                               '' PK, --PENDIENTE
@@ -411,7 +413,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                               '' KGCTPCBT, 
                               '' KACCDFDO, --VALOR VACIO
                               COALESCE(DX.TYPE, '') KACTPCAG, 
-                              COALESCE (DX.CODE, 0) KACCDCAG, 
+                              COALESCE(DX.BRANCH, 0) || '-' || COALESCE(DX.PRODUCT, 0) || '-' || COALESCE(DX.CURRENCY, 0) || '-' || COALESCE (DX.CODE, 0) || '-' || COALESCE(DX.TYPE, '0') KACCDCAG, 
                               COALESCE (DX.AMOUNT, 0) VMTCARGA, 
                               COALESCE (CAST(CAST(DX.EFFECDATE AS DATE) AS VARCHAR), '') TULTMALT, 
                               '' DUSRUPD, --NO
@@ -430,6 +432,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                    DX.CODE, 
                                    DX.AMOUNT, 
                                    DX.PERCENT, 
+                                   DX.CURRENCY,
                                    P.BRANCH, 
                                    P.PRODUCT, 
                                    P.POLICY, 
@@ -464,6 +467,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                    DX.CODE, 
                                    DX.AMOUNT, 
                                    DX.PERCENT, 
+                                   DX.CURRENCY,
                                    P.BRANCH, 
                                    P.PRODUCT, 
                                    P.POLICY, 
@@ -513,7 +517,8 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                    DX.TYPE, 
                                    DX.CODE, 
                                    DX.AMOUNT, 
-                                   DX.PERCENT, 
+                                   DX.PERCENT,
+                                   DX.CURRENCY, 
                                    P.BRANCH, 
                                    P.PRODUCT, 
                                    P.POLICY, 
