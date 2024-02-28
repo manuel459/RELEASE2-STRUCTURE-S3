@@ -42,7 +42,9 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                               '' DINCPRM, --VALOR VACIO
                               CASE 
                               WHEN ( DXP."NAMOUNT" != 0 AND DXP."NAMOUNT" IS NOT NULL) AND ( CAST(DXP."NPERCENT" AS INTEGER)= 0 AND DXP."NPERCENT" IS NULL) 
-                              THEN 'IMPORTE' ELSE 'PORCENTAJE' END KACTPVCG, 
+                              THEN '1' --IMPORTE
+                              ELSE '2' --PORCENTAJE
+                              END KACTPVCG, 
                               '' DDURACAO, 
                               '' KACTPCBB --valor vacio
                               FROM
@@ -132,9 +134,10 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                              'LPV' DCOMPA, 
                              '' DMARCA, --NO
                              '' DINCPRM, --VALOR VACIO
-                             CASE WHEN (DXP."NAMOUNT" != 0 AND DXP."NAMOUNT" IS NOT NULL) 
-                                  AND  (CAST(DXP."NPERCENT" AS INTEGER) = 0 AND DXP."NPERCENT" IS NULL) THEN 'IMPORTE' 
-                             ELSE 'PORCENTAJE' 
+                             CASE 
+                             WHEN (DXP."NAMOUNT" != 0 AND DXP."NAMOUNT" IS NOT NULL) AND (CAST(DXP."NPERCENT" AS INTEGER) = 0 AND DXP."NPERCENT" IS NULL) 
+                             THEN '1' --IMPORTE 
+                             ELSE '2' --PORCENTAJE 
                              END KACTPVCG, 
                              '' DDURACAO, --VALOR VACIO
                              '' KACTPCBB --VALOR VACIO
@@ -218,8 +221,9 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                   '' DMARCA,    --NO
                                   '' DINCPRM,    --VALOR VACIO
                                   CASE
-                                  WHEN (DXP.AMOUNT != 0 AND DXP.AMOUNT IS NOT NULL) AND (CAST(DXP.PERCENT AS INTEGER) = 0 AND DXP.PERCENT IS NULL) THEN 'IMPORTE'
-                                  ELSE 'PORCENTAJE'
+                                  WHEN (DXP.AMOUNT != 0 AND DXP.AMOUNT IS NOT NULL) AND (CAST(DXP.PERCENT AS INTEGER) = 0 AND DXP.PERCENT IS NULL) 
+                                  THEN '1' --IMPORTE
+                                  ELSE '2' --PORCENTAJE
                                   END KACTPVCG,
                                   '' DDURACAO, --VALOR VACIO
                                   '' KACTPCBB  --VALOR VACIO
@@ -420,8 +424,11 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                               'LPV' DCOMPA, 
                               '' DMARCA, --NO
                               '' DINCPRM, 
-                              CASE WHEN (DX.AMOUNT != 0 AND DX.AMOUNT IS NOT NULL) AND (CAST(DX.PERCENT AS INTEGER)= 0 AND DX.PERCENT IS NULL) 
-                              THEN 'IMPORTE' ELSE 'PORCENTAJE' END KACTPVCG, 
+                              CASE
+                              WHEN (DX.AMOUNT != 0 AND DX.AMOUNT IS NOT NULL) AND (CAST(DX.PERCENT AS INTEGER)= 0 AND DX.PERCENT IS NULL) 
+                              THEN '1' --IMPORTE
+                              ELSE '2' --PORCENTAJE
+                              END KACTPVCG, 
                               '' DDURACAO, 
                               '' KACTPCBB --VALOR VACIO 
                               FROM
