@@ -42,7 +42,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                               '' DINCPRM, --VALOR VACIO
                               CASE 
                               WHEN ( DXP."NAMOUNT" != 0 AND DXP."NAMOUNT" IS NOT NULL) AND ( CAST(DXP."NPERCENT" AS INTEGER)= 0 AND DXP."NPERCENT" IS NULL) 
-                              THEN '1' --IMPORTE 
+                              THEN '1' --IMPORTE
                               ELSE '2' --PORCENTAJE
                               END KACTPVCG, 
                               '' DDURACAO, 
@@ -134,9 +134,10 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                              'LPV' DCOMPA, 
                              '' DMARCA, --NO
                              '' DINCPRM, --VALOR VACIO
-                             CASE WHEN (DXP."NAMOUNT" != 0 AND DXP."NAMOUNT" IS NOT NULL) 
-                                  AND  (CAST(DXP."NPERCENT" AS INTEGER) = 0 AND DXP."NPERCENT" IS NULL) THEN  '1' --IMPORTE
-                             ELSE '2' --PORCENTAJE
+                             CASE 
+                             WHEN (DXP."NAMOUNT" != 0 AND DXP."NAMOUNT" IS NOT NULL) AND (CAST(DXP."NPERCENT" AS INTEGER) = 0 AND DXP."NPERCENT" IS NULL) 
+                             THEN '1' --IMPORTE 
+                             ELSE '2' --PORCENTAJE 
                              END KACTPVCG, 
                              '' DDURACAO, --VALOR VACIO
                              '' KACTPCBB --VALOR VACIO
@@ -198,34 +199,35 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
 
    #DECLARAR CONSULTA INSUNIX
    l_polizas_insunix_general = f'''
-                              (  	select
-                                  'd' inddetrec,
-                                  'abcarga' tablaifrs17,
-                                  '' pk,--pendiente
-                                  '' dtpreg,--no
-                                  '' tiocproc,--no
-                                  coalesce(cast(cast(dxp.effecdate as date) as varchar),'') tiocfrm,--pendiente
-                                  '' tiocto,--no
-                                  'pig' kgiorigm,
-                                  coalesce(dxp.branch, 0) || '-' || coalesce(dxp.product,0) || '-' || coalesce(dxp.sub_product,0) || '-' || coalesce(dxp.policy,0) || '-' || coalesce(dxp.certif,0) kabapol,--fk pendiente
-                                  '' kabunris,  --valor vacio
-                                  '' kgctpcbt,  --valor vacio
-                                  '' kaccdfdo,  -- valor vacio
-                                  coalesce(dxp.type, '') kactpcag,
-                                  coalesce(dxp.branch, 0) || '-' || coalesce(dxp.product,0) || '-' || coalesce(dxp.sub_product,0) || '-' || dxp.currency || '-' || coalesce(dxp.code, 0) || '-' || coalesce(dxp.type, '0') kaccdcag,
-                                  coalesce(dxp.amount, 0) vmtcarga,
-                                  coalesce(cast(cast(dxp.effecdate as date) as varchar),'') tultmalt,
-                                  '' dusrupd,   --no
-                                  'lpg' dcompa,
-                                  '' dmarca,    --no
-                                  '' dincprm,    --valor vacio
-                                  case
-                                  when (dxp.amount != 0 and dxp.amount is not null) and (cast(dxp.percent as integer) = 0 and dxp.percent is null) then '1' --importe
-                                  else '2' --porcentaje
-                                  end kactpvcg,
-                                  '' dduracao, --valor vacio
-                                  '' kactpcbb  --valor vacio
-                                  from
+                                ( SELECT
+                                  'D' INDDETREC,
+                                  'ABCARGA' TABLAIFRS17,
+                                  '' PK,--PENDIENTE
+                                  '' DTPREG,--NO
+                                  '' TIOCPROC,--NO
+                                  COALESCE(CAST(CAST(DXP.EFFECDATE AS DATE) AS VARCHAR),'') TIOCFRM,--PENDIENTE
+                                  '' TIOCTO,--NO
+                                  'PIG' KGIORIGM,
+                                  COALESCE(DXP.BRANCH, 0) || '-' || COALESCE(DXP.PRODUCT,0) || '-' || COALESCE(DXP.SUB_PRODUCT,0) || '-' || COALESCE(DXP.POLICY,0) || '-' || COALESCE(DXP.CERTIF,0) KABAPOL,--FK PENDIENTE
+                                  '' KABUNRIS,  --VALOR VACIO
+                                  '' KGCTPCBT,  --VALOR VACIO
+                                  '' KACCDFDO,  -- VALOR VACIO
+                                  COALESCE(DXP.TYPE, '') KACTPCAG,
+                                  COALESCE(DXP.BRANCH, 0) || '-' || COALESCE(DXP.PRODUCT,0) || '-' || COALESCE(DXP.SUB_PRODUCT,0) || '-' || DXP.CURRENCY || '-' || COALESCE(DXP.CODE, 0) || '-' || COALESCE(DXP.TYPE, '0') KACCDCAG,
+                                  COALESCE(DXP.AMOUNT, 0) VMTCARGA,
+                                  COALESCE(CAST(CAST(DXP.EFFECDATE AS DATE) AS VARCHAR),'') TULTMALT,
+                                  '' DUSRUPD,   --NO
+                                  'LPG' DCOMPA,
+                                  '' DMARCA,    --NO
+                                  '' DINCPRM,    --VALOR VACIO
+                                  CASE
+                                  WHEN (DXP.AMOUNT != 0 AND DXP.AMOUNT IS NOT NULL) AND (CAST(DXP.PERCENT AS INTEGER) = 0 AND DXP.PERCENT IS NULL) 
+                                  THEN '1' --IMPORTE
+                                  ELSE '2' --PORCENTAJE
+                                  END KACTPVCG,
+                                  '' DDURACAO, --VALOR VACIO
+                                  '' KACTPCBB  --VALOR VACIO
+                                  FROM
                                   (
                                      select 
                                      dx.effecdate,  
@@ -421,8 +423,9 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                               'LPV' DCOMPA, 
                               '' DMARCA, --NO
                               '' DINCPRM, 
-                              CASE WHEN (DX.AMOUNT != 0 AND DX.AMOUNT IS NOT NULL) AND (CAST(DX.PERCENT AS INTEGER)= 0 AND DX.PERCENT IS NULL) 
-                              THEN '1' --IMPORTE 
+                              CASE
+                              WHEN (DX.AMOUNT != 0 AND DX.AMOUNT IS NOT NULL) AND (CAST(DX.PERCENT AS INTEGER)= 0 AND DX.PERCENT IS NULL) 
+                              THEN '1' --IMPORTE
                               ELSE '2' --PORCENTAJE
                               END KACTPVCG, 
                               '' DDURACAO, 
