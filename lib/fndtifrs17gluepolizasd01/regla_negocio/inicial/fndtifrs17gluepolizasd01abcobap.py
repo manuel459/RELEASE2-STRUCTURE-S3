@@ -70,7 +70,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                           '' AS DFACMULT,
                           VMTCAPIN,                     
 						              VMTPREIN,
-                          '' AS KABTRTAB_2,
+                          '' AS KABTRTAB,
                           '' AS DINDESES,
                           '' AS DINDMOTO,
                           '' AS KACSALIN,
@@ -83,7 +83,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                           '' AS DCAPMORT,
                           VMTPRRES,
                           '' AS DIDADETAR,
-                          '' AS DIDADLIMCOBA,
+                          '' AS DIDADLIMCOB,
                           '' AS KACTPDUR,
                           '' AS KGCRAMO_SAP,
                           '' AS KACTCOMP,
@@ -318,7 +318,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                             '' as dfacmult,
                             vmtcapin,
                             vmtprein,
-                            '' as kabtrtab_2,
+                            '' as kabtrtab,
                             '' as dindeses,
                             '' as dindmoto,
                             '' as kacsalin,
@@ -331,7 +331,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                             '' as dcapmort,
                             vmtprres,
                             '' as didadetar,
-                            '' as didadlimcoba,
+                            '' as didadlimcob,
                             '' as kactpdur,
                             '' as kgcramo_sap,
                             '' as kactcomp,
@@ -836,7 +836,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                           '' AS DFACMULT,
                           VMTCAPIN,
                           VMTPREIN,
-                          '' AS KABTRTAB_2,
+                          '' AS KABTRTAB,
                           '' AS DINDESES,
                           '' AS DINDMOTO,
                           '' AS KACSALIN,
@@ -849,7 +849,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                           '' AS DCAPMORT,
                           VMTPRRES,
                           '' AS DIDADETAR,
-                          '' AS DIDADLIMCOBA,
+                          '' AS DIDADLIMCOB,
                           KACTPDUR,
                           '' AS KGCRAMO_SAP,
                           '' AS KACTCOMP,
@@ -1336,7 +1336,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                           '' AS DFACMULT,
                           VMTCAPIN, 
                           VMTPREIN,
-                          '' AS KABTRTAB_2,
+                          '' AS KABTRTAB,
                           '' AS DINDESES,
                           '' AS DINDMOTO,
                           '' AS KACSALIN,
@@ -1349,7 +1349,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                           '' AS DCAPMORT,
                           VMTPRRES,
                           '' AS DIDADETAR,
-                          '' AS DIDADLIMCOBA,
+                          '' AS DIDADLIMCOB,
                           KACTPDUR,
                           '' AS KGCRAMO_SAP,
                           '' AS KACTCOMP,
@@ -1658,7 +1658,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                       '' AS DFACMULT, --NO
                       TRUNC(GRC."INSURED_VALUE", 0)  AS VMTCAPIN,
                       TRUNC(GRC."ANNUAL_PREMIUM", 0) AS VMTPREIN,
-                      '' AS KABTRTAB_2,
+                      '' AS KABTRTAB,
                       '' AS DINDESES,    --NO
                       '' AS DINDMOTO,    --NO
                       '' AS KACSALIN,    --NO
@@ -1671,7 +1671,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                       '' AS DCAPMORT,    --NO
                       0 AS VMTPRRES,    --PENDIENTE
                       '' AS DIDADETAR,   --EN BLANCO
-                      '' AS DIDADLIMCOBA,--EN BLANCO
+                      '' AS DIDADLIMCOB,--EN BLANCO
                       '' AS KACTPDUR,    --EN BLANCO
                       '' AS KGCRAMO_SAP, --NO
                       '' AS KACTCOMP,    --NO
@@ -1689,12 +1689,12 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                       '' AS VMTCAPREM   --NO
                       FROM USINSIV01."GEN_RISK_COVERED" GRC
                       JOIN USINSIV01."POLICY" POL ON POL."POLICY_ID" = GRC."POLICY_ID" AND POL."INSR_TYPE" = GRC."INSR_TYPE"
-                      WHERE (P."INSR_END" >= '{l_fecha_carga_inicial}'
-                                    OR  (P."INSR_END" < '{l_fecha_carga_inicial}' AND EXISTS (
+                      WHERE (POL."INSR_END" >= '{l_fecha_carga_inicial}'
+                                    OR  (POL."INSR_END" < '{l_fecha_carga_inicial}' AND EXISTS (
                         	      	                              		           SELECT 1 FROM USINSIV01."CLAIM" C
                         	      	                              		           JOIN USINSIV01."CLAIM_OBJECTS" CO ON CO."CLAIM_ID" = C."CLAIM_ID" AND CO."POLICY_ID" = C."POLICY_ID"
                         	      	                              		           JOIN USINSIV01."CLAIM_RESERVE_HISTORY" CRH ON CO."CLAIM_ID" = CRH."CLAIM_ID" AND CO."REQUEST_ID" = CO."REQUEST_ID" AND CO."CLAIM_OBJ_SEQ" = CRH."CLAIM_OBJECT_SEQ"
-                        	      	                              		           WHERE C."POLICY_ID" = P."POLICY_ID"
+                        	      	                              		           WHERE C."POLICY_ID" = POL."POLICY_ID"
                         	      	                              		           AND "OP_TYPE" IN ('REG','EST','CLC','PAYMCONF','PAYMINV')
                         	      	                              		           AND CAST(CRH."REGISTRATION_DATE" AS DATE) >= '{l_fecha_carga_inicial}'
                         	      	                                                    ))

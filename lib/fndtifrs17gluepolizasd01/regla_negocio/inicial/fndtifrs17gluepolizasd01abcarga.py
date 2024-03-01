@@ -42,7 +42,9 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                               '' DINCPRM, --VALOR VACIO
                               CASE 
                               WHEN ( DXP."NAMOUNT" != 0 AND DXP."NAMOUNT" IS NOT NULL) AND ( CAST(DXP."NPERCENT" AS INTEGER)= 0 AND DXP."NPERCENT" IS NULL) 
-                              THEN 'IMPORTE' ELSE 'PORCENTAJE' END KACTPVCG, 
+                              THEN '1' --IMPORTE 
+                              ELSE '2' --PORCENTAJE
+                              END KACTPVCG, 
                               '' DDURACAO, 
                               '' KACTPCBB --valor vacio
                               FROM
@@ -133,8 +135,8 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                              '' DMARCA, --NO
                              '' DINCPRM, --VALOR VACIO
                              CASE WHEN (DXP."NAMOUNT" != 0 AND DXP."NAMOUNT" IS NOT NULL) 
-                                  AND  (CAST(DXP."NPERCENT" AS INTEGER) = 0 AND DXP."NPERCENT" IS NULL) THEN 'IMPORTE' 
-                             ELSE 'PORCENTAJE' 
+                                  AND  (CAST(DXP."NPERCENT" AS INTEGER) = 0 AND DXP."NPERCENT" IS NULL) THEN  '1' --IMPORTE
+                             ELSE '2' --PORCENTAJE
                              END KACTPVCG, 
                              '' DDURACAO, --VALOR VACIO
                              '' KACTPCBB --VALOR VACIO
@@ -196,190 +198,189 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
 
    #DECLARAR CONSULTA INSUNIX
    l_polizas_insunix_general = f'''
-                                ( SELECT
-                                  'D' INDDETREC,
-                                  'ABCARGA' TABLAIFRS17,
-                                  '' PK,--PENDIENTE
-                                  '' DTPREG,--NO
-                                  '' TIOCPROC,--NO
-                                  COALESCE(CAST(CAST(DXP.EFFECDATE AS DATE) AS VARCHAR),'') TIOCFRM,--PENDIENTE
-                                  '' TIOCTO,--NO
-                                  'PIG' KGIORIGM,
-                                  COALESCE(DXP.BRANCH, 0) || '-' || COALESCE(DXP.PRODUCT,0) || '-' || COALESCE(DXP.SUB_PRODUCT,0) || '-' || COALESCE(DXP.POLICY,0) || '-' || COALESCE(DXP.CERTIF,0) KABAPOL,--FK PENDIENTE
-                                  '' KABUNRIS,  --VALOR VACIO
-                                  '' KGCTPCBT,  --VALOR VACIO
-                                  '' KACCDFDO,  -- VALOR VACIO
-                                  COALESCE(DXP.TYPE, '') KACTPCAG,
-                                  COALESCE(DXP.BRANCH, 0) || '-' || COALESCE(DXP.PRODUCT,0) || '-' || COALESCE(DXP.SUB_PRODUCT,0) || '-' || DXP.CURRENCY || '-' || COALESCE(DXP.CODE, 0) || '-' || COALESCE(DXP.TYPE, '0') KACCDCAG,
-                                  COALESCE(DXP.AMOUNT, 0) VMTCARGA,
-                                  COALESCE(CAST(CAST(DXP.EFFECDATE AS DATE) AS VARCHAR),'') TULTMALT,
-                                  '' DUSRUPD,   --NO
-                                  'LPG' DCOMPA,
-                                  '' DMARCA,    --NO
-                                  '' DINCPRM,    --VALOR VACIO
-                                  CASE
-                                  WHEN (DXP.AMOUNT != 0 AND DXP.AMOUNT IS NOT NULL) AND (CAST(DXP.PERCENT AS INTEGER) = 0 AND DXP.PERCENT IS NULL) THEN 'IMPORTE'
-                                  ELSE 'PORCENTAJE'
-                                  END KACTPVCG,
-                                  '' DDURACAO, --VALOR VACIO
-                                  '' KACTPCBB  --VALOR VACIO
-                                  FROM
+                              (  	select
+                                  'd' inddetrec,
+                                  'abcarga' tablaifrs17,
+                                  '' pk,--pendiente
+                                  '' dtpreg,--no
+                                  '' tiocproc,--no
+                                  coalesce(cast(cast(dxp.effecdate as date) as varchar),'') tiocfrm,--pendiente
+                                  '' tiocto,--no
+                                  'pig' kgiorigm,
+                                  coalesce(dxp.branch, 0) || '-' || coalesce(dxp.product,0) || '-' || coalesce(dxp.sub_product,0) || '-' || coalesce(dxp.policy,0) || '-' || coalesce(dxp.certif,0) kabapol,--fk pendiente
+                                  '' kabunris,  --valor vacio
+                                  '' kgctpcbt,  --valor vacio
+                                  '' kaccdfdo,  -- valor vacio
+                                  coalesce(dxp.type, '') kactpcag,
+                                  coalesce(dxp.branch, 0) || '-' || coalesce(dxp.product,0) || '-' || coalesce(dxp.sub_product,0) || '-' || dxp.currency || '-' || coalesce(dxp.code, 0) || '-' || coalesce(dxp.type, '0') kaccdcag,
+                                  coalesce(dxp.amount, 0) vmtcarga,
+                                  coalesce(cast(cast(dxp.effecdate as date) as varchar),'') tultmalt,
+                                  '' dusrupd,   --no
+                                  'lpg' dcompa,
+                                  '' dmarca,    --no
+                                  '' dincprm,    --valor vacio
+                                  case
+                                  when (dxp.amount != 0 and dxp.amount is not null) and (cast(dxp.percent as integer) = 0 and dxp.percent is null) then '1' --importe
+                                  else '2' --porcentaje
+                                  end kactpvcg,
+                                  '' dduracao, --valor vacio
+                                  '' kactpcbb  --valor vacio
+                                  from
                                   (
-                                     SELECT 
-                                     DX.EFFECDATE,  
-                                     DX.TYPE, 
-                                     DX.CODE, 
-                                     DX.AMOUNT, 
-                                     DX.PERCENT,
-                                     DX.CURRENCY,
-                                     P.* 
-                                     FROM
+                                     select 
+                                     dx.effecdate,  
+                                     dx.type, 
+                                     dx.code, 
+                                     dx.amount, 
+                                     dx.percent,
+                                     dx.currency,
+                                     p.* 
+                                     from
                                      (
-	                                     SELECT  
-	                                     P.USERCOMP,
-	                                     P.COMPANY,
-	                                     P.CERTYPE,
-	                                     P.BRANCH, 
-	                                     P.PRODUCT, 
-	                                     PSP.SUB_PRODUCT, 
-	                                     P.POLICY,                                      
-	                                     COALESCE(CERT.CERTIF, 0) CERTIF,
-	                                     CASE 
-	                                     	  WHEN P.POLITYPE  = '1' THEN P.EFFECDATE
-	                                     	  WHEN P.POLITYPE <> '1' THEN CERT.EFFECDATE 
-	                                     END EFFECDATE_VAL                                     
-	                                     FROM USINSUG01.POLICY P 
-	                                     LEFT JOIN USINSUG01.CERTIFICAT CERT 
-	                                     ON CERT.USERCOMP = P.USERCOMP 
-	                                     AND CERT.COMPANY = P.COMPANY 
-	                                     AND CERT.CERTYPE = P.CERTYPE 
-	                                     AND CERT.BRANCH = P.BRANCH 
-	                                     AND CERT.PRODUCT = P.PRODUCT 
-	                                     AND CERT.POLICY = P.POLICY                                     
-	                                     JOIN USINSUG01.POL_SUBPRODUCT PSP 
-	                                     ON  PSP.USERCOMP = P.USERCOMP 
-	                                     AND PSP.COMPANY  = P.COMPANY 
-	                                     AND PSP.CERTYPE  = P.CERTYPE 
-	                                     AND PSP.BRANCH   = P.BRANCH 
-	                                     AND PSP.POLICY   = P.POLICY		    
-	                                     AND PSP.PRODUCT  = P.PRODUCT
-	                                     WHERE P.CERTYPE  = '2'
-                                       AND P.STATUS_POL NOT IN ('2','3')  -- 2: que no esten invalidas  3: que no esten pendientes de informacion
-                                     	 AND ((P.POLITYPE = '1' AND P.EXPIRDAT >= '{l_fecha_carga_inicial}' AND (P.NULLDATE IS NULL OR P.NULLDATE > '{l_fecha_carga_inicial}')) --individual
-                                     	    OR (P.POLITYPE <> '1' AND CERT.EXPIRDAT >= '{l_fecha_carga_inicial}' AND (CERT.NULLDATE IS NULL OR CERT.NULLDATE > '{l_fecha_carga_inicial}'))) --colectiva
+	                                     select  
+	                                     p.usercomp,
+	                                     p.company,
+	                                     p.certype,
+	                                     p.branch, 
+	                                     p.product, 
+	                                     psp.sub_product, 
+	                                     p.policy,                                      
+	                                     coalesce(cert.certif, 0) certif,
+	                                     case 
+	                                     	  when p.politype  = '1' then p.effecdate
+	                                     	  when p.politype <> '1' then cert.effecdate 
+	                                     end effecdate_val                                     
+	                                     from usinsug01.policy p 
+	                                     left join usinsug01.certificat cert 
+	                                     on cert.usercomp = p.usercomp 
+	                                     and cert.company = p.company 
+	                                     and cert.certype = p.certype 
+	                                     and cert.branch = p.branch 
+	                                     and cert.product = p.product 
+	                                     and cert.policy = p.policy                                     
+	                                     join usinsug01.pol_subproduct psp 
+	                                     on  psp.usercomp = p.usercomp 
+	                                     and psp.company  = p.company 
+	                                     and psp.certype  = p.certype 
+	                                     and psp.branch   = p.branch 
+	                                     and psp.policy   = p.policy		    
+	                                     and psp.product  = p.product
+	                                     where p.certype  = '2'
+                                       and p.status_pol not in ('2','3')  -- 2: que no esten invalidas  3: que no esten pendientes de informacion
+                                     	 and ((p.politype = '1' and p.expirdat >= '2021-12-31' and (p.nulldate is null or p.nulldate > '2021-12-31')) --individual
+                                     	    or (p.politype <> '1' and cert.expirdat >= '2021-12-31' and (cert.nulldate is null or cert.nulldate > '2021-12-31'))) --colectiva
 
                                        
-                                       UNION
+                                       union
 
-                                       SELECT
-                                       P.USERCOMP,
-	                                     P.COMPANY,
-	                                     P.CERTYPE,
-	                                     P.BRANCH, 
-	                                     P.PRODUCT, 
-	                                     PSP.SUB_PRODUCT, 
-	                                     P.POLICY,                                      
-	                                     COALESCE(CERT.CERTIF, 0) CERTIF,
-	                                     CASE 
-	                                     	  WHEN P.POLITYPE  = '1' THEN P.EFFECDATE
-	                                     	  WHEN P.POLITYPE <> '1' THEN CERT.EFFECDATE 
-	                                     END EFFECDATE_VAL 
-                                       FROM USINSUG01.POLICY P 
-                                       LEFT JOIN USINSUG01.CERTIFICAT CERT 
-                                       ON CERT.USERCOMP = P.USERCOMP 
-                                       AND CERT.COMPANY = P.COMPANY 
-                                       AND CERT.CERTYPE = P.CERTYPE 
-                                       AND CERT.BRANCH = P.BRANCH 
-                                       AND CERT.PRODUCT = P.PRODUCT 
-                                       AND CERT.POLICY = P.POLICY                                     
-                                       JOIN USINSUG01.POL_SUBPRODUCT PSP 
-                                       ON  PSP.USERCOMP = P.USERCOMP 
-                                       AND PSP.COMPANY  = P.COMPANY 
-                                       AND PSP.CERTYPE  = P.CERTYPE 
-                                       AND PSP.BRANCH   = P.BRANCH 
-                                       AND PSP.POLICY   = P.POLICY		    
-                                       AND PSP.PRODUCT  = P.PRODUCT
-                                       WHERE P.CERTYPE  = '2' 
-                                       AND P.STATUS_POL NOT IN ('2','3') AND P.POLITYPE = '1' --INDIVIDUAL
-                                       AND (((P.EXPIRDAT < '{l_fecha_carga_inicial}' OR P.NULLDATE < '{l_fecha_carga_inicial}')
-                                       AND EXISTS (SELECT 1 FROM  USINSUG01.CLAIM CLA    
-                                                   JOIN  USINSUG01.CLAIM_HIS CLH 
-                                                   ON CLH.USERCOMP = CLA.USERCOMP 
-                                                   AND CLH.COMPANY = CLA.COMPANY 
-                                                   AND CLH.BRANCH  = CLA.BRANCH 
-                                                   AND CLH.CLAIM   = CLA.CLAIM
-                                                   WHERE CLA.USERCOMP = P.USERCOMP 
-                                                   AND CLA.COMPANY = P.COMPANY 
-                                                   AND CLA.BRANCH = P.BRANCH 
-                                                   AND CLA.PRODUCT = P.PRODUCT 
-                                                   AND CLA.POLICY = P.POLICY 
-                                                   AND CLA.CERTIF = 0 
-                                                   AND TRIM(CLH.OPER_TYPE) IN (SELECT CAST(TCL.OPERATION AS VARCHAR(2))
-                                        		                                   FROM 	USINSUG01.TAB_CL_OPE TCL
-                                        		                                   WHERE  (TCL.RESERVE = 1 OR TCL.AJUSTES = 1 OR TCL.PAY_AMOUNT = 1)) --SINIESTROS QUE TIENEN OPERACIONES DE RESERVAS AJUSTES Y PAGOS QUE ESTEN POSTERIORES DESPUES DE LA FECHA DE CORTE 
-                                                   AND CLH.OPERDATE >= '{l_fecha_carga_inicial}'))                                     
-                                       AND P.EFFECDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'/*SE QUITO EL COMENTARIO DEL FILTRO */)
+                                       select
+                                       p.usercomp,
+	                                     p.company,
+	                                     p.certype,
+	                                     p.branch, 
+	                                     p.product, 
+	                                     psp.sub_product, 
+	                                     p.policy,                                      
+	                                     coalesce(cert.certif, 0) certif,
+	                                     case 
+	                                     	  when p.politype  = '1' then p.effecdate
+	                                     	  when p.politype <> '1' then cert.effecdate 
+	                                     end effecdate_val 
+                                       from usinsug01.policy p 
+                                       left join usinsug01.certificat cert 
+                                       on cert.usercomp = p.usercomp 
+                                       and cert.company = p.company 
+                                       and cert.certype = p.certype 
+                                       and cert.branch = p.branch 
+                                       and cert.product = p.product 
+                                       and cert.policy = p.policy                                     
+                                       join usinsug01.pol_subproduct psp 
+                                       on  psp.usercomp = p.usercomp 
+                                       and psp.company  = p.company 
+                                       and psp.certype  = p.certype 
+                                       and psp.branch   = p.branch 
+                                       and psp.policy   = p.policy		    
+                                       and psp.product  = p.product
+                                       where p.certype  = '2' 
+                                       and p.status_pol not in ('2','3') and p.politype = '1' --individual
+                                       and (((p.expirdat < '2021-12-31' or p.nulldate < '2021-12-31')
+                                       and exists (select 1 from  usinsug01.claim cla    
+                                                   join  usinsug01.claim_his clh 
+                                                   on clh.usercomp = cla.usercomp 
+                                                   and clh.company = cla.company 
+                                                   and clh.branch  = cla.branch 
+                                                   and clh.claim   = cla.claim
+                                                   where cla.usercomp = p.usercomp 
+                                                   and cla.company = p.company 
+                                                   and cla.branch = p.branch 
+                                                   and cla.product = p.product 
+                                                   and cla.policy = p.policy 
+                                                   and cla.certif = 0 
+                                                   and trim(clh.oper_type) in (select cast(tcl.operation as varchar(2))
+                                        		                                   from 	usinsug01.tab_cl_ope tcl
+                                        		                                   where  (tcl.reserve = 1 or tcl.ajustes = 1 or tcl.pay_amount = 1)) --siniestros que tienen operaciones de reservas ajustes y pagos que esten posteriores despues de la fecha de corte 
+                                                   and clh.operdate >= '2021-12-31'))                                     
+                                       and p.effecdate between '2021-01-01' and '2021-01-01'/*se quito el comentario del filtro */)
 
-                                       UNION
+                                       union
 
-                                       SELECT
-                                       P.USERCOMP,
-	                                     P.COMPANY,
-	                                     P.CERTYPE,
-	                                     P.BRANCH, 
-	                                     P.PRODUCT, 
-	                                     PSP.SUB_PRODUCT, 
-	                                     P.POLICY,                                      
-	                                     CERT.CERTIF,
-	                                     CASE 
-	                                     	  WHEN P.POLITYPE  = '1' THEN P.EFFECDATE
-	                                     	  WHEN P.POLITYPE <> '1' THEN CERT.EFFECDATE 
-	                                     END EFFECDATE_VAL
-                                       FROM USINSUG01.POLICY P 
-                                       LEFT JOIN USINSUG01.CERTIFICAT CERT 
-                                       ON CERT.USERCOMP = P.USERCOMP 
-                                       AND CERT.COMPANY = P.COMPANY 
-                                       AND CERT.CERTYPE = P.CERTYPE 
-                                       AND CERT.BRANCH = P.BRANCH 
-                                       AND CERT.PRODUCT = P.PRODUCT 
-                                       AND CERT.POLICY = P.POLICY                                     
-                                       JOIN USINSUG01.POL_SUBPRODUCT PSP 
-                                       ON  PSP.USERCOMP = P.USERCOMP 
-                                       AND PSP.COMPANY  = P.COMPANY 
-                                       AND PSP.CERTYPE  = P.CERTYPE 
-                                       AND PSP.BRANCH   = P.BRANCH 
-                                       AND PSP.POLICY = P.POLICY		    
-                                       AND PSP.PRODUCT  = P.PRODUCT
-                                       WHERE P.CERTYPE  = '2' AND P.STATUS_POL NOT IN ('2','3') AND P.POLITYPE <> '1' --COLECTIVA
-                                       AND (((CERT.EXPIRDAT < '{l_fecha_carga_inicial}'  OR  CERT.NULLDATE < '{l_fecha_carga_inicial}') 
-                                       AND EXISTS (SELECT 1 FROM USINSUG01.CLAIM CLA    
-                                                   JOIN  USINSUG01.CLAIM_HIS CLH  
-                                                   ON CLA.USERCOMP = CLH.USERCOMP 
-                                                   AND CLA.COMPANY = CLH.COMPANY 
-                                                   AND CLA.BRANCH = CLH.BRANCH  
-                                                   AND CLH.CLAIM = CLA.CLAIM
-                                                   WHERE CLA.USERCOMP = P.USERCOMP 
-                                                   AND CLA.COMPANY = P.COMPANY 
-                                                   AND CLA.BRANCH = P.BRANCH 
-                                                   AND CLA.PRODUCT = P.PRODUCT 
-                                                   AND CLA.POLICY = P.POLICY 
-                                                   AND CLA.CERTIF = CERT.CERTIF 
-                                                   AND TRIM(CLH.OPER_TYPE) IN (SELECT CAST(TCL.OPERATION AS VARCHAR(2)) 
-                                                                               FROM  USINSUG01.TAB_CL_OPE TCL 
-                                                                               WHERE (TCL.RESERVE = 1 OR TCL.AJUSTES = 1 OR TCL.PAY_AMOUNT = 1)) AND CLH.OPERDATE >= '{l_fecha_carga_inicial}')))
-                                       AND P.EFFECDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'/*SE QUITO EL COMENTARIO DEL FILTRO */)
-	                                    ) P
-                                     LEFT JOIN USINSUG01.DISC_XPREM DX 
-                                     ON DX.USERCOMP = P.USERCOMP 
-                                     AND DX.COMPANY = P.COMPANY 
-                                     AND DX.BRANCH  = P.BRANCH 
-                                     AND DX.CERTYPE = P.CERTYPE 
-                                     AND DX.POLICY  = P.POLICY 
-                                     AND DX.CERTIF  = P.CERTIF 
-                                     AND DX.EFFECDATE <= P.EFFECDATE_VAL 
-                                     AND (DX.NULLDATE IS NULL OR DX.NULLDATE > P.EFFECDATE_VAL)
-                                  ) DXP ) AS TMP
-                                '''
+                                       select
+                                       p.usercomp,
+	                                     p.company,
+	                                     p.certype,
+	                                     p.branch, 
+	                                     p.product, 
+	                                     psp.sub_product, 
+	                                     p.policy,                                      
+	                                     cert.certif,
+	                                     case 
+	                                     	  when p.politype  = '1' then p.effecdate
+	                                     	  when p.politype <> '1' then cert.effecdate 
+	                                     end effecdate_val
+                                       from usinsug01.policy p 
+                                       left join usinsug01.certificat cert 
+                                       on cert.usercomp = p.usercomp 
+                                       and cert.company = p.company 
+                                       and cert.certype = p.certype 
+                                       and cert.branch = p.branch 
+                                       and cert.product = p.product 
+                                       and cert.policy = p.policy                                     
+                                       join usinsug01.pol_subproduct psp 
+                                       on  psp.usercomp = p.usercomp 
+                                       and psp.company  = p.company 
+                                       and psp.certype  = p.certype 
+                                       and psp.branch   = p.branch 
+                                       and psp.policy = p.policy		    
+                                       and psp.product  = p.product
+                                       where p.certype  = '2' and p.status_pol not in ('2','3') and p.politype <> '1' --colectiva
+                                       and (((cert.expirdat < '2021-12-31'  or  cert.nulldate < '2021-12-31') 
+                                       and exists (select 1 from usinsug01.claim cla    
+                                                   join  usinsug01.claim_his clh  
+                                                   on cla.usercomp = clh.usercomp 
+                                                   and cla.company = clh.company 
+                                                   and cla.branch = clh.branch  
+                                                   and clh.claim = cla.claim
+                                                   where cla.usercomp = p.usercomp 
+                                                   and cla.company = p.company 
+                                                   and cla.branch = p.branch 
+                                                   and cla.product = p.product 
+                                                   and cla.policy = p.policy 
+                                                   and cla.certif = cert.certif 
+                                                   and trim(clh.oper_type) in (select cast(tcl.operation as varchar(2)) 
+                                                                               from  usinsug01.tab_cl_ope tcl 
+                                                                               where (tcl.reserve = 1 or tcl.ajustes = 1 or tcl.pay_amount = 1)) and clh.operdate >= '2021-12-31')))
+                                       and p.effecdate between '2021-01-01' and '2021-01-01'/*se quito el comentario del filtro */) p
+                                     left join usinsug01.disc_xprem dx 
+                                     on dx.usercomp = p.usercomp 
+                                     and dx.company = p.company 
+                                     and dx.branch  = p.branch 
+                                     and dx.certype = p.certype 
+                                     and dx.policy  = p.policy 
+                                     and dx.certif  = p.certif 
+                                     and dx.effecdate <= p.effecdate_val 
+                                     and (dx.nulldate is null or dx.nulldate > p.effecdate_val)
+                                  ) dxp ) as tmp
+                              '''
    #Ejecutar consulta
    l_df_polizas_insunix_general = glue_context.read.format('jdbc').options(**connection).option("dbtable",l_polizas_insunix_general).load()
 
@@ -421,7 +422,9 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                               '' DMARCA, --NO
                               '' DINCPRM, 
                               CASE WHEN (DX.AMOUNT != 0 AND DX.AMOUNT IS NOT NULL) AND (CAST(DX.PERCENT AS INTEGER)= 0 AND DX.PERCENT IS NULL) 
-                              THEN 'IMPORTE' ELSE 'PORCENTAJE' END KACTPVCG, 
+                              THEN '1' --IMPORTE 
+                              ELSE '2' --PORCENTAJE
+                              END KACTPVCG, 
                               '' DDURACAO, 
                               '' KACTPCBB --VALOR VACIO 
                               FROM
@@ -592,7 +595,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                       '' DINCPRM,--EN BLANCO
                       '' KACTPVCG,--EN BLANCO 
                       '' DDURACAO,--EN BLANCO
-                      COALESCE(GRD."COVER_TYPE",'') AS KACTPCBB
+                      COALESCE(CAST(ROUND((SELECT CP."COVER_CPR_ID" FROM USINSIV01."CPR_COVER"  CP WHERE "COVER_TYPE" = GRD."COVER_TYPE"),0) AS VARCHAR),'') AS KACTPCBB
                       FROM
                       USINSIV01."POLICY" P
                       LEFT JOIN USINSIV01."POLICY_ENG_POLICIES" PP 
