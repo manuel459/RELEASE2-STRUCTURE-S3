@@ -3,7 +3,7 @@ from pyspark.sql.functions import col , coalesce , lit , format_number
 
 def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
 
-    l_fecha_carga_inicial = '2021-12-31'
+    l_fecha_carga_inicial = '2021-12-30'
     
     l_abclrisp_insunix_lpg = f'''
                              (      select
@@ -244,9 +244,9 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                     		            and  rtr."SOURCESCHEMA" = 'usinsug01'
                                     			      where p.certype = '2' 
                                     		            and p.status_pol not in ('2','3') 
-                                    		            and  ((p.politype = '1' and p.expirdat >= '{l_fecha_carga_inicial}' and (p.nulldate is null or p.nulldate > '{l_fecha_carga_inicial}') ) -- individual
+                                    		            and  ((p.politype = '1' and p.expirdat BETWEEN '{p_fecha_inicio}' AND '{l_fecha_carga_inicial}' and (p.nulldate is null or p.nulldate > '{p_fecha_inicio}') ) -- individual
                                     		                  or 
-                                    		                 (p.politype <> '1' and cert.expirdat >= '{l_fecha_carga_inicial}' and (cert.nulldate is null or cert.nulldate > '{l_fecha_carga_inicial}')))
+                                    		                 (p.politype <> '1' and cert.expirdat BETWEEN '{p_fecha_inicio}' AND '{l_fecha_carga_inicial}' and (cert.nulldate is null or cert.nulldate > '{p_fecha_inicio}')))
                                     		            and p.effecdate between '{p_fecha_inicio}' and '{p_fecha_fin}')
                                     		            
                                     		           -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -591,19 +591,16 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                     and p.certype = cert.certype 
                                     and p.branch  = cert.branch 
                                     and p.policy  = cert.policy	
-                                    join /*usbi01."ifrs170_t_ramos_por_tipo_riesgo"*/
-                                    ( select unnest(array['usinsuv01','usinsuv01','usinsuv01','usinsuv01','usinsuv01','usinsuv01','usinsuv01','usinsuv01','usinsuv01','usinsuv01','usinsuv01','usinsuv01','usinsuv01','usinsuv01', 'usinsuv01','usinsuv01','usinsuv01','usinsuv01','usinsuv01','usinsuv01','usinsuv01','usinsuv01','usinsuv01','usinsuv01']) as "sourceschema",  
-                                             unnest(array[5,21,22,23,24,25,27,31,32,33,34,35,36,37,40,41,42,59,68,71,75,77,91,99]) as "branchcom",
-                                             unnest(array[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]) as "risktypen") rtr on rtr."branchcom" = p.branch and  rtr."risktypen" = 1 and rtr."sourceschema" = 'usinsuv01'
+                                    join usbi01."ifrs170_t_ramos_por_tipo_riesgo" rtr on rtr."branchcom" = p.branch and  rtr."risktypen" = 1 and rtr."sourceschema" = 'usinsuv01'
                                       where p.certype = '2' 
                                       and p.status_pol not in ('2','3') 
                                       and ( (p.politype = '1' -- individual 
-                                      and p.expirdat >= '{l_fecha_carga_inicial}' 
-                                      and (p.nulldate is null or p.nulldate > '{l_fecha_carga_inicial}') )
+                                      and p.expirdat BETWEEN '{p_fecha_inicio}' AND '{l_fecha_carga_inicial}'
+                                      and (p.nulldate is null or p.nulldate > '{p_fecha_inicio}') )
                                             or 
                                           (p.politype <> '1' -- colectivas 
-                                          and cert.expirdat >= '{l_fecha_carga_inicial}' 
-                                          and (cert.nulldate is null or cert.nulldate > '{l_fecha_carga_inicial}'))))
+                                          and cert.expirdat BETWEEN '{p_fecha_inicio}' AND '{l_fecha_carga_inicial}'
+                                          and (cert.nulldate is null or cert.nulldate > '{p_fecha_inicio}'))))
                                                          
                                   union /*se quito el union desde aqui */
                                                         
@@ -903,12 +900,12 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                      WHERE P."SCERTYPE" = '2' 
                                      AND P."SSTATUS_POL" NOT IN ('2','3') 
                                      AND ( (P."SPOLITYPE" = '1' -- INDIVIDUAL 
-                                           AND P."DEXPIRDAT" >= '2018-12-31'
-                                           AND (P."DNULLDATE" IS NULL OR P."DNULLDATE" > '2018-12-31') )
+                                           AND P."DEXPIRDAT" BETWEEN '{p_fecha_inicio}' AND '{l_fecha_carga_inicial}'
+                                           AND (P."DNULLDATE" IS NULL OR P."DNULLDATE" > '{p_fecha_inicio}') )
                                            OR 
                                            (P."SPOLITYPE" <> '1' -- COLECTIVAS 
-                                           AND CERT."DEXPIRDAT" >= '2018-12-31' 
-                                           AND (CERT."DNULLDATE" IS NULL OR CERT."DNULLDATE" > '2018-12-31'))))
+                                           AND CERT."DEXPIRDAT" BETWEEN '{p_fecha_inicio}' AND '{l_fecha_carga_inicial}'
+                                           AND (CERT."DNULLDATE" IS NULL OR CERT."DNULLDATE" > '{p_fecha_inicio}'))))
                                      
                                      UNION /*SE QUITO EL UNION DESDE AQUI */
 
@@ -1154,14 +1151,17 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                            	      JOIN USBI01."IFRS170_T_RAMOS_POR_TIPO_RIESGO" RTR ON RTR."BRANCHCOM" = P."NBRANCH" AND  RTR."RISKTYPEN" = 1 AND RTR."SOURCESCHEMA" = 'usvtimv01'
                            	      WHERE P."SCERTYPE" = '2' 
                                     AND P."SSTATUS_POL" NOT IN ('2','3') 
-                                    AND ((P."SPOLITYPE" = '1' -- INDIVIDUAL 
-                                    AND P."DEXPIRDAT" >= '{l_fecha_carga_inicial}' 
-                                    AND (P."DNULLDATE" IS NULL OR P."DNULLDATE" > '{l_fecha_carga_inicial}') )
-                                    OR 
-                                    (P."SPOLITYPE" <> '1' -- COLECTIVAS 
-                                    AND CERT."DEXPIRDAT" >= '{l_fecha_carga_inicial}' 
-                                    AND (CERT."DNULLDATE" IS NULL OR CERT."DNULLDATE" > '{l_fecha_carga_inicial}'))
-                                    AND p."DSTARTDATE" between '{p_fecha_inicio}' and '{p_fecha_fin}')
+                                    AND (
+                                          (P."SPOLITYPE" = '1' -- INDIVIDUAL 
+                                           AND P."DEXPIRDAT" BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
+                                           AND (P."DNULLDATE" IS NULL OR P."DNULLDATE" > '{p_fecha_inicio}')
+                                           AND P."DEXPIRDAT" < '{l_fecha_carga_inicial}' )
+                                           OR 
+                                          (P."SPOLITYPE" <> '1' -- COLECTIVAS 
+                                           AND CERT."DEXPIRDAT" BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
+                                           AND (CERT."DNULLDATE" IS NULL OR CERT."DNULLDATE" > '{p_fecha_inicio}')
+                                           AND CERT."DEXPIRDAT" < '{l_fecha_carga_inicial}')
+                                        )
 
                                     UNION /*SE QUITO EL UNION DESDE AQUI */
                               

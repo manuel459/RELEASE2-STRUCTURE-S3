@@ -70,8 +70,8 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                          		    AND DX."NDISC_CODE" = DE."NDISEXPRC"
                                 WHERE P."SCERTYPE" = '2' 
                                 AND P."SSTATUS_POL" NOT IN ('2', '3')
-                                AND ((P."SPOLITYPE" = '1' AND CAST(P."DEXPIRDAT" AS DATE)>= '{l_fecha_carga_inicial}' AND (P."DNULLDATE" IS NULL OR CAST(P."DNULLDATE" AS DATE) > '{l_fecha_carga_inicial}'))
-                                OR  (P."SPOLITYPE" <> '1' AND CAST(CERT."DEXPIRDAT" AS DATE) >= '{l_fecha_carga_inicial}' AND (CERT."DNULLDATE" IS NULL OR CAST(CERT."DNULLDATE" AS DATE) > '{l_fecha_carga_inicial}')))
+                                AND ((P."SPOLITYPE" = '1' AND CAST(P."DEXPIRDAT" AS DATE) BETWEEN '{p_fecha_inicio}' AND '{l_fecha_carga_inicial}' AND (P."DNULLDATE" IS NULL OR CAST(P."DNULLDATE" AS DATE) > '{p_fecha_inicio}'))
+                                OR  (P."SPOLITYPE" <> '1' AND CAST(CERT."DEXPIRDAT" AS DATE) BETWEEN '{p_fecha_inicio}' AND '{l_fecha_carga_inicial}' AND (CERT."DNULLDATE" IS NULL OR CAST(CERT."DNULLDATE" AS DATE) > '{p_fecha_inicio}')))
                                 AND CAST(P."DSTARTDATE" AS DATE) BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}')
 
                                 UNION  /*SE QUITO EL UNION DESDE AQUI */
@@ -381,8 +381,8 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
 	                                     AND PSP.PRODUCT  = P.PRODUCT
 	                                     WHERE P.CERTYPE  = '2'
                                          AND P.STATUS_POL NOT IN ('2','3')  -- 2: QUE NO ESTEN INVALIDAS  3: QUE NO ESTEN PENDIENTES DE INFORMACION
-                                     	 AND ((P.POLITYPE = '1' AND P.EXPIRDAT >= '{l_fecha_carga_inicial}' AND (P.NULLDATE IS NULL OR P.NULLDATE > '{l_fecha_carga_inicial}')) --INDIVIDUAL
-                                     	    OR (P.POLITYPE <> '1' AND CERT.EXPIRDAT >= '{l_fecha_carga_inicial}' AND (CERT.NULLDATE IS NULL OR CERT.NULLDATE > '{l_fecha_carga_inicial}'))) --COLECTIVA
+                                     	 AND ((P.POLITYPE = '1' AND P.EXPIRDAT BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}' AND (P.NULLDATE IS NULL OR P.NULLDATE > '{p_fecha_inicio}') AND P.EXPIRDAT < '{l_fecha_carga_inicial}') --INDIVIDUAL
+                                     	    OR (P.POLITYPE <> '1' AND CERT.EXPIRDAT BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}' AND (CERT.NULLDATE IS NULL OR CERT.NULLDATE > '{p_fecha_inicio}') AND CERT.EXPIRDAT < '{l_fecha_carga_inicial}')) --COLECTIVA
 
                                        
                                        UNION
@@ -581,9 +581,9 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                    											                      ELSE CERT.EFFECDATE 
                                    											                      END))
                                    WHERE P.CERTYPE  = '2' AND P.STATUS_POL NOT IN ('2','3') 
-                                   AND ((P.POLITYPE = '1' AND P.EXPIRDAT >= '{l_fecha_carga_inicial}' AND (P.NULLDATE IS NULL OR P.NULLDATE > '{l_fecha_carga_inicial}'))
-                                   OR  (P.POLITYPE <> '1' AND CERT.EXPIRDAT >= '{l_fecha_carga_inicial}' AND (CERT.NULLDATE IS NULL OR CERT.NULLDATE > '{l_fecha_carga_inicial}')) 
-                                   AND DX.EFFECDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'/*SE QUITO EL COMENTARIO DEL FILTRO */))
+                                   AND ((P.POLITYPE = '1' AND P.EXPIRDAT BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}' AND (P.NULLDATE IS NULL OR P.NULLDATE > '{p_fecha_inicio}') AND P.EXPIRDAT < '{l_fecha_carga_inicial}')
+                                   OR  (P.POLITYPE <> '1' AND CERT.EXPIRDAT BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}' AND (CERT.NULLDATE IS NULL OR CERT.NULLDATE > '{p_fecha_inicio}') AND CERT.EXPIRDAT < '{l_fecha_carga_inicial}') 
+                                   ))
                                   
                                   UNION /*SE QUITO EL UNION DESDE AQUI */
                                   

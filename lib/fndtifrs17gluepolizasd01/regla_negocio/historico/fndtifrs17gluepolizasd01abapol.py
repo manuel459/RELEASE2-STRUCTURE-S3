@@ -417,10 +417,10 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                          WHERE P."SCERTYPE" = '2' 
                          AND P."SSTATUS_POL" NOT IN ('2','3')
                          AND ((P."SPOLITYPE" = '1' -- INDIVIDUAL 
-                              AND CAST(P."DEXPIRDAT" AS DATE) >= '{l_fecha_carga_inicial}' AND (P."DNULLDATE" IS NULL OR CAST(P."DNULLDATE" AS DATE) > '{l_fecha_carga_inicial}') )
+                              AND CAST(P."DEXPIRDAT" AS DATE) BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}' AND (P."DNULLDATE" IS NULL OR CAST(P."DNULLDATE" AS DATE) > '{p_fecha_inicio}') AND P."DEXPIRDAT" < '{l_fecha_carga_inicial}' )
                          OR  (P."SPOLITYPE" <> '1' -- COLECTIVAS 
-                              AND CAST(CERT."DEXPIRDAT" AS DATE) >= '{l_fecha_carga_inicial}' AND (CERT."DNULLDATE" IS NULL OR CAST(CERT."DNULLDATE" AS DATE) > '{l_fecha_carga_inicial}')))
-                         AND CAST(P."DSTARTDATE" AS DATE) BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}')
+                              AND CAST(CERT."DEXPIRDAT" AS DATE) >= '{l_fecha_carga_inicial}' AND (CERT."DNULLDATE" IS NULL OR CAST(CERT."DNULLDATE" AS DATE) > '{l_fecha_carga_inicial}') AND CERT."DEXPIRDAT" < '{l_fecha_carga_inicial}'))
+                         )
                         
                         UNION 
 
@@ -1238,14 +1238,16 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                            WHERE P."SCERTYPE" = '2' 
                            AND P."SSTATUS_POL" NOT IN ('2','3') 
                            AND ( (P."SPOLITYPE" = '1' -- INDIVIDUAL 
-                                   AND CAST(P."DEXPIRDAT" AS DATE) >= '{l_fecha_carga_inicial}' 
-                                   AND (P."DNULLDATE" IS NULL OR CAST(P."DNULLDATE" AS DATE)> '{l_fecha_carga_inicial}') )
+                                   AND CAST(P."DEXPIRDAT" AS DATE) BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}' 
+                                   AND (P."DNULLDATE" IS NULL OR CAST(P."DNULLDATE" AS DATE)> '{p_fecha_inicio}')
+                                   AND P."DEXPIRDAT" < '{l_fecha_carga_inicial}' )
                                    OR 
                                    (P."SPOLITYPE" <> '1' -- COLECTIVAS
-                                   AND CAST(CERT."DEXPIRDAT" AS DATE)>= '{l_fecha_carga_inicial}' 
-                                   AND (CERT."DNULLDATE" IS NULL OR CAST(CERT."DNULLDATE" AS DATE)> '{l_fecha_carga_inicial}'))
+                                   AND CAST(CERT."DEXPIRDAT" AS DATE) BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}' 
+                                   AND (CERT."DNULLDATE" IS NULL OR CAST(CERT."DNULLDATE" AS DATE) > '{p_fecha_inicio}')
+                                   AND CERT."DEXPIRDAT" < '{l_fecha_carga_inicial}')
                                )
-                           AND P."DSTARTDATE" BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}' ) --SE ESTA QUITANDO EL LIMIT 100
+                          ) --SE ESTA QUITANDO EL LIMIT 100
 
                           UNION 
 
@@ -2107,13 +2109,15 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                             WHERE P.CERTYPE  = '2'
                             AND P.STATUS_POL NOT IN ('2','3') 
                             AND ((P.POLITYPE = '1' -- INDIVIDUAL 
-                                      AND P.EXPIRDAT >= '{l_fecha_carga_inicial}' 
-                                      AND (P.NULLDATE IS NULL OR P.NULLDATE > '{l_fecha_carga_inicial}'))
+                                      AND P.EXPIRDAT BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
+                                      AND (P.NULLDATE IS NULL OR P.NULLDATE > '{p_fecha_inicio}')
+                                      AND P.EXPIRDAT < '{l_fecha_carga_inicial}')
                                       OR 
                                     (P.POLITYPE <> '1' -- COLECTIVAS 
-                                      AND CERT.EXPIRDAT >= '{l_fecha_carga_inicial}' 
-                                AND (CERT.NULLDATE IS NULL OR CERT.NULLDATE > '{l_fecha_carga_inicial}')))
-                            AND P.EFFECDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}')
+                                      AND CERT.EXPIRDAT BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}' 
+                                AND (CERT.NULLDATE IS NULL OR CERT.NULLDATE > '{p_fecha_inicio}')
+                                AND CERT.EXPIRDAT < '{l_fecha_carga_inicial}'))
+                            )
 
                             UNION --SE QUITO EL UNION, DESDE AQUI 
 
@@ -2634,13 +2638,15 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                WHERE P.CERTYPE  = '2'
                                AND P.STATUS_POL NOT IN ('2','3') 
                                AND ((P.POLITYPE = '1' -- INDIVIDUAL 
-                                     AND P.EXPIRDAT >= '{l_fecha_carga_inicial}'  
-                                     AND (P.NULLDATE IS NULL OR P.NULLDATE > '{l_fecha_carga_inicial}'))
+                                     AND P.EXPIRDAT BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'  
+                                     AND (P.NULLDATE IS NULL OR P.NULLDATE > '{p_fecha_inicio}')
+                                     AND P.EXPIRDAT < '{l_fecha_carga_inicial}')
                                      OR 
                                    (P.POLITYPE <> '1' -- COLECTIVAS 
-                                     AND CERT.EXPIRDAT >= '{l_fecha_carga_inicial}' 
-                               AND (CERT.NULLDATE IS NULL OR CERT.NULLDATE > '{l_fecha_carga_inicial}')))
-                               AND P.EFFECDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}')
+                                     AND CERT.EXPIRDAT BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}' 
+                               AND (CERT.NULLDATE IS NULL OR CERT.NULLDATE > '{p_fecha_inicio}')
+                               AND CERT.EXPIRDAT < '{l_fecha_carga_inicial}'))
+                               )
                                
                                UNION
 

@@ -224,9 +224,17 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                   AND PSP.PRODUCT  = POL.PRODUCT 
                                   AND PSP.POLICY   = POL.POLICY 
                                   WHERE C.CERTYPE  = '2' AND POL.STATUS_POL NOT IN ('2','3') 
-                                  AND ((POL.POLITYPE = '1' AND POL.EXPIRDAT >= '2021-12-31'  AND (POL.NULLDATE IS NULL OR POL.NULLDATE > '2021-12-31')) 
-                                  OR (POL.POLITYPE <> '1' AND CERT.EXPIRDAT >= '2021-12-31'  AND (CERT.NULLDATE IS NULL OR CERT.NULLDATE > '2021-12-31')))
-                                  AND POL.EFFECDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}')
+                                  AND (
+                                        (POL.POLITYPE = '1' 
+                                         AND POL.EXPIRDAT BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'  
+                                         AND (POL.NULLDATE IS NULL OR POL.NULLDATE > '{p_fecha_inicio}')
+                                         AND POL.EXPIRDAT < '{l_fecha_carga_inicial}') 
+                                        OR 
+                                        (POL.POLITYPE <> '1' 
+                                         AND CERT.EXPIRDAT BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'  
+                                         AND (CERT.NULLDATE IS NULL OR CERT.NULLDATE > '{p_fecha_inicio}')
+                                         AND CERT.EXPIRDAT < '{l_fecha_carga_inicial}')
+                                      )
                                   
                                   UNION /*SE QUITO EL UNION DESDE AQUI */
 
@@ -631,13 +639,18 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                        AND POL.POLICY = C.POLICY
                                        WHERE C.CERTYPE = '2'
                                        AND POL.STATUS_POL NOT IN ('2', '3')
-                                       AND ((POL.POLITYPE = '1' -- INDIVIDUAL 
-                                             AND POL.EXPIRDAT >= '{l_fecha_carga_inicial}'
-                                           AND (POL.NULLDATE IS NULL OR POL.NULLDATE > '{l_fecha_carga_inicial}'))
-                                       OR (POL.POLITYPE <> '1' -- COLECTIVAS 
-                                           AND CERT.EXPIRDAT >= '{l_fecha_carga_inicial}'
-                                       AND (CERT.NULLDATE IS NULL OR CERT.NULLDATE > '{l_fecha_carga_inicial}')))
-                                       AND POL.EFFECDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}')
+                                       AND (
+                                             (POL.POLITYPE = '1' -- INDIVIDUAL 
+                                              AND POL.EXPIRDAT BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
+                                              AND (POL.NULLDATE IS NULL OR POL.NULLDATE > '{p_fecha_inicio}')
+                                              AND POL.EXPIRDAT < '{l_fecha_carga_inicial}')
+                                             OR 
+                                             (POL.POLITYPE <> '1' -- COLECTIVAS 
+                                              AND CERT.EXPIRDAT BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
+                                              AND (CERT.NULLDATE IS NULL OR CERT.NULLDATE > '{p_fecha_inicio}')
+                                              AND CERT.EXPIRDAT < '{l_fecha_carga_inicial}')
+                                           )
+                                    )
                                     
                                     UNION /*SE QUITO EL UNION DESDE AQUI */
                             
@@ -1118,14 +1131,18 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                     AND POL."NPOLICY"   = C."NPOLICY" 
                                     WHERE POL."SCERTYPE" = '2' 
                                     AND   POL."SSTATUS_POL" NOT IN ('2','3') 
-                                    AND ((POL."SPOLITYPE" = '1' -- INDIVIDUAL 
-                                    AND POL."DEXPIRDAT" >= '{l_fecha_carga_inicial}' 
-                                    AND (POL."DNULLDATE" IS NULL OR POL."DNULLDATE" > '{l_fecha_carga_inicial}'))
-                                    OR 
-                                    (POL."SPOLITYPE" <> '1' -- COLECTIVAS 
-                                    AND CERT."DEXPIRDAT" >= '{l_fecha_carga_inicial}' 
-                                    AND (CERT."DNULLDATE" IS NULL OR CERT."DNULLDATE" > '{l_fecha_carga_inicial}')))
-                                    AND POL."DSTARTDATE" BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}') 
+                                    AND (
+                                          (POL."SPOLITYPE" = '1' -- INDIVIDUAL 
+                                           AND POL."DEXPIRDAT" BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
+                                           AND (POL."DNULLDATE" IS NULL OR POL."DNULLDATE" > '{p_fecha_inicio}')
+                                           AND POL."DEXPIRDAT" < '{l_fecha_carga_inicial}')
+                                           OR 
+                                          (POL."SPOLITYPE" <> '1' -- COLECTIVAS 
+                                          AND CERT."DEXPIRDAT" BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
+                                          AND (CERT."DNULLDATE" IS NULL OR CERT."DNULLDATE" > '{p_fecha_inicio}')
+                                          AND CERT."DEXPIRDAT" < '{l_fecha_carga_inicial}')
+                                        )
+                                   ) 
                                   
                                   UNION /* SE QUITO EN UNION DESDE AQUI */
 
@@ -1461,15 +1478,18 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                     AND POL."NPOLICY"   = C."NPOLICY" 
                                     WHERE POL."SCERTYPE" = '2' 
                                     AND POL."SSTATUS_POL" NOT IN ('2','3') 
-                                    AND ((POL."SPOLITYPE" = '1' -- INDIVIDUAL 
-                                    AND POL."DEXPIRDAT" >= '{l_fecha_carga_inicial}' 
-                                    AND (POL."DNULLDATE" IS NULL OR POL."DNULLDATE" > '{l_fecha_carga_inicial}'))
-                                    OR 
-                                    (POL."SPOLITYPE" <> '1' -- COLECTIVAS 
-                                    AND CERT."DEXPIRDAT" >= '{l_fecha_carga_inicial}' 
-                                    AND (CERT."DNULLDATE" IS NULL OR CERT."DNULLDATE" > '{l_fecha_carga_inicial}')))
-                                    AND POL."DSTARTDATE" BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}')
-                           
+                                    AND (
+                                          (POL."SPOLITYPE" = '1' -- INDIVIDUAL 
+                                           AND POL."DEXPIRDAT" BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
+                                           AND (POL."DNULLDATE" IS NULL OR POL."DNULLDATE" > '{p_fecha_inicio}')
+                                           AND POL."DEXPIRDAT" < '{l_fecha_carga_inicial}')
+                                           OR 
+                                          (POL."SPOLITYPE" <> '1' -- COLECTIVAS 
+                                           AND CERT."DEXPIRDAT" BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
+                                           AND (CERT."DNULLDATE" IS NULL OR CERT."DNULLDATE" > '{p_fecha_inicio}')
+                                           AND CERT."DEXPIRDAT" < '{l_fecha_carga_inicial}')
+                                        )
+                              )
                               UNION /*SE QUITO EL UNION DESDE AQUI */
                               (SELECT
                                     C."SCERTYPE",
