@@ -661,7 +661,6 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                       and r.effecdate <= pc.effecdate 
                                       and (r.nulldate is null or r.nulldate > pc.effecdate)
                                       where r.role in (2,8)
-                                      and pc.effecdate between '{p_fecha_inicio}' and '{p_fecha_fin}'
                              ) as tmp
                              '''
     
@@ -970,7 +969,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                AND R."DEFFECDATE" <= PC."DSTARTDATE" 
                                AND (R."DNULLDATE" IS NULL OR R."DNULLDATE" > PC."DSTARTDATE")
                                WHERE R."NROLE" IN (2,8)
-                               AND PC."DSTARTDATE" BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}') AS TMP
+                              ) AS TMP
                            '''
     
     l_df_abclrisp_vtime_lpg = glue_context.read.format('jdbc').options(**connection).option("dbtable", l_abclrisp_vtime_lpg).load()

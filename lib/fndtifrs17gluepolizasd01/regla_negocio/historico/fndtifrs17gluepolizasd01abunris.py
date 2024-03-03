@@ -208,7 +208,6 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                               AND ROL.EFFECDATE <= PC.EFFECDATE 
                               AND (ROL.NULLDATE IS NULL OR ROL.NULLDATE > PC.EFFECDATE)
                               AND ROL.ROLE IN (2,8) -- Asegurado , Asegurado adicional
-                              AND PC.EFFECDATE BETWEEN  '{p_fecha_inicio}' and '{p_fecha_fin}'
                              ) AS TMP
                              '''
 
@@ -413,7 +412,6 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                     AND AD.BRANCH   = PC.BRANCH 
                                     AND AD.POLICY   = PC.POLICY 
                                     AND AD.CERTIF   = PC.CERTIF
-                                    AND PC.EFFECDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}' 
                              ) AS TMP
                              '''
 
@@ -620,7 +618,6 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                               AND TNB.CERTIF   = PC.CERTIF
                               AND TNB.EFFECDATE <= PC.EFFECDATE 
                               AND (TNB.NULLDATE IS NULL OR TNB.NULLDATE > PC.EFFECDATE)
-                              AND PC.EFFECDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}' 
                              ) AS TMP
                              '''
 
@@ -814,7 +811,6 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                               AND ROL.EFFECDATE <= PC.EFFECDATE 
                               AND (ROL.NULLDATE IS NULL OR ROL.NULLDATE > PC.EFFECDATE)
                               AND ROL.ROLE IN (2,8)
-                              AND PC.EFFECDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}' 
                             ) AS TMP
                            '''
     

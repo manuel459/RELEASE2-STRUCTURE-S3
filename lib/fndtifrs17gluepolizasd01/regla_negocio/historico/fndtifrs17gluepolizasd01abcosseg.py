@@ -171,7 +171,6 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                              AND C.POLICY   = PC.POLICY 
                              AND C.EFFECDATE <= PC.EFFECDATE 
                              AND (C.NULLDATE IS NULL OR C.NULLDATE > PC.EFFECDATE)
-                             AND C.EFFECDATE BETWEEN '{p_fecha_inicio}' and '{p_fecha_fin}'
                              ) AS TMP
                              '''
     #EJECUTAR CONSULTA
@@ -323,7 +322,6 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                               AND C.POLICY   = PC.POLICY 
                               AND C.EFFECDATE <= PC.EFFECDATE 
                               AND (C.NULLDATE IS NULL OR C.NULLDATE > PC.EFFECDATE) --1997-10-02	2020-11-02
-                              AND C.EFFECDATE BETWEEN '{p_fecha_inicio}' and '{p_fecha_fin}'
                              ) AS TMP
                              '''
     
