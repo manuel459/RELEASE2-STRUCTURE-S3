@@ -234,86 +234,81 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                     		       r.compdate
                                     		       from usinsug01.roles r 
                                     		       join 
-                                    		       (  ( select p.usercomp, p.company, p.certype, p.branch, p.product, psp.sub_product, p.policy, cert.certif, p.titularc, p.effecdate as p_effecdate ,p.politype , cert.effecdate as c_effecdate
-                                    		        	from usinsug01.policy p 
-                                    			      left join usinsug01.certificat cert on p.usercomp = cert.usercomp and p.company = cert.company and p.certype = cert.certype and p.branch  = cert.branch and p.policy  = cert.policy
-                                    			      join usinsug01.pol_subproduct psp   on  psp.usercomp = p.usercomp and psp.company  = p.company and psp.certype  = p.certype and psp.branch  = p.branch	and psp.product  = p.product and psp.policy   = p.policy	
-                                    			      join usbi01."IFRS170_T_RAMOS_POR_TIPO_RIESGO" rtr 
-                                    		           	on   rtr."BRANCHCOM" = p.branch 
-                                    		            and  rtr."RISKTYPEN" = 1 
-                                    		            and  rtr."SOURCESCHEMA" = 'usinsug01'
-                                    			      where p.certype = '2' 
-                                    		            and p.status_pol not in ('2','3') 
-                                    		            and  ((p.politype = '1' and p.expirdat BETWEEN '{p_fecha_inicio}' AND '{l_fecha_carga_inicial}' and (p.nulldate is null or p.nulldate > '{p_fecha_inicio}') ) -- individual
-                                    		                  or 
-                                    		                 (p.politype <> '1' and cert.expirdat BETWEEN '{p_fecha_inicio}' AND '{l_fecha_carga_inicial}' and (cert.nulldate is null or cert.nulldate > '{p_fecha_inicio}')))
-                                    		            and p.effecdate between '{p_fecha_inicio}' and '{p_fecha_fin}')
-                                    		            
-                                    		           -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-                                    		         
-                                    		            union  /*quitando union desde aqui*/
-                                    	
-                                    		            ( select p.usercomp, p.company, p.certype, p.branch, p.product, psp.sub_product, p.policy, cert.certif, p.titularc, p.effecdate as p_effecdate ,p.politype , cert.effecdate as c_effecdate
-                                    		              from usinsug01.policy p 
-                                    		              left join usinsug01.certificat cert on p.usercomp = cert.usercomp and p.company = cert.company and p.certype = cert.certype and p.branch  = cert.branch and p.policy  = cert.policy
-                                    		              join usinsug01.pol_subproduct psp   on  psp.usercomp = p.usercomp and psp.company  = p.company and psp.certype  = p.certype and psp.branch   = p.branch		    and psp.product  = p.product and psp.policy   = p.policy	
-                                    		              join  usbi01."IFRS170_T_RAMOS_POR_TIPO_RIESGO" rtr 
-                                    		              on   rtr."BRANCHCOM" = p.branch 
-                                    		              and  rtr."RISKTYPEN" = 1 
-                                    		              and  rtr."SOURCESCHEMA" = 'usinsug01'
-                                    		              where p.certype  = '2' 
-                                    		              and   p.status_pol not in ('2', '3') 
-                                    		              and   (((p.politype = '1' and  p.expirdat < '{l_fecha_carga_inicial}' or p.nulldate < '{l_fecha_carga_inicial}')
-                                    		              and exists (select 1 from  usinsug01.claim cla  
-                                    		                          join  usinsuv01.claim_his clh 
-                                    		                          on clh.usercomp  = cla.usercomp 
-                                    		                          and clh.company  = cla.company 
-                                    		                          and clh.branch   = cla.branch 
-                                    		                          and clh.claim    = cla.claim
-                                    		                          where cla.branch = p.branch 
-                                    		                          and cla.policy   = p.policy 
-                                    		                          and trim(clh.oper_type) in (select cast(tcl.operation as varchar(2)) from usinsug01.tab_cl_ope tcl where  (tcl.reserve = 1 or tcl.ajustes = 1 or tcl.pay_amount = 1)) 
-                                    		                          and clh.operdate >= '{l_fecha_carga_inicial}'
-                                    		              and p.effecdate between '{p_fecha_inicio}' and '{p_fecha_fin}'))))
-                                    		                            
-                                    		                              
-                                    		            -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-                                    		                
-                                    		            union
-                                    	
-                                    		            ( select p.usercomp, p.company, p.certype, p.branch, p.product, psp.sub_product, p.policy, cert.certif, p.titularc, p.effecdate as p_effecdate ,p.politype , cert.effecdate as c_effecdate
-                                    		              from usinsug01.policy p 
-                                    		              left join usinsug01.certificat cert on p.usercomp = cert.usercomp and p.company = cert.company and p.certype = cert.certype and p.branch  = cert.branch and p.policy  = cert.policy
-                                    		              join usinsug01.pol_subproduct psp   on  psp.usercomp = p.usercomp and psp.company  = p.company and psp.certype  = p.certype and psp.branch = p.branch and psp.product = p.product and psp.policy   = p.policy	
-                                    		              join usbi01."IFRS170_T_RAMOS_POR_TIPO_RIESGO" rtr 
-                                    		              on   rtr."BRANCHCOM" = p.branch 
-                                    		              and  rtr."RISKTYPEN" = 1 
-                                    		              and  rtr."SOURCESCHEMA" = 'usinsug01'
-                                    		              where p.certype  = '2' 
-                                    		              and p.status_pol not in ('2', '3')
-                                    		              and (((p.politype <> '1' and cert.expirdat < '{l_fecha_carga_inicial}'  or  cert.nulldate < '{l_fecha_carga_inicial}') 
-                                    		              and exists (select 1 from  usinsug01.claim cla    
-                                    		                          join  usinsug01.claim_his clh  
-                                    		                          on    cla.usercomp  = clh.usercomp 
-                                    		                          and   cla.company   = clh.company 
-                                    		                          and   cla.branch    = clh.branch  
-                                    		                          and   clh.claim     = cla.claim
-                                    		                          where cla.branch    = cert.branch
-                                    		                          and   cla.policy    = cert.policy
-                                    		                          and   cla.certif    = cert.certif
-                                    		                          and   trim(clh.oper_type) in (select cast(tcl.operation as varchar(2)) from usinsug01.tab_cl_ope tcl  where (tcl.reserve = 1 or tcl.ajustes = 1 or tcl.pay_amount = 1)) 
-                                    		                          and  clh.operdate >= '{l_fecha_carga_inicial}')))
-                                    		              and p.effecdate between '{p_fecha_inicio}' and '{p_fecha_fin}') /*quitando union hasta aqui*/
-                                    		) as pc	
-                                    		on  r.usercomp = pc.usercomp 
-                                    		and r.company  = pc.company 
-                                    		and r.certype  = pc.certype 
-                                    		and r.branch   = pc.branch 
-                                    		and r.policy   = pc.policy 
-                                    		and r.certif   = pc.certif  
-                                    		and r.effecdate <= pc.p_effecdate 
-                                    		and (r.nulldate is null or r.nulldate > pc.p_effecdate)
-                                    		where r.role in ('2', '8')) as t ) pcr where flag = 1) as tmp
+                                    		       (
+                                                         select p.usercomp, p.company, p.certype, p.branch, p.product, psp.sub_product, p.policy, cert.certif, p.titularc, p.effecdate as p_effecdate ,p.politype , cert.effecdate as c_effecdate
+                                                            from usinsug01.policy p 
+                                                            left join usinsug01.certificat cert 
+                                                            on p.usercomp = cert.usercomp 
+                                                            and p.company = cert.company 
+                                                            and p.certype = cert.certype 
+                                                            and p.branch  = cert.branch 
+                                                            and p.policy  = cert.policy
+                                                            join usinsug01.pol_subproduct psp  
+                                                            on  psp.usercomp = p.usercomp 
+                                                            and psp.company  = p.company 
+                                                            and psp.certype  = p.certype 
+                                                            and psp.branch  = p.branch	
+                                                            and psp.product  = p.product 
+                                                            and psp.policy   = p.policy	
+                                                            join usbi01."IFRS170_T_RAMOS_POR_TIPO_RIESGO" rtr 
+                                                            on  rtr."BRANCHCOM" = p.branch 
+                                                            and rtr."RISKTYPEN" = 1 
+                                                            and rtr."SOURCESCHEMA" = 'usinsug01'
+                                                            where p.certype = '2' 
+                                                            and p.status_pol not in ('2','3') 
+                                                            and  (
+                                                                        (p.politype = '1' and p.expirdat BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}' 
+                                                                        and (p.nulldate is null or p.nulldate > '{p_fecha_inicio}')
+                                                                        and p.expirdat < '{l_fecha_carga_inicial}') -- individual
+                                                                        or 
+                                                                        (p.politype <> '1' and cert.expirdat BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}' 
+                                                                        and (cert.nulldate is null or cert.nulldate > '{p_fecha_inicio}')
+                                                                        and cert.expirdat < '{l_fecha_carga_inicial}') --colectivo
+                                                            )
+                                                            and (
+                                                                  (
+                                                                        (P.POLITYPE = '1' and (P.EXPIRDAT < '{l_fecha_carga_inicial}' OR P.NULLDATE < '{l_fecha_carga_inicial}')) --INDIVIDUAL
+                                                                        and not exists (select 1 from usinsug01.claim cla  
+                                                                                    join  usinsuv01.claim_his clh 
+                                                                                    on clh.usercomp  = cla.usercomp 
+                                                                                    and clh.company  = cla.company 
+                                                                                    and clh.branch   = cla.branch 
+                                                                                    and clh.claim    = cla.claim
+                                                                                    where cla.branch = p.branch 
+                                                                                    and cla.policy   = p.policy 
+                                                                                    and trim(clh.oper_type) 
+                                                                                    in (select cast(tcl.operation as varchar(2)) from usinsug01.tab_cl_ope tcl 
+                                                                                          where (tcl.reserve = 1 or tcl.ajustes = 1 or tcl.pay_amount = 1)) 
+                                                                                    and clh.operdate >= '{l_fecha_carga_inicial}')
+                                                                  )
+                                                                  or
+                                                                  (
+                                                                        (P.POLITYPE <> '1' and (CERT.EXPIRDAT < '{l_fecha_carga_inicial}' OR CERT.NULLDATE < '{l_fecha_carga_inicial}')) --COLECTIVO
+                                                                        and not exists (select 1 from  usinsug01.claim cla    
+                                                                                          join  usinsug01.claim_his clh  
+                                                                                          on    cla.usercomp  = clh.usercomp 
+                                                                                          and   cla.company   = clh.company 
+                                                                                          and   cla.branch    = clh.branch  
+                                                                                          and   clh.claim     = cla.claim
+                                                                                          where cla.branch    = cert.branch
+                                                                                          and   cla.policy    = cert.policy
+                                                                                          and   cla.certif    = cert.certif
+                                                                                          and   trim(clh.oper_type) 
+                                                                                          in (select cast(tcl.operation as varchar(2)) from usinsug01.tab_cl_ope tcl  
+                                                                                                where (tcl.reserve = 1 or tcl.ajustes = 1 or tcl.pay_amount = 1)) 
+                                                                                          and  clh.operdate >= '{l_fecha_carga_inicial}')
+                                                                  )
+                                                            )   
+                                    		      ) as pc	
+                                                      on  r.usercomp = pc.usercomp 
+                                                      and r.company  = pc.company 
+                                                      and r.certype  = pc.certype 
+                                                      and r.branch   = pc.branch 
+                                                      and r.policy   = pc.policy 
+                                                      and r.certif   = pc.certif  
+                                                      and r.effecdate <= pc.p_effecdate 
+                                                      and (r.nulldate is null or r.nulldate > pc.p_effecdate)
+                                                      where r.role in ('2', '8')) as t ) pcr where flag = 1) as tmp
                                                 '''
     
     l_df_abclrisp_insunix_lpg = glue_context.read.format('jdbc').options(**connection).option("dbtable", l_abclrisp_insunix_lpg).load()
@@ -582,8 +577,8 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                               '' as tpgmybenef
                               from usinsuv01.roles r
                               join 
-                              (   
-                                  ( select p.usercomp, p.company, p.certype, p.branch, p.product, p.policy, cert.certif, p.titularc, p.effecdate , p.politype, cert.effecdate as effecdate_cert
+                              (
+                                    select p.usercomp, p.company, p.certype, p.branch, p.product, p.policy, cert.certif, p.titularc, p.effecdate , p.politype, cert.effecdate as effecdate_cert
                                     from usinsuv01.policy p 
                                     left join usinsuv01.certificat cert 
                                     on p.usercomp = cert.usercomp 
@@ -592,75 +587,66 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                     and p.branch  = cert.branch 
                                     and p.policy  = cert.policy	
                                     join usbi01."ifrs170_t_ramos_por_tipo_riesgo" rtr on rtr."branchcom" = p.branch and  rtr."risktypen" = 1 and rtr."sourceschema" = 'usinsuv01'
-                                      where p.certype = '2' 
-                                      and p.status_pol not in ('2','3') 
-                                      and ( (p.politype = '1' -- individual 
-                                      and p.expirdat BETWEEN '{p_fecha_inicio}' AND '{l_fecha_carga_inicial}'
-                                      and (p.nulldate is null or p.nulldate > '{p_fecha_inicio}') )
-                                            or 
+                                    where p.certype = '2' 
+                                    and p.status_pol not in ('2','3') 
+                                    and ( 
+                                          (p.politype = '1' -- individual 
+                                          and p.expirdat BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
+                                          and (p.nulldate is null or p.nulldate > '{p_fecha_inicio}')
+                                          and p.expirdat < '{l_fecha_carga_inicial}')
+                                          or 
                                           (p.politype <> '1' -- colectivas 
-                                          and cert.expirdat BETWEEN '{p_fecha_inicio}' AND '{l_fecha_carga_inicial}'
-                                          and (cert.nulldate is null or cert.nulldate > '{p_fecha_inicio}'))))
-                                                         
-                                  union /*se quito el union desde aqui */
-                                                        
-                                  (  select p.usercomp, p.company, p.certype, p.branch, p.product, p.policy, cert.certif, p.titularc, p.effecdate ,p.politype , cert.effecdate as effecdate_cert
-                                       from usinsuv01.policy p 
-                                       left join usinsuv01.certificat cert on p.usercomp = cert.usercomp and p.company = cert.company and p.certype = cert.certype and p.branch  = cert.branch and p.policy  = cert.policy                             	           
-                                       join usbi01."IFRS170_T_RAMOS_POR_TIPO_RIESGO"* rtr on rtr."BRANCHCOM" = p.branch and  rtr."RISKTYPEN" = 1 and rtr."SOURCESCHEMA" = 'usinsuv01'
-                                       where p.certype  = '2' 
-                                       and p.status_pol not in ('2', '3') 
-                                       and (((p.politype = '1' and  p.expirdat < '{l_fecha_carga_inicial}' or p.nulldate < '{l_fecha_carga_inicial}')
-                                       and exists (select 1 from usinsuv01.claim cla    
-                                       join  usinsuv01.claim_his clh 
-                                       on clh.usercomp = cla.usercomp 
-                                       and clh.company = cla.company 
-                                       and clh.branch = cla.branch 
-                                       and clh.claim = cla.claim
-                                       where cla.branch = p.branch 
-                                       and cla.policy = p.policy 
-                                       and trim(clh.oper_type) in (select cast(tcl.operation as varchar(2))
-              	                     	                         from usinsug01.tab_cl_ope tcl
-              	                     	                         where (tcl.reserve = 1 or tcl.ajustes = 1 or tcl.pay_amount = 1)) 
-                                       and  clh.operdate >= '{l_fecha_carga_inicial}'
-                                       and p.effecdate between '{p_fecha_inicio}' and '{p_fecha_fin}'))))
-
-                                  union
-
-                                  (  select p.usercomp, p.company, p.certype, p.branch, p.product, p.policy, cert.certif, p.titularc, p.effecdate ,p.politype , cert.effecdate as effecdate_cert
-                                       from usinsuv01.policy p 
-                                       left join usinsuv01.certificat cert on p.usercomp = cert.usercomp and p.company = cert.company and p.certype = cert.certype and p.branch  = cert.branch and p.policy  = cert.policy                             	              
-                                       join usbi01."IFRS170_T_RAMOS_POR_TIPO_RIESGO" rtr 
-                                       on   rtr."BRANCHCOM"     = p.branch 
-                                       and  rtr."RISKTYPEN"     = 1 
-                                       and  rtr."SOURCESCHEMA"  = 'usinsuv01'
-                                       where p.certype  = '2' 
-                                       and p.status_pol not in ('2', '3')
-                                       and (((p.politype <> '1' and cert.expirdat < '{l_fecha_carga_inicial}'  or  cert.nulldate < '{l_fecha_carga_inicial}') 
-                                       and exists (select 1 from  usinsuv01.claim cla    
-                                       join  usinsuv01.claim_his clh  
-                                       on cla.usercomp = clh.usercomp 
-                                       and cla.company = clh.company 
-                                       and cla.branch = clh.branch  
-                                       and clh.claim = cla.claim
-                                       where cla.branch   = cert.branch
-                                       and   cla.policy   = cert.policy
-                                       and   cla.certif   = cert.certif
-                                       and   trim(clh.oper_type) in (select cast(tcl.operation as varchar(2)) 
-                                                                     from  usinsug01.tab_cl_ope tcl 
-                                                                     where (tcl.reserve = 1 or tcl.ajustes = 1 or tcl.pay_amount = 1)) 
-                                      and  clh.operdate >= '{l_fecha_carga_inicial}')))
-                                      and p.effecdate between '{p_fecha_inicio}' and '{p_fecha_fin}') /*se quito el union hasta aqui */) as pc	
-                                      on  r.usercomp = pc.usercomp 
-                                      and r.company  = pc.company 
-                                      and r.certype  = pc.certype
-                                      and r.branch   = pc.branch 
-                                      and r.policy   = pc.policy 
-                                      and r.certif   = pc.certif  
-                                      --and r.client   = pc.titularc
-                                      and r.effecdate <= pc.effecdate 
-                                      and (r.nulldate is null or r.nulldate > pc.effecdate)
-                                      where r.role in (2,8)
+                                          and cert.expirdat BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
+                                          and (cert.nulldate is null or cert.nulldate > '{p_fecha_inicio}')
+                                          and cert.expirdat < '{l_fecha_carga_inicial}')
+                                    ) 
+                                    and (
+                                          (
+                                                (P.POLITYPE = '1' and (P.EXPIRDAT < '{l_fecha_carga_inicial}' OR P.NULLDATE < '{l_fecha_carga_inicial}')) --INDIVIDUAL
+                                                and not exists (select 1 from usinsuv01.claim cla    
+                                                                  join  usinsuv01.claim_his clh 
+                                                                  on clh.usercomp = cla.usercomp 
+                                                                  and clh.company = cla.company 
+                                                                  and clh.branch = cla.branch 
+                                                                  and clh.claim = cla.claim
+                                                                  where cla.branch = p.branch 
+                                                                  and cla.policy = p.policy 
+                                                                  and trim(clh.oper_type) 
+                                                                  in (select cast(tcl.operation as varchar(2))
+                                                                        from usinsug01.tab_cl_ope tcl
+                                                                        where (tcl.reserve = 1 or tcl.ajustes = 1 or tcl.pay_amount = 1)) 
+                                                                  and  clh.operdate >= '{l_fecha_carga_inicial}')
+                                          )
+                                          or
+                                          (
+                                                (P.POLITYPE <> '1' and (CERT.EXPIRDAT < '{l_fecha_carga_inicial}' OR CERT.NULLDATE < '{l_fecha_carga_inicial}')) --COLECTIVO
+                                                and not exists (select 1 from  usinsuv01.claim cla    
+                                                            join  usinsuv01.claim_his clh  
+                                                            on cla.usercomp = clh.usercomp 
+                                                            and cla.company = clh.company 
+                                                            and cla.branch = clh.branch  
+                                                            and clh.claim = cla.claim
+                                                            where cla.branch   = cert.branch
+                                                            and   cla.policy   = cert.policy
+                                                            and   cla.certif   = cert.certif
+                                                            and   trim(clh.oper_type) 
+                                                            in (select cast(tcl.operation as varchar(2)) 
+                                                                  from  usinsug01.tab_cl_ope tcl 
+                                                                  where (tcl.reserve = 1 or tcl.ajustes = 1 or tcl.pay_amount = 1)) 
+                                                            and  clh.operdate >= '{l_fecha_carga_inicial}')
+                                                )
+                                          ) 
+                              ) as pc	
+                              on  r.usercomp = pc.usercomp 
+                              and r.company  = pc.company 
+                              and r.certype  = pc.certype
+                              and r.branch   = pc.branch 
+                              and r.policy   = pc.policy 
+                              and r.certif   = pc.certif  
+                              --and r.client   = pc.titularc
+                              and r.effecdate <= pc.effecdate 
+                              and (r.nulldate is null or r.nulldate > pc.effecdate)
+                              where r.role in (2,8)
                              ) as tmp
                              '''
     
@@ -1224,148 +1210,151 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
 
     l_abclrisp_insis_lpv = f'''
                            (SELECT
-                            'D' INDDETREC, 
-                            'ABCLRISP' TABLAIFRS17, 
-                            '' AS PK,
-                            '' AS DTPREG,
-                            '' AS TIOCPROC,
-                            cast(IO."INSR_BEGIN" as date) AS TIOCFRM,
-                            '' AS TIOCTO,
-                            'PNV' AS KGIORIGM,
-                            SUBSTRING(CAST(P."POLICY_ID" AS VARCHAR),6,12) AS KABAPOL,
-                            SUBSTRING(CAST(P."POLICY_ID" AS VARCHAR),6,12) || '-' || coalesce(cast(IO."OBJECT_ID" as varchar), '0') AS KABUNRIS,
-                            '' AS KGCTPCBT, --EN BLANCO
-                            ROW_NUMBER () OVER (PARTITION  BY P."ATTR1", P."ATTR2", P."POLICY_ID", P."POLICY_NO" /*ORDER BY R."SCLIENT"*/) AS DNPESEG,
-                            (
-                            SELECT 'PAE' || '-' || ILPI."LEGACY_ID" 
-                            FROM USINSIV01."INTRF_LPV_PEOPLE_IDS" ILPI
-                            WHERE ILPI."MAN_ID" = OA."MAN_ID"
-                            )
-                            AS KEBENTID_PS,
-                            '' AS DIDADEAC, --PENDIENTE
-                            '' AS DANOREF,  --EN BLANCO
-                            '' AS KACEMPR,
-                            cast(OA."OAIP1" as numeric(12,2)) AS VMTSALAR,
-                            '' AS KACTPSAL,
-                            '' AS TADMEMP,
-                            IO."INSR_BEGIN" AS TADMGRP,
-                            '' AS TSAIDGRP,
-                            'LPV' AS DCOMPA,
-                            '' AS DMARCA,
-                            '' AS TDNASCIM,
-                            '' AS DQDIASUB,
-                            '' AS DQESPING,
-                            '' AS KACSEXO,
-                            '' AS KACCAE,
-                            '' AS DQTRABAL,
-                            '' AS DINAPMEN,
-                            '' AS DQCOEFEQ,
-                            '' AS DQHORSEM, --EN BLANCO
-                            '' AS DQMESES,
-                            '' AS VMTALIME, --EN BLANCO
-                            '' AS DQMESALI, --EN BLANCO
-                            '' AS VMTALOJA,
-                            '' AS DQMESALO,
-                            '' AS VMTRENUM, --EN BLANCO
-                            '' AS DQMESREN,
-                            '' AS DQDIATRA,
-                            '' AS DQCOPRE,
-                            '' AS DITINER,
-                            '' AS DNOMES,
-                            '' AS KACUTILIZ,
-                            '' AS VMTDESCO, --EN BLANCO
-                            '' AS DFRANQU,  --EN BLANCO
-                            '' AS DTARIFA,
-                            '' AS DINTIPEXP,
-                            '' AS KACESPAN,
-                            '' AS DQANIMAL,
-                            '' AS KACTIPSG,
-                            '' AS DAPROESC,
-                            '' AS DCMUDESC,
-                            '' AS DQCAPITA,
-                            '' AS VTXCOMPA,
-                            '' AS DQCAES,
-                            '' AS DINEXTTE,
-                            '' AS KACCLTARI,
-                            '' AS KACTIPVEI,
-                            '' AS KACCATRIS,
-                            '' AS DINDCOL,
-                            '' AS DACONSTR,
-                            '' AS DQPESSO1,
-                            '' AS DQPESSO2,
-                            '' AS DQVIAS,
-                            '' AS KACAGRAV,
-                            '' AS KACPARTI,
-                            '' AS KACSERMD,
-                            '' AS KACMRISC,
-                            '' AS DINDCON,
-                            '' AS DQPRAZO,
-                            '' AS KACTPPES,
-                            IO."OBJECT_STATE" AS KACESPES, --EN BLANCO
-                            '' AS KACMEPES,
-                            '' AS TDESPES,  --EN BLANCO
-                            '' AS KACTPPRA,
-                            '' AS DEMPREST,
-                            '' AS VMTPREST,
-                            '' AS VMTEMPRE,
-                            '' AS VMTPRCRD,
-                            '' AS DCONTCGD,
-                            '' AS DNCLICGD,
-                            '' AS DCERTIFC,
-                            '' AS TINICIO,  --EN BLANCO
-                            ''  AS TTERMO,  --EN BLANCO
-                            '' AS DNOMEPAR,
-                            '' AS KACPROF,
-                            '' AS KACACTIV,
-                            '' AS KACSACTIV,
-                            '' AS VMTSALMD,
-                            '' AS DCODSUB,
-                            '' AS KACTPCON,
-                            '' AS DAREACCV,
-                            '' AS DAREACUL,
-                            '' AS KACZONAG,
-                            '' AS KACTPIDX,
-                            '' AS TDTINDEX,
-                            '' AS VMTPRMIN,
-                            '' AS DCDREGIM,
-                            '' AS DQHORTRA,
-                            '' AS DQSEMTRA,  --EN BLANCO
-                            '' AS DCAMPANH,
-                            '' AS KACMODAL,
-                            '' AS DENTIDSO,
-                            '' AS DLOCREF,
-                            '' AS KACINTNI,
-                            '' AS KACCLRIS,
-                            '' AS KACAMBCB,
-                            '' AS KACTRAIN,
-                            '' AS DINDCIRS,
-                            '' AS DINCERPA,
-                            '' AS DINDMOTO,
-                            '' AS DMATRIC,
-                            '' AS DINDMARK,
-                            '' AS KACOPCBT,
-                            '' AS VTXINDX,
-                            '' AS DAGRIDAD,   --EN BLANCO
-                            '' AS KACPAIS_DT, --NO
-                            '' AS KACMDAC,    --EN BLANCO
-                            OA."AGE" AS DIDADECOM,  
-                            '' AS VTXPERINDC,
-                            '' AS TPGMYBENEF
-                            FROM USINSIV01."INSURED_OBJECT" IO
-                            JOIN USINSIV01."O_ACCINSURED" OA ON OA."OBJECT_ID" = IO."OBJECT_ID"
-                            JOIN USINSIV01."POLICY" P on P."POLICY_ID" = IO."POLICY_ID" and P."INSR_TYPE" = IO."INSR_TYPE"
-                            LEFT JOIN USINSIV01."POLICY_ENG_POLICIES" PP ON P."POLICY_ID" = PP."POLICY_ID"
-                            WHERE (P."INSR_END" >= '{l_fecha_carga_inicial}'
-                                    OR  (P."INSR_END" < '{l_fecha_carga_inicial}' AND EXISTS (
-                        	      	                              		           SELECT 1 FROM USINSIV01."CLAIM" C
-                        	      	                              		           JOIN USINSIV01."CLAIM_OBJECTS" CO ON CO."CLAIM_ID" = C."CLAIM_ID" AND CO."POLICY_ID" = C."POLICY_ID"
-                        	      	                              		           JOIN USINSIV01."CLAIM_RESERVE_HISTORY" CRH ON CO."CLAIM_ID" = CRH."CLAIM_ID" AND CO."REQUEST_ID" = CO."REQUEST_ID" AND CO."CLAIM_OBJ_SEQ" = CRH."CLAIM_OBJECT_SEQ"
-                        	      	                              		           WHERE C."POLICY_ID" = P."POLICY_ID"
-                        	      	                              		           AND "OP_TYPE" IN ('REG','EST','CLC','PAYMCONF','PAYMINV')
-                        	      	                              		           AND CAST(CRH."REGISTRATION_DATE" AS DATE) >= '{l_fecha_carga_inicial}'
-                        	      	                                                    ))
-                            )
-                            --AND P."REGISTRATION_DATE" BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}') AS PNV'''
+                              'D' INDDETREC, 
+                              'ABCLRISP' TABLAIFRS17, 
+                              '' AS PK,
+                              '' AS DTPREG,
+                              '' AS TIOCPROC,
+                              cast(IO."INSR_BEGIN" as date) AS TIOCFRM,
+                              '' AS TIOCTO,
+                              'PNV' AS KGIORIGM,
+                              SUBSTRING(CAST(P."POLICY_ID" AS VARCHAR),6,12) AS KABAPOL,
+                              SUBSTRING(CAST(P."POLICY_ID" AS VARCHAR),6,12) || '-' || coalesce(cast(IO."OBJECT_ID" as varchar), '0') AS KABUNRIS,
+                              '' AS KGCTPCBT, --EN BLANCO
+                              ROW_NUMBER () OVER (PARTITION  BY P."ATTR1", P."ATTR2", P."POLICY_ID", P."POLICY_NO" /*ORDER BY R."SCLIENT"*/) AS DNPESEG,
+                              (
+                              SELECT 'PAE' || '-' || ILPI."LEGACY_ID" 
+                              FROM USINSIV01."INTRF_LPV_PEOPLE_IDS" ILPI
+                              WHERE ILPI."MAN_ID" = OA."MAN_ID"
+                              )
+                              AS KEBENTID_PS,
+                              '' AS DIDADEAC, --PENDIENTE
+                              '' AS DANOREF,  --EN BLANCO
+                              '' AS KACEMPR,
+                              cast(OA."OAIP1" as numeric(12,2)) AS VMTSALAR,
+                              '' AS KACTPSAL,
+                              '' AS TADMEMP,
+                              IO."INSR_BEGIN" AS TADMGRP,
+                              '' AS TSAIDGRP,
+                              'LPV' AS DCOMPA,
+                              '' AS DMARCA,
+                              '' AS TDNASCIM,
+                              '' AS DQDIASUB,
+                              '' AS DQESPING,
+                              '' AS KACSEXO,
+                              '' AS KACCAE,
+                              '' AS DQTRABAL,
+                              '' AS DINAPMEN,
+                              '' AS DQCOEFEQ,
+                              '' AS DQHORSEM, --EN BLANCO
+                              '' AS DQMESES,
+                              '' AS VMTALIME, --EN BLANCO
+                              '' AS DQMESALI, --EN BLANCO
+                              '' AS VMTALOJA,
+                              '' AS DQMESALO,
+                              '' AS VMTRENUM, --EN BLANCO
+                              '' AS DQMESREN,
+                              '' AS DQDIATRA,
+                              '' AS DQCOPRE,
+                              '' AS DITINER,
+                              '' AS DNOMES,
+                              '' AS KACUTILIZ,
+                              '' AS VMTDESCO, --EN BLANCO
+                              '' AS DFRANQU,  --EN BLANCO
+                              '' AS DTARIFA,
+                              '' AS DINTIPEXP,
+                              '' AS KACESPAN,
+                              '' AS DQANIMAL,
+                              '' AS KACTIPSG,
+                              '' AS DAPROESC,
+                              '' AS DCMUDESC,
+                              '' AS DQCAPITA,
+                              '' AS VTXCOMPA,
+                              '' AS DQCAES,
+                              '' AS DINEXTTE,
+                              '' AS KACCLTARI,
+                              '' AS KACTIPVEI,
+                              '' AS KACCATRIS,
+                              '' AS DINDCOL,
+                              '' AS DACONSTR,
+                              '' AS DQPESSO1,
+                              '' AS DQPESSO2,
+                              '' AS DQVIAS,
+                              '' AS KACAGRAV,
+                              '' AS KACPARTI,
+                              '' AS KACSERMD,
+                              '' AS KACMRISC,
+                              '' AS DINDCON,
+                              '' AS DQPRAZO,
+                              '' AS KACTPPES,
+                              IO."OBJECT_STATE" AS KACESPES, --EN BLANCO
+                              '' AS KACMEPES,
+                              '' AS TDESPES,  --EN BLANCO
+                              '' AS KACTPPRA,
+                              '' AS DEMPREST,
+                              '' AS VMTPREST,
+                              '' AS VMTEMPRE,
+                              '' AS VMTPRCRD,
+                              '' AS DCONTCGD,
+                              '' AS DNCLICGD,
+                              '' AS DCERTIFC,
+                              '' AS TINICIO,  --EN BLANCO
+                              ''  AS TTERMO,  --EN BLANCO
+                              '' AS DNOMEPAR,
+                              '' AS KACPROF,
+                              '' AS KACACTIV,
+                              '' AS KACSACTIV,
+                              '' AS VMTSALMD,
+                              '' AS DCODSUB,
+                              '' AS KACTPCON,
+                              '' AS DAREACCV,
+                              '' AS DAREACUL,
+                              '' AS KACZONAG,
+                              '' AS KACTPIDX,
+                              '' AS TDTINDEX,
+                              '' AS VMTPRMIN,
+                              '' AS DCDREGIM,
+                              '' AS DQHORTRA,
+                              '' AS DQSEMTRA,  --EN BLANCO
+                              '' AS DCAMPANH,
+                              '' AS KACMODAL,
+                              '' AS DENTIDSO,
+                              '' AS DLOCREF,
+                              '' AS KACINTNI,
+                              '' AS KACCLRIS,
+                              '' AS KACAMBCB,
+                              '' AS KACTRAIN,
+                              '' AS DINDCIRS,
+                              '' AS DINCERPA,
+                              '' AS DINDMOTO,
+                              '' AS DMATRIC,
+                              '' AS DINDMARK,
+                              '' AS KACOPCBT,
+                              '' AS VTXINDX,
+                              '' AS DAGRIDAD,   --EN BLANCO
+                              '' AS KACPAIS_DT, --NO
+                              '' AS KACMDAC,    --EN BLANCO
+                              OA."AGE" AS DIDADECOM,  
+                              '' AS VTXPERINDC,
+                              '' AS TPGMYBENEF
+                              FROM USINSIV01."INSURED_OBJECT" IO
+                              JOIN USINSIV01."O_ACCINSURED" OA ON OA."OBJECT_ID" = IO."OBJECT_ID"
+                              JOIN USINSIV01."POLICY" P on P."POLICY_ID" = IO."POLICY_ID" and P."INSR_TYPE" = IO."INSR_TYPE"
+                              LEFT JOIN USINSIV01."POLICY_ENG_POLICIES" PP ON P."POLICY_ID" = PP."POLICY_ID"
+                              WHERE CAST(P."INSR_END" AS DATE) BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}' 
+                              AND CAST(P."INSR_END" AS DATE) < '{l_fecha_carga_inicial}' AND NOT EXISTS ( SELECT 1 FROM USINSIV01."CLAIM" C
+                                                                                            JOIN USINSIV01."CLAIM_OBJECTS" CO 
+                                                                                            ON CO."CLAIM_ID" = C."CLAIM_ID" 
+                                                                                            AND CO."POLICY_ID" = C."POLICY_ID"
+                                                                                            JOIN USINSIV01."CLAIM_RESERVE_HISTORY" CRH 
+                                                                                            ON CO."CLAIM_ID" = CRH."CLAIM_ID" 
+                                                                                            AND CO."REQUEST_ID" = CO."REQUEST_ID" 
+                                                                                            AND CO."CLAIM_OBJ_SEQ" = CRH."CLAIM_OBJECT_SEQ"
+                                                                                            WHERE C."POLICY_ID" = P."POLICY_ID"
+                                                                                            AND "OP_TYPE" IN ('REG','EST','CLC','PAYMCONF','PAYMINV')
+                                                                                            AND CAST(CRH."REGISTRATION_DATE" AS DATE) >= '{l_fecha_carga_inicial}'     
+                	      	                                                            ) 
+                            ) AS PNV'''
     
     l_df_abclrisp_insis_lpv = glue_context.read.format('jdbc').options(**connection).option("dbtable", l_abclrisp_insis_lpv).load()
 

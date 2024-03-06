@@ -53,117 +53,68 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                               '' AS DUSRUPD --no
                               FROM USINSUG01.COINSURAN C
                               JOIN ( 
-                                     (SELECT P.USERCOMP, P.COMPANY, P.CERTYPE, P.BRANCH, P.PRODUCT, PSP.SUB_PRODUCT, P.POLICY, CERT.CERTIF, P.TITULARC, P.EFFECDATE ,P.POLITYPE , CERT.EFFECDATE as EFFECDATE_CERT
-                                      FROM USINSUG01.POLICY P 
-                             	      LEFT JOIN USINSUG01.CERTIFICAT CERT 
-                             	      ON P.USERCOMP = CERT.USERCOMP 
-                             	      AND P.COMPANY = CERT.COMPANY 
-                             	      AND P.CERTYPE = CERT.CERTYPE 
-                             	      AND P.BRANCH  = CERT.BRANCH 
-                             	      AND P.POLICY  = CERT.policy
-                             	      JOIN USINSUG01.POL_SUBPRODUCT PSP
-                             	      ON  PSP.USERCOMP = P.USERCOMP
-                             	      AND PSP.COMPANY  = P.COMPANY
-                             	      AND PSP.CERTYPE  = P.CERTYPE
-                             	      AND PSP.BRANCH   = P.BRANCH		   
-                             	      AND PSP.PRODUCT  = P.PRODUCT
-                             	      AND PSP.POLICY   = P.POLICY	
-                             	      JOIN USBI01."IFRS170_T_RAMOS_POR_TIPO_RIESGO" RTR ON RTR."BRANCHCOM" = P.BRANCH AND  RTR."RISKTYPEN" = 1 AND RTR."SOURCESCHEMA" = 'usinsug01'
-                             	      WHERE P.CERTYPE = '2' 
-                                      AND P.STATUS_POL NOT IN ('2','3') 
-                                      AND ( (P.POLITYPE = '1' -- INDIVIDUAL 
-                                        AND P.EXPIRDAT BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
-                                        AND (P.NULLDATE IS NULL OR P.NULLDATE > '{p_fecha_inicio}')
-                                        AND P.EXPIRDAT < '{l_fecha_carga_inicial}' )
-                                        OR 
-                                        (P.POLITYPE <> '1' -- COLECTIVAS 
-                                        AND CERT.EXPIRDAT BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
-                                        AND (CERT.NULLDATE IS NULL OR CERT.NULLDATE > '{p_fecha_inicio}')
-                                        AND CERT.EXPIRDAT < '{l_fecha_carga_inicial}'))
-                                    )
-                                        
-                                    union /*SE QUITO EL UNION DESDE AQUI */
-                                    
-                                    (SELECT P.USERCOMP, P.COMPANY, P.CERTYPE, P.BRANCH, P.PRODUCT, PSP.SUB_PRODUCT, P.POLICY, CERT.CERTIF, P.TITULARC, P.EFFECDATE ,P.POLITYPE , CERT.EFFECDATE as EFFECDATE_CERT
-                                     FROM USINSUG01.POLICY P 
-                             	     LEFT JOIN USINSUG01.CERTIFICAT CERT 
-                             	     ON P.USERCOMP = CERT.USERCOMP 
-                             	     AND P.COMPANY = CERT.COMPANY 
-                             	     AND P.CERTYPE = CERT.CERTYPE 
-                             	     AND P.BRANCH  = CERT.BRANCH 
-                             	     AND P.POLICY  = CERT.policy
-                             	     JOIN USINSUG01.POL_SUBPRODUCT PSP
-                             	     ON  PSP.USERCOMP = P.USERCOMP
-                             	     AND PSP.COMPANY  = P.COMPANY
-                             	     AND PSP.CERTYPE  = P.CERTYPE
-                             	     AND PSP.BRANCH   = P.BRANCH		   
-                             	     AND PSP.PRODUCT  = P.PRODUCT
-                             	     AND PSP.POLICY   = P.POLICY	
-                             	     JOIN USBI01."IFRS170_T_RAMOS_POR_TIPO_RIESGO" RTR ON RTR."BRANCHCOM" = P.BRANCH AND  RTR."RISKTYPEN" = 1 AND RTR."SOURCESCHEMA" = 'usinsug01'
-                             	     WHERE P.CERTYPE = '2' AND
-                                            P.STATUS_POL NOT IN ('2', '3') AND
-                                            (
-                                              (P.POLITYPE = '1' AND  P.EXPIRDAT < '{l_fecha_carga_inicial}' or P.NULLDATE < '{l_fecha_carga_inicial}') and exists
-                                                                                                                              (   select  1
-                                                                                                                                    from  usinsug01.claim cla    
-                                                                                                                                    join  usinsug01.claim_his clh 
-                                                                                                                                    on   clh.usercomp = cla.usercomp 
-                                                                                                                                    and  clh.company = cla.company 
-                                                                                                                                    and  clh.claim = cla.claim
-                                                                                                                                    where /*cla.usercomp = P.USERCOMP 
-                                                                                                                                    and   cla.COMPANY = P.COMPANY  
-                                                                                                                                    and  */ cla.branch = p.branch
-                                                                                                                                    and   cla."policy" = p.policy
-                                                                                                                                    and   trim(clh.oper_type) in 
-                                                                                                                                                (	select 	cast(tcl.operation as varchar(2))
-                                                                                                                                                      from 	usinsug01.tab_cl_ope tcl
-                                                                                                                                                      where	(tcl.reserve = 1 or tcl.ajustes = 1 or tcl.pay_amount = 1))
-                                                                                                                                    and     clh.operdate >= '{l_fecha_carga_inicial}')
-                                            )
-                                        
-                                     )
-                                        
-                                     union
-                                     
-                                     (SELECT P.USERCOMP, P.COMPANY, P.CERTYPE, P.BRANCH, P.PRODUCT, PSP.SUB_PRODUCT, P.POLICY, CERT.CERTIF, P.TITULARC, P.EFFECDATE ,P.POLITYPE , CERT.EFFECDATE as EFFECDATE_CERT
-                                      FROM USINSUG01.POLICY P 
-                             	      LEFT JOIN USINSUG01.CERTIFICAT CERT 
-                             	      ON P.USERCOMP = CERT.USERCOMP 
-                             	      AND P.COMPANY = CERT.COMPANY 
-                             	      AND P.CERTYPE = CERT.CERTYPE 
-                             	      AND P.BRANCH  = CERT.BRANCH 
-                             	      AND P.POLICY  = CERT.policy
-                             	      JOIN USINSUG01.POL_SUBPRODUCT PSP
-                             	      ON  PSP.USERCOMP = P.USERCOMP
-                             	      AND PSP.COMPANY  = P.COMPANY
-                             	      AND PSP.CERTYPE  = P.CERTYPE
-                             	      AND PSP.BRANCH   = P.BRANCH		   
-                             	      AND PSP.PRODUCT  = P.PRODUCT
-                             	      AND PSP.POLICY   = P.POLICY	
-                             	      JOIN USBI01."IFRS170_T_RAMOS_POR_TIPO_RIESGO" RTR ON RTR."BRANCHCOM" = P.BRANCH AND  RTR."RISKTYPEN" = 1 AND RTR."SOURCESCHEMA" = 'usinsug01'
-                             	      WHERE P.CERTYPE = '2' AND
-                                            P.STATUS_POL NOT IN ('2', '3') AND
-                                            (
-                                              (P.POLITYPE <> '1' AND CERT.EXPIRDAT < '{l_fecha_carga_inicial}'  or  CERT.NULLDATE < '{l_fecha_carga_inicial}') and exists
-                                                                                                                                    (   select  1
-                                                                                                                                          from  usinsug01.claim cla    
-                                                                                                                                          join  usinsug01.claim_his clh 
-                                                                                                                                          on cla.usercomp = clh.usercomp  
-                                                                                                                                          and cla.company = clh.company 
-                                                                                                                                          and  clh.claim = cla.claim
-                                                                                                                                          where /*cla.usercomp = CERT.USERCOMP 
-                                                                                                                                          and   cla.COMPANY = CERT.COMPANY  
-                                                                                                                                          and */  cla.branch = CERT.branch
-                                                                                                                                          and   cla."policy" = CERT.policy
-                                                                                                                                          and   cla.certif = CERT.certif
-                                                                                                                                          and   trim(clh.oper_type) in 
-                                                                                                                                                      (	select 	cast(tcl.operation as varchar(2))
-                                                                                                                                                            from 	usinsug01.tab_cl_ope tcl
-                                                                                                                                                            where	(tcl.reserve = 1 or tcl.ajustes = 1 or tcl.pay_amount = 1))
-                                                                                                                                          and     clh.operdate >= '{l_fecha_carga_inicial}') 
-                                            )
-                                     )/*SE QUITO EL UNION HASTA AQUI */
-                                 ) AS PC	
+                                     SELECT P.USERCOMP, P.COMPANY, P.CERTYPE, P.BRANCH, P.PRODUCT, PSP.SUB_PRODUCT, P.POLICY, CERT.CERTIF, P.TITULARC, P.EFFECDATE ,P.POLITYPE , CERT.EFFECDATE as EFFECDATE_CERT
+                                          FROM USINSUG01.POLICY P 
+                                          LEFT JOIN USINSUG01.CERTIFICAT CERT 
+                                          ON P.USERCOMP = CERT.USERCOMP 
+                                          AND P.COMPANY = CERT.COMPANY 
+                                          AND P.CERTYPE = CERT.CERTYPE 
+                                          AND P.BRANCH  = CERT.BRANCH 
+                                          AND P.POLICY  = CERT.policy
+                                          JOIN USINSUG01.POL_SUBPRODUCT PSP
+                                          ON  PSP.USERCOMP = P.USERCOMP
+                                          AND PSP.COMPANY  = P.COMPANY
+                                          AND PSP.CERTYPE  = P.CERTYPE
+                                          AND PSP.BRANCH   = P.BRANCH		   
+                                          AND PSP.PRODUCT  = P.PRODUCT
+                                          AND PSP.POLICY   = P.POLICY	
+                                          JOIN USBI01."IFRS170_T_RAMOS_POR_TIPO_RIESGO" RTR ON RTR."BRANCHCOM" = P.BRANCH AND  RTR."RISKTYPEN" = 1 AND RTR."SOURCESCHEMA" = 'usinsug01'
+                                          WHERE P.CERTYPE = '2' 
+                                          AND P.STATUS_POL NOT IN ('2','3') 
+                                          AND ( (P.POLITYPE = '1' -- INDIVIDUAL 
+                                          AND P.EXPIRDAT BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
+                                          AND (P.NULLDATE IS NULL OR P.NULLDATE > '{p_fecha_inicio}')
+                                          AND P.EXPIRDAT < '{l_fecha_carga_inicial}' )
+                                          OR 
+                                          (P.POLITYPE <> '1' -- COLECTIVAS 
+                                          AND CERT.EXPIRDAT BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
+                                          AND (CERT.NULLDATE IS NULL OR CERT.NULLDATE > '{p_fecha_inicio}')
+                                          AND CERT.EXPIRDAT < '{l_fecha_carga_inicial}')) and not exists (select  1
+                                                                                                            from  usinsug01.claim cla    
+                                                                                                            join  usinsug01.claim_his clh 
+                                                                                                            on   clh.usercomp = cla.usercomp 
+                                                                                                            and  clh.company = cla.company 
+                                                                                                            and  clh.claim = cla.claim
+                                                                                                            where /*cla.usercomp = P.USERCOMP 
+                                                                                                            and   cla.COMPANY = P.COMPANY  
+                                                                                                            and  */ cla.branch = p.branch
+                                                                                                            and   cla."policy" = p.policy
+                                                                                                            and   trim(clh.oper_type) in 
+                                                                                                                        (	select 	cast(tcl.operation as varchar(2))
+                                                                                                                              from 	usinsug01.tab_cl_ope tcl
+                                                                                                                              where	(tcl.reserve = 1 or tcl.ajustes = 1 or tcl.pay_amount = 1))
+                                                                                                            and     clh.operdate >= '{l_fecha_carga_inicial}'
+                                                                                                            and P.POLITYPE = '1' 
+                                                                                                            AND  P.EXPIRDAT < '{l_fecha_carga_inicial}' or P.NULLDATE < '{l_fecha_carga_inicial}' )
+                                                                                          and not exists (select  1
+                                                                                                                  from  usinsug01.claim cla    
+                                                                                                                  join  usinsug01.claim_his clh 
+                                                                                                                  on cla.usercomp = clh.usercomp  
+                                                                                                                  and cla.company = clh.company 
+                                                                                                                  and  clh.claim = cla.claim
+                                                                                                                  where /*cla.usercomp = CERT.USERCOMP 
+                                                                                                                  and   cla.COMPANY = CERT.COMPANY  
+                                                                                                                  and */  cla.branch = CERT.branch
+                                                                                                                  and   cla."policy" = CERT.policy
+                                                                                                                  and   cla.certif = CERT.certif
+                                                                                                                  and   trim(clh.oper_type) in 
+                                                                                                                              (	select 	cast(tcl.operation as varchar(2))
+                                                                                                                                    from 	usinsug01.tab_cl_ope tcl
+                                                                                                                                    where	(tcl.reserve = 1 or tcl.ajustes = 1 or tcl.pay_amount = 1))
+                                                                                                                  and     clh.operdate >= '{l_fecha_carga_inicial}'
+                                                                                                                  and P.POLITYPE <> '1' AND CERT.EXPIRDAT < '{l_fecha_carga_inicial}'  
+                                                                                                                  or  CERT.NULLDATE < '{l_fecha_carga_inicial}')
+                                   ) AS PC	
                              ON  C.USERCOMP = PC.USERCOMP 
                              AND C.COMPANY  = PC.COMPANY 
                              AND C.CERTYPE  = PC.CERTYPE
@@ -226,19 +177,19 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                     '' AS DUSRUPD --NO
                                     FROM usinsuv01.COINSURAN C
                                     JOIN (
-                                                (
-                                                SELECT P.USERCOMP, P.COMPANY, P.CERTYPE, P.BRANCH, P.PRODUCT, P.POLICY, CERT.CERTIF, P.TITULARC, P.EFFECDATE , P.POLITYPE, CERT.EFFECDATE as EFFECDATE_CERT
-                                                FROM USINSUV01.POLICY P 
-                                                LEFT JOIN USINSUV01.CERTIFICAT CERT 
-                                                ON P.USERCOMP = CERT.USERCOMP 
-                                                AND P.COMPANY = CERT.COMPANY 
-                                                AND P.CERTYPE = CERT.CERTYPE 
-                                                AND P.BRANCH  = CERT.BRANCH 
-                                                AND P.POLICY  = CERT.policy	
-                                                JOIN USBI01."IFRS170_T_RAMOS_POR_TIPO_RIESGO" RTR ON RTR."BRANCHCOM" = P.BRANCH AND  RTR."RISKTYPEN" = 1 AND RTR."SOURCESCHEMA" = 'usinsuv01'
-                                                WHERE P.CERTYPE = '2' 
-                                                AND P.STATUS_POL NOT IN ('2','3') 
-                                                AND ( (P.POLITYPE = '1' -- INDIVIDUAL 
+                                          SELECT P.USERCOMP, P.COMPANY, P.CERTYPE, P.BRANCH, P.PRODUCT, P.POLICY, CERT.CERTIF, P.TITULARC, P.EFFECDATE , P.POLITYPE, CERT.EFFECDATE as EFFECDATE_CERT
+                                          FROM USINSUV01.POLICY P 
+                                          LEFT JOIN USINSUV01.CERTIFICAT CERT 
+                                          ON P.USERCOMP = CERT.USERCOMP 
+                                          AND P.COMPANY = CERT.COMPANY 
+                                          AND P.CERTYPE = CERT.CERTYPE 
+                                          AND P.BRANCH  = CERT.BRANCH 
+                                          AND P.POLICY  = CERT.policy	
+                                          JOIN USBI01."IFRS170_T_RAMOS_POR_TIPO_RIESGO" RTR ON RTR."BRANCHCOM" = P.BRANCH AND  RTR."RISKTYPEN" = 1 AND RTR."SOURCESCHEMA" = 'usinsuv01'
+                                          WHERE P.CERTYPE = '2' 
+                                          AND P.STATUS_POL NOT IN ('2','3') 
+                                          AND ( 
+                                                (P.POLITYPE = '1' -- INDIVIDUAL 
                                                 AND P.EXPIRDAT BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
                                                 AND (P.NULLDATE IS NULL OR P.NULLDATE > '{p_fecha_inicio}')
                                                 AND P.EXPIRDAT < '{l_fecha_carga_inicial}' )
@@ -246,74 +197,43 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                                 (P.POLITYPE <> '1' -- COLECTIVAS 
                                                 AND CERT.EXPIRDAT BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
                                                 AND (CERT.NULLDATE IS NULL OR CERT.NULLDATE > '{p_fecha_inicio}')
-                                                AND CERT.EXPIRDAT < '{l_fecha_carga_inicial}'))
-                                                )
-                                                union /*SE QUITO EL UNION DESDE AQUI */
-                                                (
-                                                SELECT P.USERCOMP, P.COMPANY, P.CERTYPE, P.BRANCH, P.PRODUCT, P.POLICY, CERT.CERTIF, P.TITULARC, P.EFFECDATE , P.POLITYPE, CERT.EFFECDATE as EFFECDATE_CERT
-                                                FROM USINSUV01.POLICY P 
-                                                LEFT JOIN USINSUV01.CERTIFICAT CERT 
-                                                ON P.USERCOMP = CERT.USERCOMP 
-                                                AND P.COMPANY = CERT.COMPANY 
-                                                AND P.CERTYPE = CERT.CERTYPE 
-                                                AND P.BRANCH  = CERT.BRANCH 
-                                                AND P.POLICY  = CERT.policy	
-                                                JOIN USBI01."IFRS170_T_RAMOS_POR_TIPO_RIESGO" RTR ON RTR."BRANCHCOM" = P.BRANCH AND  RTR."RISKTYPEN" = 1 AND RTR."SOURCESCHEMA" = 'usinsuv01'
-                                                WHERE P.CERTYPE = '2' and P.STATUS_POL NOT IN ('2', '3') AND
-                                                                        (
-                                                                              (P.POLITYPE = '1' AND  (P.EXPIRDAT < '{l_fecha_carga_inicial}' or P.NULLDATE < '{l_fecha_carga_inicial}')) and exists
-                                                                                                                                                            (   select  1
-                                                                                                                                                                  from  usinsuv01.claim cla    
-                                                                                                                                                                  join  usinsuv01.claim_his clh 
-                                                                                                                                                                  on   clh.usercomp = cla.usercomp 
-                                                                                                                                                                  and  clh.company = cla.company 
-                                                                                                                                                                  and  clh.claim = cla.claim
-                                                                                                                                                                  where cla.usercomp = P.USERCOMP 
-                                                                                                                                                                  and   cla.COMPANY = P.COMPANY  
-                                                                                                                                                                  and   cla.branch = p.branch
-                                                                                                                                                                  and   cla.product = p.product
-                                                                                                                                                                  and   cla."policy" = p.policy
-                                                                                                                                                                  and   cla.certif = 0
-                                                                                                                                                                  and   trim(clh.oper_type) in 
-                                                                                                                                                                              (	select 	cast(tcl.operation as varchar(2))
-                                                                                                                                                                                    from 	usinsug01.tab_cl_ope tcl
-                                                                                                                                                                                    where	(tcl.reserve = 1 or tcl.ajustes = 1 or tcl.pay_amount = 1))
-                                                                                                                                                                  and     clh.operdate >= '{l_fecha_carga_inicial}')
-                                                                        )
-                                                )
-                                                union
-                                                (
-                                                SELECT P.USERCOMP, P.COMPANY, P.CERTYPE, P.BRANCH, P.PRODUCT, P.POLICY, CERT.CERTIF, P.TITULARC, P.EFFECDATE , P.POLITYPE, CERT.EFFECDATE as EFFECDATE_CERT
-                                                FROM USINSUV01.POLICY P 
-                                                LEFT JOIN USINSUV01.CERTIFICAT CERT 
-                                                ON P.USERCOMP = CERT.USERCOMP 
-                                                AND P.COMPANY = CERT.COMPANY 
-                                                AND P.CERTYPE = CERT.CERTYPE 
-                                                AND P.BRANCH  = CERT.BRANCH 
-                                                AND P.POLICY  = CERT.policy	
-                                                JOIN USBI01."IFRS170_T_RAMOS_POR_TIPO_RIESGO" RTR ON RTR."BRANCHCOM" = P.BRANCH AND  RTR."RISKTYPEN" = 1 AND RTR."SOURCESCHEMA" = 'usinsuv01'
-                                                where P.CERTYPE = '2' AND
-                                                      P.STATUS_POL NOT IN ('2', '3') AND
-                                                      (
-                                                      (P.POLITYPE <> '1' AND (CERT.EXPIRDAT < '{l_fecha_carga_inicial}'  or  CERT.NULLDATE < '{l_fecha_carga_inicial}')) and exists
-                                                                                                                                                (   select  1
-                                                                                                                                                      from  usinsuv01.claim cla    
-                                                                                                                                                      join  usinsuv01.claim_his clh 
-                                                                                                                                                      on cla.usercomp = clh.usercomp  
-                                                                                                                                                      and cla.company = clh.company 
-                                                                                                                                                      and  clh.claim = cla.claim
-                                                                                                                                                      where cla.usercomp = CERT.USERCOMP 
-                                                                                                                                                      and   cla.COMPANY = CERT.COMPANY  
-                                                                                                                                                      and   cla.branch = CERT.branch
-                                                                                                                                                      and   cla."policy" = CERT.policy
-                                                                                                                                                      and   cla.certif = CERT.certif
-                                                                                                                                                      and   trim(clh.oper_type) in 
-                                                                                                                                                                  (	select 	cast(tcl.operation as varchar(2))
+                                                AND CERT.EXPIRDAT < '{l_fecha_carga_inicial}')
+                                                ) and not exists (select  1
+                                                                  from  usinsuv01.claim cla    
+                                                                  join  usinsuv01.claim_his clh 
+                                                                  on   clh.usercomp = cla.usercomp 
+                                                                  and  clh.company = cla.company 
+                                                                  and  clh.claim = cla.claim
+                                                                  where cla.usercomp = P.USERCOMP 
+                                                                  and   cla.COMPANY = P.COMPANY  
+                                                                  and   cla.branch = p.branch
+                                                                  and   cla.product = p.product
+                                                                  and   cla."policy" = p.policy
+                                                                  and   cla.certif = 0
+                                                                  and   trim(clh.oper_type) in 
+                                                                  (	select 	cast(tcl.operation as varchar(2))
+                                                                        from 	usinsug01.tab_cl_ope tcl
+                                                                        where	(tcl.reserve = 1 or tcl.ajustes = 1 or tcl.pay_amount = 1))
+                                                                  and     clh.operdate >= '{l_fecha_carga_inicial}'
+                                                                  and P.POLITYPE = '1' 
+                                                                  AND (P.EXPIRDAT < '{l_fecha_carga_inicial}' or P.NULLDATE < '{l_fecha_carga_inicial}')) and not exists (select  1
+                                                                                                                                                                        from  usinsuv01.claim cla    
+                                                                                                                                                                        join  usinsuv01.claim_his clh 
+                                                                                                                                                                        on cla.usercomp = clh.usercomp  
+                                                                                                                                                                        and cla.company = clh.company 
+                                                                                                                                                                        and  clh.claim = cla.claim
+                                                                                                                                                                        where cla.usercomp = CERT.USERCOMP 
+                                                                                                                                                                        and   cla.COMPANY = CERT.COMPANY  
+                                                                                                                                                                        and   cla.branch = CERT.branch
+                                                                                                                                                                        and   cla."policy" = CERT.policy
+                                                                                                                                                                        and   cla.certif = CERT.certif
+                                                                                                                                                                        and   trim(clh.oper_type) in 
+                                                                                                                                                                        (	select 	cast(tcl.operation as varchar(2))
                                                                                                                                                                         from 	usinsug01.tab_cl_ope tcl
                                                                                                                                                                         where	(tcl.reserve = 1 or tcl.ajustes = 1 or tcl.pay_amount = 1))
-                                                                                                                                                      and     clh.operdate >= '{l_fecha_carga_inicial}') 
-                                                )
-                                          )/*SE QUITO EL UNION HASTA AQUI */
+                                                                                                                                                                        and     clh.operdate >= '{l_fecha_carga_inicial}'
+                                                                                                                                                                        P.POLITYPE <> '1' AND (CERT.EXPIRDAT < '{l_fecha_carga_inicial}'  
+                                                                                                                                                                        or  CERT.NULLDATE < '{l_fecha_carga_inicial}'))
                                     ) AS PC	
                               ON  C.USERCOMP = PC.USERCOMP 
                               AND C.COMPANY  = PC.COMPANY 

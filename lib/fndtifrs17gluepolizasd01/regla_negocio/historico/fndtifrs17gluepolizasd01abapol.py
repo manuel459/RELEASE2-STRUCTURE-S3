@@ -2059,153 +2059,108 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                            '' AS TEMISREN          --NO
                            FROM  
                            (
-                            (SELECT 
-                            P.USERCOMP,
-                            P.COMPANY,     
-                            P.CERTYPE,                       
-                            P.BRANCH,
-                            P.PRODUCT,
-                            P.POLICY,                           
-                            P.TITULARC,
-                            P.EFFECDATE,
-                            P.EXPIRDAT,
-                            P.NULLDATE,
-                            P.STATUS_POL,
-                            P.POLITYPE,
-                            P.DATE_ORIGI,
-                            P.ISSUEDAT,
-                            P.RENEWAL,
-                            P.PAYFREQ,
-                            P.BUSSITYP,
-                            P.REINTYPE,
-                            P.PREMIUM,
-                            P.NULLCODE,
-                            P.YEAR_MONTH,
-                            POL.SUB_PRODUCT,
-                            CERT.EFFECDATE  AS CERT_EFFECDATE,
-                            CERT.STARTDATE  AS CERT_STARTDATE,
-                            CERT.EXPIRDAT   AS CERT_EXPIRDAT,
-                            CERT.CERTIF,
-                            CERT.TITULARC   AS CERT_TITULARC,
-                            CERT.DATE_ORIGI AS CERT_DATE_ORIGI,
-                            CERT.ISSUEDAT   AS CERT_ISSUEDAT,
-                            CERT.NULLDATE   AS CERT_NULLDATE,
-                            CERT.STATUSVA   AS CERT_STATUSVA
-                            FROM USINSUG01.POLICY P 
-                            LEFT JOIN USINSUG01.CERTIFICAT CERT 
-                            ON  CERT.USERCOMP = P.USERCOMP  
-                            AND CERT.COMPANY = P.COMPANY   
-                            AND CERT.CERTYPE = P.CERTYPE 
-                            AND CERT.BRANCH  = P.BRANCH
-                            AND CERT.POLICY  = P.POLICY 
-                            AND CERT.PRODUCT = P.PRODUCT
-                            JOIN USINSUG01.POL_SUBPRODUCT POL
-                            ON POL.USERCOMP = P.USERCOMP
-                            AND POL.COMPANY = P.COMPANY
-                            AND POL.CERTYPE = P.CERTYPE
-                            AND POL.BRANCH = P.BRANCH
-                            AND POL.POLICY = P.POLICY
-                            AND POL.PRODUCT = P.PRODUCT
-                            WHERE P.CERTYPE  = '2'
-                            AND P.STATUS_POL NOT IN ('2','3') 
-                            AND ((P.POLITYPE = '1' -- INDIVIDUAL 
-                                      AND P.EXPIRDAT BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
-                                      AND (P.NULLDATE IS NULL OR P.NULLDATE > '{p_fecha_inicio}')
-                                      AND P.EXPIRDAT < '{l_fecha_carga_inicial}')
-                                      OR 
-                                    (P.POLITYPE <> '1' -- COLECTIVAS 
-                                      AND CERT.EXPIRDAT BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}' 
-                                AND (CERT.NULLDATE IS NULL OR CERT.NULLDATE > '{p_fecha_inicio}')
-                                AND CERT.EXPIRDAT < '{l_fecha_carga_inicial}'))
-                            )
-
-                            UNION --SE QUITO EL UNION, DESDE AQUI 
-
-                            (SELECT 
-                            P.USERCOMP,
-                            P.COMPANY,     
-                            P.CERTYPE,                       
-                            P.BRANCH,
-                            P.PRODUCT,
-                            P.POLICY,                           
-                            P.TITULARC,
-                            P.EFFECDATE,
-                            P.EXPIRDAT,
-                            P.NULLDATE,
-                            P.STATUS_POL,
-                            P.POLITYPE,
-                            P.DATE_ORIGI,
-                            P.ISSUEDAT,
-                            P.RENEWAL,
-                            P.PAYFREQ,
-                            P.BUSSITYP,
-                            P.REINTYPE,
-                            P.PREMIUM,
-                            P.NULLCODE,
-                            P.YEAR_MONTH,
-                            POL.SUB_PRODUCT,
-                            CERT.EFFECDATE  AS CERT_EFFECDATE,
-                            CERT.STARTDATE  AS CERT_STARTDATE,
-                            CERT.EXPIRDAT   AS CERT_EXPIRDAT,
-                            CERT.CERTIF,
-                            CERT.TITULARC   AS CERT_TITULARC,
-                            CERT.DATE_ORIGI AS CERT_DATE_ORIGI,
-                            CERT.ISSUEDAT   AS CERT_ISSUEDAT,
-                            CERT.NULLDATE   AS CERT_NULLDATE,
-                            CERT.STATUSVA   AS CERT_STATUSVA
-                            FROM USINSUG01.POLICY P
-                            LEFT JOIN USINSUG01.CERTIFICAT CERT 
-                            ON  CERT.USERCOMP = P.USERCOMP 
-                            AND CERT.COMPANY = P.COMPANY 
-                            AND CERT.CERTYPE = P.CERTYPE 
-                            AND CERT.BRANCH = P.BRANCH 
-                            AND CERT.POLICY = P.POLICY 
-                            AND CERT.PRODUCT = P.PRODUCT
-                            JOIN USINSUG01.POL_SUBPRODUCT POL
-                            ON POL.USERCOMP = P.USERCOMP
-                            AND POL.COMPANY = P.COMPANY
-                            AND POL.CERTYPE = P.CERTYPE
-                            AND POL.BRANCH = P.BRANCH
-                            AND POL.POLICY = P.POLICY
-                            AND POL.PRODUCT = P.PRODUCT
-                            WHERE P.CERTYPE = '2' 
-                            AND P.STATUS_POL NOT IN ('2', '3') 
-                            AND (((P.POLITYPE = '1' AND (P.EXPIRDAT < '{l_fecha_carga_inicial}' OR P.NULLDATE < '{l_fecha_carga_inicial}')) 
-                            AND EXISTS (SELECT  1
-                                        FROM  USINSUG01.CLAIM CLA    
-                                        JOIN  USINSUG01.CLAIM_HIS CLH 
-                                        ON    CLH.USERCOMP = CLA.USERCOMP 
-                                        AND   CLH.COMPANY  = CLA.COMPANY 
-                                        AND   CLH.BRANCH   = CLA.BRANCH
-                                        AND   CLH.CLAIM    = CLA.CLAIM
-                                        WHERE /*CLA.USERCOMP = P.USERCOMP 
-                                          AND   CLA.COMPANY = P.COMPANY  
-                                        AND  */ CLA.BRANCH = P.BRANCH
-                                        AND   CLA.POLICY = P.POLICY
-                                        AND   TRIM(CLH.OPER_TYPE) IN  (SELECT CAST(TCL.OPERATION AS VARCHAR(2)) 
-                                            						   FROM    USINSUG01.TAB_CL_OPE TCL
-                                                                       WHERE  (TCL.RESERVE = 1 OR TCL.AJUSTES = 1 OR TCL.PAY_AMOUNT = 1)
-                                                                      )
-                                        AND   CLH.OPERDATE >= '{l_fecha_carga_inicial}'))
-															                            OR ((P.POLITYPE <> '1' AND (CERT.EXPIRDAT < '{l_fecha_carga_inicial}'  OR  CERT.NULLDATE < '{l_fecha_carga_inicial}'))
-															                            AND EXISTS (SELECT  1 FROM  USINSUG01.CLAIM CLA    
-															                                        JOIN  USINSUG01.CLAIM_HIS CLH 
-															                                        ON    CLA.USERCOMP = CLH.USERCOMP  
-															                                        AND   CLA.COMPANY = CLH.COMPANY 
-															                                        AND   CLH.CLAIM = CLA.CLAIM
-															                                        WHERE /*CLA.USERCOMP = CERT.USERCOMP 
-															                                        AND   CLA.COMPANY = CERT.COMPANY  
-															                                        AND */CLA.BRANCH   = CERT.BRANCH
-															                                        AND   CLA.POLICY = CERT.POLICY
-															                                        AND   CLA.CERTIF   = CERT.CERTIF
-															                                        AND   TRIM(CLH.OPER_TYPE) IN  (SELECT CAST(TCL.OPERATION AS VARCHAR(2)) 
-															                                                                       FROM  USINSUG01.TAB_CL_OPE TCL
-															                                                                       WHERE (TCL.RESERVE = 1 OR TCL.AJUSTES = 1 OR TCL.PAY_AMOUNT = 1)
-															                                                                      )
-															                                        AND  CLH.OPERDATE >= '{l_fecha_carga_inicial}'
-															                                       ))) 
-							AND P.EFFECDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}') /*SE QUITO EL UNION, DESDE HASTA AQUI */ )P
-                            ) AS TMP
+                             SELECT 
+                              P.USERCOMP,
+                              P.COMPANY,     
+                              P.CERTYPE,                       
+                              P.BRANCH,
+                              P.PRODUCT,
+                              P.POLICY,                           
+                              P.TITULARC,
+                              P.EFFECDATE,
+                              P.EXPIRDAT,
+                              P.NULLDATE,
+                              P.STATUS_POL,
+                              P.POLITYPE,
+                              P.DATE_ORIGI,
+                              P.ISSUEDAT,
+                              P.RENEWAL,
+                              P.PAYFREQ,
+                              P.BUSSITYP,
+                              P.REINTYPE,
+                              P.PREMIUM,
+                              P.NULLCODE,
+                              P.YEAR_MONTH,
+                              POL.SUB_PRODUCT,
+                              CERT.EFFECDATE  AS CERT_EFFECDATE,
+                              CERT.STARTDATE  AS CERT_STARTDATE,
+                              CERT.EXPIRDAT   AS CERT_EXPIRDAT,
+                              CERT.CERTIF,
+                              CERT.TITULARC   AS CERT_TITULARC,
+                              CERT.DATE_ORIGI AS CERT_DATE_ORIGI,
+                              CERT.ISSUEDAT   AS CERT_ISSUEDAT,
+                              CERT.NULLDATE   AS CERT_NULLDATE,
+                              CERT.STATUSVA   AS CERT_STATUSVA
+                              FROM USINSUG01.POLICY P 
+                              LEFT JOIN USINSUG01.CERTIFICAT CERT 
+                              ON  CERT.USERCOMP = P.USERCOMP  
+                              AND CERT.COMPANY = P.COMPANY   
+                              AND CERT.CERTYPE = P.CERTYPE 
+                              AND CERT.BRANCH  = P.BRANCH
+                              AND CERT.POLICY  = P.POLICY 
+                              AND CERT.PRODUCT = P.PRODUCT
+                              JOIN USINSUG01.POL_SUBPRODUCT POL
+                              ON POL.USERCOMP = P.USERCOMP
+                              AND POL.COMPANY = P.COMPANY
+                              AND POL.CERTYPE = P.CERTYPE
+                              AND POL.BRANCH = P.BRANCH
+                              AND POL.POLICY = P.POLICY
+                              AND POL.PRODUCT = P.PRODUCT
+                              WHERE P.CERTYPE  = '2'
+                              AND P.STATUS_POL NOT IN ('2','3') 
+                              AND (
+                                (P.POLITYPE = '1' -- INDIVIDUAL 
+                                    AND P.EXPIRDAT BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
+                                    AND (P.NULLDATE IS NULL OR P.NULLDATE > '{p_fecha_inicio}')
+                                    AND P.EXPIRDAT < '{l_fecha_carga_inicial}')
+                                    OR 
+                                  (P.POLITYPE <> '1' -- COLECTIVAS 
+                                    AND CERT.EXPIRDAT BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}' 
+                                    AND (CERT.NULLDATE IS NULL OR CERT.NULLDATE > '{p_fecha_inicio}')
+                                    AND CERT.EXPIRDAT < '{l_fecha_carga_inicial}')
+                                  ) 
+                              and (
+                                  (
+                                    (P.POLITYPE = '1' AND (P.EXPIRDAT < '{l_fecha_carga_inicial}' OR P.NULLDATE < '{l_fecha_carga_inicial}'))
+                                    and not exists (SELECT  1
+                                                        FROM  USINSUG01.CLAIM CLA    
+                                                        JOIN  USINSUG01.CLAIM_HIS CLH 
+                                                        ON    CLH.USERCOMP = CLA.USERCOMP 
+                                                        AND   CLH.COMPANY  = CLA.COMPANY 
+                                                        AND   CLH.BRANCH   = CLA.BRANCH
+                                                        AND   CLH.CLAIM    = CLA.CLAIM
+                                                        WHERE /*CLA.USERCOMP = P.USERCOMP 
+                                                          AND   CLA.COMPANY = P.COMPANY  
+                                                        AND  */ CLA.BRANCH = P.BRANCH
+                                                        AND   CLA.POLICY = P.POLICY
+                                                        AND   TRIM(CLH.OPER_TYPE) 
+                                                        IN (SELECT CAST(TCL.OPERATION AS VARCHAR(2)) 
+                                              FROM  USINSUG01.TAB_CL_OPE TCL
+                                                          where (TCL.RESERVE = 1 OR TCL.AJUSTES = 1 OR TCL.PAY_AMOUNT = 1))
+                                                        and CLH.OPERDATE >= '{l_fecha_carga_inicial}')
+                                  ) 
+                                  or
+                                  (
+                                    (P.POLITYPE <> '1' AND (cert.EXPIRDAT < '{l_fecha_carga_inicial}' OR cert.NULLDATE < '{l_fecha_carga_inicial}'))
+                                    and not exists (SELECT  1 FROM  USINSUG01.CLAIM CLA    
+                                                        JOIN  USINSUG01.CLAIM_HIS CLH 
+                                                        ON    CLA.USERCOMP = CLH.USERCOMP  
+                                                        AND   CLA.COMPANY = CLH.COMPANY 
+                                                        AND   CLH.CLAIM = CLA.CLAIM
+                                                        WHERE /*CLA.USERCOMP = CERT.USERCOMP 
+                                                        AND   CLA.COMPANY = CERT.COMPANY  
+                                                        AND */CLA.BRANCH   = CERT.BRANCH
+                                                        AND   CLA.POLICY = CERT.POLICY
+                                                        AND   CLA.CERTIF   = CERT.CERTIF
+                                                        AND   TRIM(CLH.OPER_TYPE) 
+                                                        IN  (SELECT CAST(TCL.OPERATION AS VARCHAR(2)) 
+                                                          FROM  USINSUG01.TAB_CL_OPE TCL
+                                                          WHERE (TCL.RESERVE = 1 OR TCL.AJUSTES = 1 OR TCL.PAY_AMOUNT = 1))
+                                                        AND  CLH.OPERDATE >= '{l_fecha_carga_inicial}')
+                                  )
+                                )
+                           )P
+                          ) AS TMP
                           '''
 
   l_df_polizas_insunix_lpg = glue_context.read.format('jdbc').options(**connection).option("dbtable",l_polizas_insunix_lpg).load()                      
@@ -2596,61 +2551,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                               '' AS TEMISREN           --NO*/
                               FROM 
                               (
-                               (SELECT                               
-                               P.USERCOMP,
-                               P.COMPANY,     
-                               P.CERTYPE,                       
-                               P.BRANCH,
-                               P.PRODUCT,
-                               P.POLICY,                           
-                               P.TITULARC,
-                               P.EFFECDATE,
-                               P.EXPIRDAT,
-                               P.NULLDATE,
-                               P.STATUS_POL,
-                               P.POLITYPE,
-                               P.DATE_ORIGI,
-                               P.ISSUEDAT,
-                               P.RENEWAL,
-                               P.PAYFREQ,
-                               P.BUSSITYP,
-                               P.REINTYPE,
-                               P.PREMIUM,
-                               P.NULLCODE,
-                               P.YEAR_MONTH,
-                               CERT.EFFECDATE  AS CERT_EFFECDATE,
-                               CERT.STARTDATE  AS CERT_STARTDATE,
-                               CERT.EXPIRDAT   AS CERT_EXPIRDAT,
-                               CERT.CERTIF,
-                               CERT.TITULARC   AS CERT_TITULARC,
-                               CERT.DATE_ORIGI AS CERT_DATE_ORIGI,
-                               CERT.ISSUEDAT   AS CERT_ISSUEDAT,
-                               CERT.NULLDATE   AS CERT_NULLDATE,
-                               CERT.STATUSVA   AS CERT_STATUSVA
-                               FROM USINSUV01.POLICY P 
-                               LEFT JOIN USINSUV01.CERTIFICAT CERT 
-                               ON  CERT.USERCOMP = P.USERCOMP 
-                               AND CERT.COMPANY = P.COMPANY   
-                               AND CERT.CERTYPE = P.CERTYPE
-                               AND CERT.BRANCH  = P.BRANCH
-                               AND CERT.POLICY  = P.POLICY
-                               AND CERT.PRODUCT = P.PRODUCT
-                               WHERE P.CERTYPE  = '2'
-                               AND P.STATUS_POL NOT IN ('2','3') 
-                               AND ((P.POLITYPE = '1' -- INDIVIDUAL 
-                                     AND P.EXPIRDAT BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'  
-                                     AND (P.NULLDATE IS NULL OR P.NULLDATE > '{p_fecha_inicio}')
-                                     AND P.EXPIRDAT < '{l_fecha_carga_inicial}')
-                                     OR 
-                                   (P.POLITYPE <> '1' -- COLECTIVAS 
-                                     AND CERT.EXPIRDAT BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}' 
-                               AND (CERT.NULLDATE IS NULL OR CERT.NULLDATE > '{p_fecha_inicio}')
-                               AND CERT.EXPIRDAT < '{l_fecha_carga_inicial}'))
-                               )
-                               
-                               UNION
-
-                               (SELECT 
+                                SELECT                               
                                 P.USERCOMP,
                                 P.COMPANY,     
                                 P.CERTYPE,                       
@@ -2681,92 +2582,65 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                 CERT.ISSUEDAT   AS CERT_ISSUEDAT,
                                 CERT.NULLDATE   AS CERT_NULLDATE,
                                 CERT.STATUSVA   AS CERT_STATUSVA
-                                FROM USINSUV01.POLICY P
+                                FROM USINSUV01.POLICY P 
                                 LEFT JOIN USINSUV01.CERTIFICAT CERT 
                                 ON  CERT.USERCOMP = P.USERCOMP 
-                                AND CERT.COMPANY = P.COMPANY 
-                                AND CERT.CERTYPE = P.CERTYPE 
-                                AND CERT.BRANCH  = P.BRANCH 
-                                AND CERT.POLICY  = P.POLICY 
+                                AND CERT.COMPANY = P.COMPANY   
+                                AND CERT.CERTYPE = P.CERTYPE
+                                AND CERT.BRANCH  = P.BRANCH
+                                AND CERT.POLICY  = P.POLICY
                                 AND CERT.PRODUCT = P.PRODUCT
-                                WHERE P.CERTYPE  = '2' 
-                                AND P.STATUS_POL NOT IN ('2', '3') 
-                                AND (((P.POLITYPE = '1' AND  P.EXPIRDAT < '{l_fecha_carga_inicial}' OR P.NULLDATE < '{l_fecha_carga_inicial}') 
-                                AND EXISTS (SELECT  1 FROM  USINSUV01.CLAIM CLA    
-                                            JOIN  USINSUV01.CLAIM_HIS CLH 
-                                            ON    CLH.USERCOMP = CLA.USERCOMP 
-                                            AND   CLH.COMPANY  = CLA.COMPANY 
-                                            AND   CLH.BRANCH   = CLA.BRANCH 
-                                            AND   CLH.CLAIM    = CLA.CLAIM
-                                            WHERE CLA.BRANCH   = P.BRANCH
-                                            AND   CLA.POLICY   = P.POLICY
-                                            AND   TRIM(CLH.OPER_TYPE) IN (SELECT CAST(TCL.OPERATION AS VARCHAR(2)) 
-                                                                          FROM USINSUG01.TAB_CL_OPE TCL
-                                                                          WHERE  (TCL.RESERVE = 1 OR TCL.AJUSTES = 1 OR TCL.PAY_AMOUNT = 1)
-                                                                         ) 
-                                            AND   CLH.OPERDATE >= '{l_fecha_carga_inicial}'))) 
-                                AND P.EFFECDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}')
-                                
-                                UNION --SE QUITO EL UNION, DESDE AQUI 
-                                
-                                (SELECT 
-                                P.USERCOMP,
-                                P.COMPANY,     
-                                P.CERTYPE,                       
-                                P.BRANCH,
-                                P.PRODUCT,
-                                P.POLICY,                           
-                                P.TITULARC,
-                                P.EFFECDATE,
-                                P.EXPIRDAT,
-                                P.NULLDATE,
-                                P.STATUS_POL,
-                                P.POLITYPE,
-                                P.DATE_ORIGI,
-                                P.ISSUEDAT,
-                                P.RENEWAL,
-                                P.PAYFREQ,
-                                P.BUSSITYP,
-                                P.REINTYPE,
-                                P.PREMIUM,
-                                P.NULLCODE,
-                                P.YEAR_MONTH,
-                                CERT.EFFECDATE  AS CERT_EFFECDATE,
-                                CERT.STARTDATE  AS CERT_STARTDATE,
-                                CERT.EXPIRDAT   AS CERT_EXPIRDAT,
-                                CERT.CERTIF,
-                                CERT.TITULARC   AS CERT_TITULARC,
-                                CERT.DATE_ORIGI AS CERT_DATE_ORIGI,
-                                CERT.ISSUEDAT   AS CERT_ISSUEDAT,
-                                CERT.NULLDATE   AS CERT_NULLDATE,
-                                CERT.STATUSVA   AS CERT_STATUSVA
-                                FROM USINSUV01.POLICY P
-                                LEFT JOIN USINSUV01.CERTIFICAT CERT 
-                                ON  CERT.USERCOMP = P.USERCOMP 
-                                AND CERT.COMPANY = P.COMPANY 
-                                AND CERT.CERTYPE = P.CERTYPE 
-                                AND CERT.BRANCH  = P.BRANCH 
-                                AND CERT.POLICY  = P.POLICY 
-                                AND CERT.PRODUCT = P.PRODUCT
-                                WHERE P.CERTYPE  = '2' 
-                                AND P.STATUS_POL NOT IN ('2', '3') 
-                                AND (((P.POLITYPE <> '1' AND CERT.EXPIRDAT < '{l_fecha_carga_inicial}'  OR  CERT.NULLDATE < '{l_fecha_carga_inicial}') 
-                                AND EXISTS (SELECT  1
-                                            FROM  USINSUV01.CLAIM CLA    
-                                            JOIN  USINSUV01.CLAIM_HIS CLH 
-                                            ON    CLA.USERCOMP = CLH.USERCOMP  
-                                            AND   CLA.COMPANY  = CLH.COMPANY 
-                                            AND   CLA.BRANCH   = CLH.BRANCH 
-                                            AND   CLH.CLAIM    = CLA.CLAIM
-                                            WHERE /*CLA.USERCOMP = CERT.USERCOMP 
-                                            AND   CLA.COMPANY  = CERT.COMPANY  
-                                            AND*/   CLA.BRANCH   = CERT.BRANCH
-                                            AND   CLA.POLICY   = CERT.POLICY
-                                            AND   CLA.CERTIF   = CERT.CERTIF
-                                            AND   TRIM(CLH.OPER_TYPE) IN  (SELECT CAST(TCL.OPERATION AS VARCHAR(2)) FROM  USINSUG01.TAB_CL_OPE TCL
-                                                                             WHERE (TCL.RESERVE = 1 OR TCL.AJUSTES = 1 OR TCL.PAY_AMOUNT = 1))
-                                            AND  CLH.OPERDATE >= '{l_fecha_carga_inicial}')))
-                                AND P.EFFECDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}')/*SE QUITO EL UNION, DESDE HAST AQUI */) AS P
+                                WHERE P.CERTYPE  = '2'
+                                AND P.STATUS_POL NOT IN ('2','3') 
+                                AND (
+                                      (P.POLITYPE = '1' -- INDIVIDUAL 
+                                      AND P.EXPIRDAT BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'  
+                                      AND (P.NULLDATE IS NULL OR P.NULLDATE > '{p_fecha_inicio}')
+                                      AND P.EXPIRDAT < '{l_fecha_carga_inicial}')
+                                      OR 
+                                      (P.POLITYPE <> '1' -- COLECTIVAS 
+                                      AND CERT.EXPIRDAT BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}' 
+                                    AND (CERT.NULLDATE IS NULL OR CERT.NULLDATE > '{p_fecha_inicio}')
+                                    AND CERT.EXPIRDAT < '{l_fecha_carga_inicial}')
+                                    )
+                                and (
+                                      (
+                                        (P.POLITYPE = '1' AND (P.EXPIRDAT < '{l_fecha_carga_inicial}' OR P.NULLDATE < '{l_fecha_carga_inicial}'))
+                                        and not exists (SELECT  1 FROM  USINSUV01.CLAIM CLA    
+                                                        JOIN  USINSUV01.CLAIM_HIS CLH 
+                                                        ON    CLH.USERCOMP = CLA.USERCOMP 
+                                                        AND   CLH.COMPANY  = CLA.COMPANY 
+                                                        AND   CLH.BRANCH   = CLA.BRANCH 
+                                                        AND   CLH.CLAIM    = CLA.CLAIM
+                                                        WHERE CLA.BRANCH   = P.BRANCH
+                                                        AND   CLA.POLICY   = P.POLICY
+                                                        AND   TRIM(CLH.OPER_TYPE) 
+                                                        IN (SELECT CAST(TCL.OPERATION AS VARCHAR(2)) 
+                                                              FROM USINSUG01.TAB_CL_OPE TCL
+                                                              WHERE  (TCL.RESERVE = 1 OR TCL.AJUSTES = 1 OR TCL.PAY_AMOUNT = 1)) 
+                                                        AND CLH.OPERDATE >= '{l_fecha_carga_inicial}')
+                                      )
+                                      or
+                                      (
+                                        (P.POLITYPE <> '1' AND (cert.EXPIRDAT < '{l_fecha_carga_inicial}' OR cert.NULLDATE < '{l_fecha_carga_inicial}'))
+                                        and not exists (SELECT  1 FROM  USINSUV01.CLAIM CLA    
+                                                          JOIN  USINSUV01.CLAIM_HIS CLH 
+                                                          ON    CLA.USERCOMP = CLH.USERCOMP  
+                                                          AND   CLA.COMPANY  = CLH.COMPANY 
+                                                          AND   CLA.BRANCH   = CLH.BRANCH 
+                                                          AND   CLH.CLAIM    = CLA.CLAIM
+                                                          WHERE /*CLA.USERCOMP = CERT.USERCOMP 
+                                                          AND   CLA.COMPANY  = CERT.COMPANY  
+                                                          AND*/   CLA.BRANCH   = CERT.BRANCH
+                                                          AND   CLA.POLICY   = CERT.POLICY
+                                                          AND   CLA.CERTIF   = CERT.CERTIF
+                                                          AND   TRIM(CLH.OPER_TYPE) 
+                                                          IN  (SELECT CAST(TCL.OPERATION AS VARCHAR(2)) FROM  USINSUG01.TAB_CL_OPE TCL
+                                                              WHERE (TCL.RESERVE = 1 OR TCL.AJUSTES = 1 OR TCL.PAY_AMOUNT = 1))
+                                                          AND  CLH.OPERDATE >= '{l_fecha_carga_inicial}')
+                                      )
+                                    )
+                              ) AS P
                           ) AS TMP
                           '''
    #Ejecutar consulta

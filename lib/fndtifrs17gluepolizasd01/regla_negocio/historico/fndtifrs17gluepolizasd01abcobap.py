@@ -197,135 +197,80 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                --,C.MODULEC AS MODULO 
                                FROM
                                (
-                                 (SELECT                                  
-                                  POL.POLICY AS POL_POLICY, POL.PRODUCT AS POL_PRODUCT, PSP.SUB_PRODUCT, POL.EFFECDATE AS POL_EFFECDATE, POL.POLITYPE AS POL_POLITYPE, POL.DATE_ORIGI as POL_DATE_ORIGI, 
-                                  C.USERCOMP, C.COMPANY, C.BRANCH, C.POLICY, C.EFFECDATE, C.NULLDATE, C.PREMIUM, C.RATECOVE, C.CAPITAL, C.CURRENCY, C.COVER, C.MODULEC, C.CAPITALI,
-                                  CERT.USERCOMP AS CERT_USERCOMP, CERT.COMPANY AS CERT_COMPANY, CERT.CERTYPE, CERT.DATE_ORIGI AS CERT_DATE_ORIGI, CERT.EFFECDATE as CERT_EFFECDATE, 
-                                  CERT.COMPANY AS CERT_COMPANY, CERT.CERTYPE AS CERT_CERTYPE, CERT.BRANCH AS CERT_BRANCH, CERT.CERTIF AS CERTIF  
-                                  FROM USINSUG01.COVER C   
-                                  LEFT JOIN USINSUG01.CERTIFICAT CERT 
-                                  ON C.USERCOMP = CERT.USERCOMP  
-                                  AND C.COMPANY = CERT.COMPANY  
-                                  AND C.CERTYPE = CERT.CERTYPE 
-                                  AND C.BRANCH = CERT.BRANCH  
-                                  AND C.POLICY = CERT.POLICY 
-                                  AND C.CERTIF = CERT.CERTIF
-                                  JOIN USINSUG01.POLICY POL 
-                                  ON  POL.USERCOMP = C.USERCOMP 
-                                  AND POL.COMPANY = C.COMPANY 
-                                  AND POL.CERTYPE = C.CERTYPE 
-                                  AND POL.BRANCH = C.BRANCH  
-                                  AND POL.POLICY = C.POLICY
-                                  JOIN USINSUG01.POL_SUBPRODUCT PSP 
-                                  ON  PSP.USERCOMP = POL.USERCOMP 
-                                  AND PSP.COMPANY = POL.COMPANY 
-                                  AND PSP.CERTYPE = POL.CERTYPE 
-                                  AND PSP.BRANCH = POL.BRANCH 
-                                  AND PSP.PRODUCT  = POL.PRODUCT 
-                                  AND PSP.POLICY   = POL.POLICY 
-                                  WHERE C.CERTYPE  = '2' AND POL.STATUS_POL NOT IN ('2','3') 
-                                  AND (
+                                  SELECT 
+                                   POL.POLICY AS POL_POLICY, POL.PRODUCT AS POL_PRODUCT, PSP.SUB_PRODUCT, POL.EFFECDATE AS POL_EFFECDATE, POL.POLITYPE AS POL_POLITYPE, POL.DATE_ORIGI as POL_DATE_ORIGI, 
+                                   C.USERCOMP, C.COMPANY, C.BRANCH, C.POLICY, C.EFFECDATE, C.NULLDATE, C.PREMIUM, C.RATECOVE, C.CAPITAL, C.CURRENCY, C.COVER, C.MODULEC, C.CAPITALI,
+                                   CERT.USERCOMP AS CERT_USERCOMP, CERT.COMPANY AS CERT_COMPANY, CERT.CERTYPE, CERT.DATE_ORIGI AS CERT_DATE_ORIGI, CERT.EFFECDATE as CERT_EFFECDATE, 
+                                   CERT.COMPANY AS CERT_COMPANY, CERT.CERTYPE AS CERT_CERTYPE, CERT.BRANCH AS CERT_BRANCH, CERT.CERTIF AS CERTIF  
+                                   FROM USINSUG01.COVER C   
+                                   LEFT JOIN USINSUG01.CERTIFICAT CERT 
+                                   ON C.USERCOMP = CERT.USERCOMP  
+                                   AND C.COMPANY = CERT.COMPANY  
+                                   AND C.CERTYPE = CERT.CERTYPE 
+                                   AND C.BRANCH = CERT.BRANCH  
+                                   AND C.POLICY = CERT.POLICY 
+                                   AND C.CERTIF = CERT.CERTIF
+                                   JOIN USINSUG01.POLICY POL 
+                                   ON  POL.USERCOMP = C.USERCOMP 
+                                   AND POL.COMPANY = C.COMPANY 
+                                   AND POL.CERTYPE = C.CERTYPE 
+                                   AND POL.BRANCH = C.BRANCH  
+                                   AND POL.POLICY = C.POLICY
+                                   JOIN USINSUG01.POL_SUBPRODUCT PSP 
+                                   ON  PSP.USERCOMP = POL.USERCOMP 
+                                   AND PSP.COMPANY = POL.COMPANY 
+                                   AND PSP.CERTYPE = POL.CERTYPE 
+                                   AND PSP.BRANCH = POL.BRANCH 
+                                   AND PSP.PRODUCT  = POL.PRODUCT 
+                                   AND PSP.POLICY   = POL.POLICY 
+                                   WHERE C.CERTYPE  = '2' AND POL.STATUS_POL NOT IN ('2','3') 
+                                   AND (
                                         (POL.POLITYPE = '1' 
-                                         AND POL.EXPIRDAT BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'  
-                                         AND (POL.NULLDATE IS NULL OR POL.NULLDATE > '{p_fecha_inicio}')
-                                         AND POL.EXPIRDAT < '{l_fecha_carga_inicial}') 
+                                        AND POL.EXPIRDAT BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'  
+                                        AND (POL.NULLDATE IS NULL OR POL.NULLDATE > '{p_fecha_inicio}')
+                                        AND POL.EXPIRDAT < '{l_fecha_carga_inicial}') 
                                         OR 
                                         (POL.POLITYPE <> '1' 
-                                         AND CERT.EXPIRDAT BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'  
-                                         AND (CERT.NULLDATE IS NULL OR CERT.NULLDATE > '{p_fecha_inicio}')
-                                         AND CERT.EXPIRDAT < '{l_fecha_carga_inicial}')
-                                      )
-                                  
-                                  UNION /*SE QUITO EL UNION DESDE AQUI */
-
-                                  (SELECT
-                                   POL.POLICY AS POL_POLICY, POL.PRODUCT AS POL_PRODUCT, PSP.SUB_PRODUCT, POL.EFFECDATE AS POL_EFFECDATE, POL.POLITYPE AS POL_POLITYPE, POL.DATE_ORIGI as POL_DATE_ORIGI, 
-                                   C.USERCOMP, C.COMPANY, C.BRANCH, C.POLICY, C.EFFECDATE, C.NULLDATE, C.PREMIUM, C.RATECOVE, C.CAPITAL, C.CURRENCY, C.COVER, C.MODULEC, C.CAPITALI,
-                                   CERT.USERCOMP AS CERT_USERCOMP, CERT.COMPANY AS CERT_COMPANY, CERT.CERTYPE, CERT.DATE_ORIGI AS CERT_DATE_ORIGI, CERT.EFFECDATE as CERT_EFFECDATE, 
-                                   CERT.COMPANY AS CERT_COMPANY, CERT.CERTYPE AS CERT_CERTYPE, CERT.BRANCH AS CERT_BRANCH, CERT.CERTIF AS CERTIF 
-                                   FROM USINSUG01.COVER C  
-                                   LEFT JOIN USINSUG01.CERTIFICAT CERT 
-                                   ON C.USERCOMP = CERT.USERCOMP  
-                                   AND C.COMPANY = CERT.COMPANY  
-                                   AND C.CERTYPE = CERT.CERTYPE 
-                                   AND C.BRANCH = CERT.BRANCH  
-                                   AND C.POLICY = CERT.POLICY 
-                                   AND C.CERTIF = CERT.CERTIF
-                                   JOIN USINSUG01.POLICY POL 
-                                   ON  POL.USERCOMP = C.USERCOMP 
-                                   AND POL.COMPANY = C.COMPANY 
-                                   AND POL.CERTYPE = C.CERTYPE 
-                                   AND POL.BRANCH = C.BRANCH  
-                                   AND POL.POLICY = C.POLICY
-                                   JOIN USINSUG01.POL_SUBPRODUCT PSP 
-                                   ON  PSP.USERCOMP = POL.USERCOMP 
-                                   AND PSP.COMPANY = POL.COMPANY 
-                                   AND PSP.CERTYPE = POL.CERTYPE 
-                                   AND PSP.BRANCH = POL.BRANCH 
-                                   AND PSP.PRODUCT  = POL.PRODUCT 
-                                   AND PSP.POLICY   = POL.POLICY 
-                                   WHERE POL.CERTYPE  = '2' 
-                                   AND POL.STATUS_POL NOT IN ('2', '3') 
-                                   AND (((POL.POLITYPE = '1' AND  POL.EXPIRDAT < '{l_fecha_carga_inicial}' OR POL.NULLDATE < '{l_fecha_carga_inicial}')
-                                   AND EXISTS (SELECT 1 FROM  USINSUG01.CLAIM CLA    
-                                               JOIN  USINSUG01.CLAIM_HIS CLH 
-                                               ON CLH.USERCOMP = CLA.USERCOMP 
-                                               AND CLH.COMPANY = CLA.COMPANY 
-                                               AND CLH.BRANCH = CLA.BRANCH 
-                                               AND CLH.CLAIM = CLA.CLAIM
-                                               WHERE CLA.BRANCH = POL.BRANCH 
-                                               AND CLA.POLICY = POL.POLICY 
-                                               AND TRIM(CLH.OPER_TYPE) IN (SELECT CAST(TCL.OPERATION AS VARCHAR(2))
-                                                                           FROM 	USINSUG01.TAB_CL_OPE TCL
-                                      		                                 WHERE  (TCL.RESERVE = 1 OR TCL.AJUSTES = 1 OR TCL.PAY_AMOUNT = 1)) 
-                                                                           AND   CLH.OPERDATE >= '{l_fecha_carga_inicial}'))) 
-                                   AND POL.EFFECDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}')   
-
-                                  UNION
-
-                                  (SELECT
-                                   POL.POLICY AS POL_POLICY, POL.PRODUCT AS POL_PRODUCT, PSP.SUB_PRODUCT, POL.EFFECDATE AS POL_EFFECDATE, POL.POLITYPE AS POL_POLITYPE, POL.DATE_ORIGI as POL_DATE_ORIGI, 
-                                   C.USERCOMP, C.COMPANY, C.BRANCH, C.POLICY, C.EFFECDATE, C.NULLDATE, C.PREMIUM, C.RATECOVE, C.CAPITAL, C.CURRENCY, C.COVER, C.MODULEC, C.CAPITALI,
-                                   CERT.USERCOMP AS CERT_USERCOMP, CERT.COMPANY AS CERT_COMPANY, CERT.CERTYPE, CERT.DATE_ORIGI AS CERT_DATE_ORIGI, CERT.EFFECDATE as CERT_EFFECDATE, 
-                                   CERT.COMPANY AS CERT_COMPANY, CERT.CERTYPE AS CERT_CERTYPE, CERT.BRANCH AS CERT_BRANCH, CERT.CERTIF AS CERTIF 
-                                   FROM USINSUG01.COVER C  
-                                   LEFT JOIN USINSUG01.CERTIFICAT CERT 
-                                   ON C.USERCOMP = CERT.USERCOMP  
-                                   AND C.COMPANY = CERT.COMPANY  
-                                   AND C.CERTYPE = CERT.CERTYPE 
-                                   AND C.BRANCH = CERT.BRANCH  
-                                   AND C.POLICY = CERT.POLICY 
-                                   AND C.CERTIF = CERT.CERTIF
-                                   JOIN USINSUG01.POLICY POL 
-                                   ON  POL.USERCOMP = C.USERCOMP 
-                                   AND POL.COMPANY = C.COMPANY 
-                                   AND POL.CERTYPE = C.CERTYPE 
-                                   AND POL.BRANCH = C.BRANCH  
-                                   AND POL.POLICY = C.POLICY
-                                   JOIN USINSUG01.POL_SUBPRODUCT PSP 
-                                   ON  PSP.USERCOMP = POL.USERCOMP 
-                                   AND PSP.COMPANY = POL.COMPANY 
-                                   AND PSP.CERTYPE = POL.CERTYPE 
-                                   AND PSP.BRANCH = POL.BRANCH 
-                                   AND PSP.PRODUCT  = POL.PRODUCT 
-                                   AND PSP.POLICY   = POL.POLICY 
-                                   WHERE POL.CERTYPE  = '2' 
-                                   AND POL.STATUS_POL NOT IN ('2', '3')
-                                   AND (((POL.POLITYPE <> '1' AND CERT.EXPIRDAT < '{l_fecha_carga_inicial}'  OR  CERT.NULLDATE < '{l_fecha_carga_inicial}') 
-                                   AND EXISTS (SELECT 1 FROM  USINSUG01.CLAIM CLA    
-                                               JOIN  USINSUG01.CLAIM_HIS CLH  
-                                               ON CLA.USERCOMP = CLH.USERCOMP 
-                                               AND CLA.COMPANY = CLH.COMPANY 
-                                               AND CLA.BRANCH = CLH.BRANCH  
-                                               AND CLH.CLAIM = CLA.CLAIM
-                                               WHERE CLA.BRANCH   = CERT.BRANCH 
-                                               AND   CLA.POLICY   = CERT.POLICY 
-                                               AND   CLA.CERTIF   = CERT.CERTIF 
-                                               AND TRIM(CLH.OPER_TYPE) IN (SELECT CAST(TCL.OPERATION AS VARCHAR(2)) 
-                                                                           FROM  USINSUG01.TAB_CL_OPE TCL 
-                                                                           WHERE (TCL.RESERVE = 1 OR TCL.AJUSTES = 1 OR TCL.PAY_AMOUNT = 1)) 
-                                                                           AND  CLH.OPERDATE >= '{l_fecha_carga_inicial}')))
-                                   AND POL.EFFECDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}') /*SE QUITO EL UNION HASTA AQUI */
+                                        AND CERT.EXPIRDAT BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'  
+                                        AND (CERT.NULLDATE IS NULL OR CERT.NULLDATE > '{p_fecha_inicio}')
+                                        AND CERT.EXPIRDAT < '{l_fecha_carga_inicial}')
+                                        ) 
+                                   and (
+                                             (
+                                             (P.POLITYPE = '1' and (P.EXPIRDAT < '{l_fecha_carga_inicial}' OR P.NULLDATE < '{l_fecha_carga_inicial}')) --INDIVIDUAL
+                                             and not exists (SELECT 1 FROM  USINSUG01.CLAIM CLA    
+                                                       JOIN  USINSUG01.CLAIM_HIS CLH 
+                                                       ON CLH.USERCOMP = CLA.USERCOMP 
+                                                       AND CLH.COMPANY = CLA.COMPANY 
+                                                       AND CLH.BRANCH = CLA.BRANCH 
+                                                       AND CLH.CLAIM = CLA.CLAIM
+                                                       WHERE CLA.BRANCH = POL.BRANCH 
+                                                       AND CLA.POLICY = POL.POLICY 
+                                                       AND TRIM(CLH.OPER_TYPE) 
+                                                       IN (SELECT CAST(TCL.OPERATION AS VARCHAR(2))
+                                                            FROM  USINSUG01.TAB_CL_OPE TCL
+                                                            WHERE (TCL.RESERVE = 1 OR TCL.AJUSTES = 1 OR TCL.PAY_AMOUNT = 1)) 
+                                                       AND   CLH.OPERDATE >= '{l_fecha_carga_inicial}')
+                                             )
+                                             or
+                                             (
+                                             (P.POLITYPE <> '1' and (cert.EXPIRDAT < '{l_fecha_carga_inicial}' OR cert.NULLDATE < '{l_fecha_carga_inicial}')) --COLECTIVA
+                                             and not exists (SELECT 1 FROM USINSUG01.CLAIM CLA    
+                                                       JOIN  USINSUG01.CLAIM_HIS CLH  
+                                                       ON    CLA.USERCOMP = CLH.USERCOMP 
+                                                       AND   CLA.COMPANY = CLH.COMPANY 
+                                                       AND   CLA.BRANCH = CLH.BRANCH  
+                                                       AND   CLH.CLAIM = CLA.CLAIM
+                                                       WHERE CLA.BRANCH   = CERT.BRANCH 
+                                                       AND   CLA.POLICY   = CERT.POLICY 
+                                                       AND   CLA.CERTIF   = CERT.CERTIF 
+                                                       AND TRIM(CLH.OPER_TYPE) 
+                                                       IN (SELECT CAST(TCL.OPERATION AS VARCHAR(2)) 
+                                                       FROM  USINSUG01.TAB_CL_OPE TCL 
+                                                       WHERE (TCL.RESERVE = 1 OR TCL.AJUSTES = 1 OR TCL.PAY_AMOUNT = 1)) 
+                                                       AND  CLH.OPERDATE >= '{l_fecha_carga_inicial}')
+                                             )
+                                        )
                                ) C                                       
                             ) C2                    
                         ) AS T
@@ -548,323 +493,145 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                                                            AND R.TYPE <> 1))), 0) AS VMTPRRES
                                     --,C.MODULEC
                                     FROM 
-                                    ( 
-                                      (SELECT
-                                       C.USERCOMP, C.COMPANY, C.CERTYPE, C.BRANCH, C.CURRENCY, C.COVER, C.EFFECDATE,        
-                                       C.NULLDATE,C.POLICY, C.CERTIF, C.PREMIUM, C.RATECOVE, C.CAPITAL, C.CAPITALI, C.MODULEC,
-                                       POL.PRODUCT,POL.POLITYPE,POL.EFFECDATE AS EFFECDATE_POL,CERT.EFFECDATE AS EFFECDATE_CERT,
-                                       CASE WHEN POL.POLITYPE = '1' --INDIVIDUAL
-                                       THEN CASE WHEN (C.EFFECDATE <= POL.EFFECDATE AND(C.NULLDATE IS NULL OR C.NULLDATE > POL.EFFECDATE)) 
+                                    (
+                                        SELECT
+                                        C.USERCOMP, C.COMPANY, C.CERTYPE, C.BRANCH, C.CURRENCY, C.COVER, C.EFFECDATE,        
+                                        C.NULLDATE,C.POLICY, C.CERTIF, C.PREMIUM, C.RATECOVE, C.CAPITAL, C.CAPITALI, C.MODULEC,
+                                        POL.PRODUCT,POL.POLITYPE,POL.EFFECDATE AS EFFECDATE_POL,CERT.EFFECDATE AS EFFECDATE_CERT,
+                                        CASE WHEN POL.POLITYPE = '1' --INDIVIDUAL
+                                        THEN CASE WHEN (C.EFFECDATE <= POL.EFFECDATE AND(C.NULLDATE IS NULL OR C.NULLDATE > POL.EFFECDATE)) 
                                              THEN 1
-                                       ELSE CASE WHEN EXISTS (SELECT 1
-                                                              FROM USINSUV01.COVER COV1
-                                                              WHERE COV1.CERTYPE = C.CERTYPE
-                                                              AND COV1.USERCOMP = C.USERCOMP
-                                                              AND COV1.COMPANY = C.COMPANY
-                                                              AND COV1.BRANCH = C.BRANCH
-                                                              --AND 	COV1.PRODUCT  = C.PRODUCT
-                                                              AND COV1.MODULEC  = C.MODULEC
-                                                              AND COV1.POLICY   = C.POLICY
-                                                              AND COV1.CERTIF   = C.CERTIF
-                                                              AND COV1.CURRENCY = C.CURRENCY
-                                                              AND COV1.COVER    = C.COVER
-                                                              AND COV1.EFFECDATE <= POL.EFFECDATE
-                                                              AND (COV1.NULLDATE IS NULL OR COV1.NULLDATE > POL.EFFECDATE))
-                                            THEN 0
-                                       ELSE CASE WHEN C.NULLDATE = (SELECT MAX(COV1.NULLDATE)
-                                                                    FROM USINSUV01.COVER COV1
-                                                                    WHERE COV1.USERCOMP = C.USERCOMP
-                                                                    AND COV1.CERTYPE = C.CERTYPE
-                                                                    AND COV1.COMPANY = C.COMPANY
-                                                                    AND COV1.BRANCH = C.BRANCH
-                                                                    --AND 	  COV1.PRODUCT  = C.PRODUCT
-                                                                    AND COV1.MODULEC = C.MODULEC
-                                                                    AND COV1.POLICY = C.POLICY
-                                                                    AND COV1.CERTIF = C.CERTIF
-                                                                    AND COV1.CURRENCY = C.CURRENCY
-                                                                    AND COV1.COVER = C.COVER)
-                                            THEN 1
-                                       ELSE 0
-                                       END
-                                       END
-                                       END
-                                       ELSE  CASE WHEN (C.EFFECDATE <= CERT.EFFECDATE AND (C.NULLDATE IS NULL OR C.NULLDATE > CERT.EFFECDATE)) 
+                                        ELSE CASE WHEN EXISTS (SELECT 1
+                                                                 FROM USINSUV01.COVER COV1
+                                                                 WHERE COV1.CERTYPE = C.CERTYPE
+                                                                 AND COV1.USERCOMP = C.USERCOMP
+                                                                 AND COV1.COMPANY = C.COMPANY
+                                                                 AND COV1.BRANCH = C.BRANCH
+                                                                 --AND 	COV1.PRODUCT  = C.PRODUCT
+                                                                 AND COV1.MODULEC  = C.MODULEC
+                                                                 AND COV1.POLICY   = C.POLICY
+                                                                 AND COV1.CERTIF   = C.CERTIF
+                                                                 AND COV1.CURRENCY = C.CURRENCY
+                                                                 AND COV1.COVER    = C.COVER
+                                                                 AND COV1.EFFECDATE <= POL.EFFECDATE
+                                                                 AND (COV1.NULLDATE IS NULL OR COV1.NULLDATE > POL.EFFECDATE))
+                                             THEN 0
+                                        ELSE CASE WHEN C.NULLDATE = (SELECT MAX(COV1.NULLDATE)
+                                                                      FROM USINSUV01.COVER COV1
+                                                                      WHERE COV1.USERCOMP = C.USERCOMP
+                                                                      AND COV1.CERTYPE = C.CERTYPE
+                                                                      AND COV1.COMPANY = C.COMPANY
+                                                                      AND COV1.BRANCH = C.BRANCH
+                                                                      --AND 	  COV1.PRODUCT  = C.PRODUCT
+                                                                      AND COV1.MODULEC = C.MODULEC
+                                                                      AND COV1.POLICY = C.POLICY
+                                                                      AND COV1.CERTIF = C.CERTIF
+                                                                      AND COV1.CURRENCY = C.CURRENCY
+                                                                      AND COV1.COVER = C.COVER)
                                              THEN 1
-                                       ELSE CASE WHEN EXISTS (SELECT  1
-                                                              FROM USINSUV01.COVER COV1
-                                                              WHERE COV1.CERTYPE = C.CERTYPE
-                                                              AND COV1.USERCOMP = C.USERCOMP
-                                                              AND COV1.COMPANY = C.COMPANY
-                                                              AND COV1.BRANCH = C.BRANCH
-                                                              --AND 	COV1.PRODUCT  = C.PRODUCT
-                                                              AND COV1.MODULEC = C.MODULEC
-                                                              AND COV1.POLICY = C.POLICY
-                                                              AND COV1.CERTIF = C.CERTIF
-                                                              AND COV1.CURRENCY = C.CURRENCY
-                                                              AND COV1.COVER = C.COVER
-                                                              AND COV1.EFFECDATE <= CERT.EFFECDATE
-                                                              AND (COV1.NULLDATE IS NULL OR COV1.NULLDATE > CERT.EFFECDATE)) 
-                                            THEN 0
-                                       ELSE CASE WHEN C.NULLDATE = (SELECT MAX(COV1.NULLDATE)
-                                                                    FROM USINSUV01.COVER COV1
-                                                                    WHERE COV1.USERCOMP = C.USERCOMP
-                                                                    AND COV1.CERTYPE = C.CERTYPE
-                                                                    AND COV1.COMPANY = C.COMPANY
-                                                                    AND COV1.BRANCH = C.BRANCH
-                                                                    --AND 	  COV1.PRODUCT  = C.PRODUCT
-                                                                    AND COV1.MODULEC = C.MODULEC
-                                                                    AND COV1.POLICY = C.POLICY
-                                                                    AND COV1.CERTIF = C.CERTIF
-                                                                    AND COV1.CURRENCY = C.CURRENCY
-                                                                    AND COV1.COVER = C.COVER) 
-                                            THEN 1
-                                       ELSE 0
-                                       END
-                                       END
-                                       END
-                                       END FLAG
-                                       FROM USINSUV01.COVER C
-                                       LEFT JOIN USINSUV01.CERTIFICAT CERT 
-                                       ON C.USERCOMP = CERT.USERCOMP 
-                                       AND C.COMPANY = CERT.COMPANY 
-                                       AND C.CERTYPE = CERT.CERTYPE 
-                                       AND C.BRANCH = CERT.BRANCH 
-                                       AND C.POLICY = CERT.POLICY 
-                                       AND C.CERTIF = CERT.CERTIF
-                                       JOIN USINSUV01.POLICY POL 
-                                       ON POL.USERCOMP = C.USERCOMP 
-                                       AND POL.COMPANY = C.COMPANY 
-                                       AND POL.CERTYPE = C.CERTYPE 
-                                       AND POL.BRANCH = C.BRANCH 
-                                       AND POL.POLICY = C.POLICY
-                                       WHERE C.CERTYPE = '2'
-                                       AND POL.STATUS_POL NOT IN ('2', '3')
-                                       AND (
+                                        ELSE 0
+                                        END
+                                        END
+                                        END
+                                        ELSE  CASE WHEN (C.EFFECDATE <= CERT.EFFECDATE AND (C.NULLDATE IS NULL OR C.NULLDATE > CERT.EFFECDATE)) 
+                                             THEN 1
+                                        ELSE CASE WHEN EXISTS (SELECT  1
+                                                                 FROM USINSUV01.COVER COV1
+                                                                 WHERE COV1.CERTYPE = C.CERTYPE
+                                                                 AND COV1.USERCOMP = C.USERCOMP
+                                                                 AND COV1.COMPANY = C.COMPANY
+                                                                 AND COV1.BRANCH = C.BRANCH
+                                                                 --AND 	COV1.PRODUCT  = C.PRODUCT
+                                                                 AND COV1.MODULEC = C.MODULEC
+                                                                 AND COV1.POLICY = C.POLICY
+                                                                 AND COV1.CERTIF = C.CERTIF
+                                                                 AND COV1.CURRENCY = C.CURRENCY
+                                                                 AND COV1.COVER = C.COVER
+                                                                 AND COV1.EFFECDATE <= CERT.EFFECDATE
+                                                                 AND (COV1.NULLDATE IS NULL OR COV1.NULLDATE > CERT.EFFECDATE)) 
+                                             THEN 0
+                                        ELSE CASE WHEN C.NULLDATE = (SELECT MAX(COV1.NULLDATE)
+                                                                      FROM USINSUV01.COVER COV1
+                                                                      WHERE COV1.USERCOMP = C.USERCOMP
+                                                                      AND COV1.CERTYPE = C.CERTYPE
+                                                                      AND COV1.COMPANY = C.COMPANY
+                                                                      AND COV1.BRANCH = C.BRANCH
+                                                                      --AND 	  COV1.PRODUCT  = C.PRODUCT
+                                                                      AND COV1.MODULEC = C.MODULEC
+                                                                      AND COV1.POLICY = C.POLICY
+                                                                      AND COV1.CERTIF = C.CERTIF
+                                                                      AND COV1.CURRENCY = C.CURRENCY
+                                                                      AND COV1.COVER = C.COVER) 
+                                             THEN 1
+                                        ELSE 0
+                                        END
+                                        END
+                                        END
+                                        END FLAG
+                                        FROM USINSUV01.COVER C
+                                        LEFT JOIN USINSUV01.CERTIFICAT CERT 
+                                        ON C.USERCOMP = CERT.USERCOMP 
+                                        AND C.COMPANY = CERT.COMPANY 
+                                        AND C.CERTYPE = CERT.CERTYPE 
+                                        AND C.BRANCH = CERT.BRANCH 
+                                        AND C.POLICY = CERT.POLICY 
+                                        AND C.CERTIF = CERT.CERTIF
+                                        JOIN USINSUV01.POLICY POL 
+                                        ON POL.USERCOMP = C.USERCOMP 
+                                        AND POL.COMPANY = C.COMPANY 
+                                        AND POL.CERTYPE = C.CERTYPE 
+                                        AND POL.BRANCH = C.BRANCH 
+                                        AND POL.POLICY = C.POLICY
+                                        WHERE C.CERTYPE = '2'
+                                        AND POL.STATUS_POL NOT IN ('2', '3')
+                                        AND (
                                              (POL.POLITYPE = '1' -- INDIVIDUAL 
-                                              AND POL.EXPIRDAT BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
-                                              AND (POL.NULLDATE IS NULL OR POL.NULLDATE > '{p_fecha_inicio}')
-                                              AND POL.EXPIRDAT < '{l_fecha_carga_inicial}')
+                                             AND POL.EXPIRDAT BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
+                                             AND (POL.NULLDATE IS NULL OR POL.NULLDATE > '{p_fecha_inicio}')
+                                             AND POL.EXPIRDAT < '{l_fecha_carga_inicial}')
                                              OR 
                                              (POL.POLITYPE <> '1' -- COLECTIVAS 
-                                              AND CERT.EXPIRDAT BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
-                                              AND (CERT.NULLDATE IS NULL OR CERT.NULLDATE > '{p_fecha_inicio}')
-                                              AND CERT.EXPIRDAT < '{l_fecha_carga_inicial}')
-                                           )
-                                    )
-                                    
-                                    UNION /*SE QUITO EL UNION DESDE AQUI */
-                            
-                                     (SELECT
-                                      C.USERCOMP, C.COMPANY, C.CERTYPE, C.BRANCH, C.CURRENCY, C.COVER, C.EFFECDATE,        
-                                      C.NULLDATE,C.POLICY, C.CERTIF, C.PREMIUM, C.RATECOVE, C.CAPITAL, C.CAPITALI, C.MODULEC AS MODULO,
-                                      POL.PRODUCT,POL.POLITYPE,POL.EFFECDATE AS EFFECDATE_POL,CERT.EFFECDATE AS EFFECDATE_CERT,
-                                      CASE WHEN POL.POLITYPE = '1' --INDIVIDUAL
-                                      THEN CASE WHEN (C.EFFECDATE <= POL.EFFECDATE AND (C.NULLDATE IS NULL OR C.NULLDATE > POL.EFFECDATE)) 
-                                           THEN 1
-                                      ELSE CASE WHEN EXISTS (SELECT 1 FROM USINSUV01.COVER COV1
-                                                             WHERE COV1.CERTYPE = C.CERTYPE
-                                                             AND COV1.USERCOMP = C.USERCOMP
-                                                             AND COV1.COMPANY = C.COMPANY
-                                                             AND COV1.BRANCH = C.BRANCH
-                                                             --AND 	COV1.PRODUCT  = C.PRODUCT
-                                                             AND COV1.MODULEC = C.MODULEC
-                                                             AND COV1.POLICY = C.POLICY
-                                                             AND COV1.CERTIF = C.CERTIF
-                                                             AND COV1.CURRENCY = C.CURRENCY
-                                                             AND COV1.COVER = C.COVER
-                                                             AND COV1.EFFECDATE <= POL.EFFECDATE
-                                                             AND (COV1.NULLDATE IS NULL OR COV1.NULLDATE > POL.EFFECDATE)) 
-                                           THEN 0
-                                      ELSE CASE WHEN C.NULLDATE = (SELECT MAX(COV1.NULLDATE)
-                                                                    FROM USINSUV01.COVER COV1
-                                                                    WHERE COV1.USERCOMP = C.USERCOMP
-                                                                    AND COV1.CERTYPE = C.CERTYPE
-                                                                    AND COV1.COMPANY = C.COMPANY
-                                                                    AND COV1.BRANCH = C.BRANCH
-                                                                    --AND 	  COV1.PRODUCT  = C.PRODUCT
-                                                                    AND COV1.MODULEC = C.MODULEC
-                                                                    AND COV1.POLICY = C.POLICY
-                                                                    AND COV1.CERTIF = C.CERTIF
-                                                                    AND COV1.CURRENCY = C.CURRENCY
-                                                                    AND COV1.COVER = C.COVER) 
-                                           THEN 1
-                                      ELSE 0
-                                      END
-                                      END
-                                      END
-                                      ELSE CASE WHEN (C.EFFECDATE <= CERT.EFFECDATE AND (C.NULLDATE IS NULL OR C.NULLDATE > CERT.EFFECDATE)) 
-                                           THEN 1
-                                      ELSE CASE WHEN EXISTS (SELECT  1 FROM USINSUV01.COVER COV1
-                                                             WHERE COV1.CERTYPE = C.CERTYPE
-                                                             AND COV1.USERCOMP = C.USERCOMP
-                                                             AND COV1.COMPANY = C.COMPANY
-                                                             AND COV1.BRANCH = C.BRANCH
-                                                             --AND 	COV1.PRODUCT  = C.PRODUCT
-                                                             AND COV1.MODULEC = C.MODULEC
-                                                             AND COV1.POLICY = C.POLICY
-                                                             AND COV1.CERTIF = C.CERTIF
-                                                             AND COV1.CURRENCY = C.CURRENCY
-                                                             AND COV1.COVER = C.COVER
-                                                             AND COV1.EFFECDATE <= CERT.EFFECDATE
-                                                             AND (COV1.NULLDATE IS NULL OR COV1.NULLDATE > CERT.EFFECDATE))
-                                           THEN 0
-                                      ELSE CASE WHEN C.NULLDATE = (SELECT MAX(COV1.NULLDATE)
-                                                                   FROM USINSUV01.COVER COV1
-                                                                   WHERE COV1.USERCOMP = C.USERCOMP
-                                                                   AND COV1.CERTYPE = C.CERTYPE
-                                                                   AND COV1.COMPANY = C.COMPANY
-                                                                   AND COV1.BRANCH = C.BRANCH
-                                                                   --AND 	  COV1.PRODUCT  = C.PRODUCT
-                                                                   AND COV1.MODULEC = C.MODULEC
-                                                                   AND COV1.POLICY = C.POLICY
-                                                                   AND COV1.CERTIF = C.CERTIF
-                                                                   AND COV1.CURRENCY = C.CURRENCY
-                                                                   AND COV1.COVER = C.COVER)
-                                           THEN 1
-                                      ELSE 0
-                                      END
-                                      END
-                                      END
-                                      END FLAG
-                                      FROM USINSUV01.COVER C
-                                      LEFT JOIN USINSUV01.CERTIFICAT CERT 
-                                      ON C.USERCOMP = CERT.USERCOMP 
-                                      AND C.COMPANY = CERT.COMPANY 
-                                      AND C.CERTYPE = CERT.CERTYPE 
-                                      AND C.BRANCH = CERT.BRANCH 
-                                      AND C.POLICY = CERT.POLICY 
-                                      AND C.CERTIF = CERT.CERTIF
-                                      JOIN USINSUV01.POLICY POL 
-                                      ON POL.USERCOMP = C.USERCOMP 
-                                      AND POL.COMPANY = C.COMPANY 
-                                      AND POL.CERTYPE = C.CERTYPE 
-                                      AND POL.BRANCH = C.BRANCH 
-                                      AND POL.POLICY = C.POLICY
-                                      WHERE POL.CERTYPE  = '2' 
-                                      AND POL.STATUS_POL NOT IN ('2', '3') 
-                                      AND (((POL.POLITYPE = '1' AND  POL.EXPIRDAT < '{l_fecha_carga_inicial}' OR POL.NULLDATE < '{l_fecha_carga_inicial}')
-                                      AND EXISTS (SELECT 1 FROM  USINSUV01.CLAIM CLA
-                                                  JOIN  USINSUV01.CLAIM_HIS CLH 
-                                                  ON CLH.USERCOMP = CLA.USERCOMP 
-                                                  AND CLH.COMPANY = CLA.COMPANY 
-                                                  AND CLH.BRANCH = CLA.BRANCH 
-                                                  AND CLH.CLAIM = CLA.CLAIM
-                                                  WHERE CLA.BRANCH = POL.BRANCH 
-                                                  AND CLA.POLICY = POL.POLICY 
-                                                  AND TRIM(CLH.OPER_TYPE) IN (SELECT CAST(TCL.OPERATION AS VARCHAR(2))
-                                          		                                FROM 	USINSUG01.TAB_CL_OPE TCL
-                                          		                                WHERE  (TCL.RESERVE = 1 OR TCL.AJUSTES = 1 OR TCL.PAY_AMOUNT = 1)) 
-                                                                              AND   CLH.OPERDATE >= '{l_fecha_carga_inicial}')))
-                                      AND POL.EFFECDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}')
-                                                                                
-                                      UNION
-                            
-                                     (SELECT
-                                      C.USERCOMP, C.COMPANY, C.CERTYPE, C.BRANCH, C.CURRENCY, C.COVER, C.EFFECDATE,        
-                                      C.NULLDATE,C.POLICY, C.CERTIF, C.PREMIUM, C.RATECOVE, C.CAPITAL, C.CAPITALI, C.MODULEC AS MODULO,
-                                      POL.PRODUCT,POL.POLITYPE,POL.EFFECDATE AS EFFECDATE_POL,CERT.EFFECDATE AS EFFECDATE_CERT,
-                                      CASE
-                                      WHEN POL.POLITYPE = '1' --INDIVIDUAL
-                                      THEN CASE
-                                      WHEN (C.EFFECDATE <= POL.EFFECDATE AND
-                                       (C.NULLDATE IS NULL OR
-                                       C.NULLDATE > POL.EFFECDATE)) THEN 1
-                                      ELSE CASE WHEN EXISTS (SELECT 1 FROM USINSUV01.COVER COV1
-                                                             WHERE COV1.CERTYPE = C.CERTYPE
-                                                             AND COV1.USERCOMP = C.USERCOMP
-                                                             AND COV1.COMPANY = C.COMPANY
-                                                             AND COV1.BRANCH = C.BRANCH
-                                                             --AND 	COV1.PRODUCT  = C.PRODUCT
-                                                             AND COV1.MODULEC = C.MODULEC
-                                                             AND COV1.POLICY = C.POLICY
-                                                             AND COV1.CERTIF = C.CERTIF
-                                                             AND COV1.CURRENCY = C.CURRENCY
-                                                             AND COV1.COVER = C.COVER
-                                                             AND COV1.EFFECDATE <= POL.EFFECDATE
-                                                             AND (COV1.NULLDATE IS NULL OR COV1.NULLDATE > POL.EFFECDATE)) 
-                                           THEN 0
-                                      ELSE CASE WHEN C.NULLDATE = (SELECT MAX(COV1.NULLDATE) 
-                                                                   FROM USINSUV01.COVER COV1
-                                                                   WHERE COV1.USERCOMP = C.USERCOMP
-                                                                   AND COV1.CERTYPE = C.CERTYPE
-                                                                   AND COV1.COMPANY = C.COMPANY
-                                                                   AND COV1.BRANCH = C.BRANCH
-                                                                   --AND 	  COV1.PRODUCT  = C.PRODUCT
-                                                                   AND COV1.MODULEC = C.MODULEC
-                                                                   AND COV1.POLICY = C.POLICY
-                                                                   AND COV1.CERTIF = C.CERTIF
-                                                                   AND COV1.CURRENCY = C.CURRENCY
-                                                                   AND COV1.COVER = C.COVER) 
-                                           THEN 1
-                                      ELSE 0
-                                      END
-                                      END
-                                      END
-                                      ELSE CASE WHEN (C.EFFECDATE <= CERT.EFFECDATE AND (C.NULLDATE IS NULL OR C.NULLDATE > CERT.EFFECDATE)) 
-                                           THEN 1
-                                      ELSE CASE WHEN EXISTS (SELECT  1 FROM USINSUV01.COVER COV1
-                                                             WHERE COV1.CERTYPE = C.CERTYPE
-                                                             AND COV1.USERCOMP = C.USERCOMP
-                                                             AND COV1.COMPANY = C.COMPANY
-                                                             AND COV1.BRANCH = C.BRANCH
-                                                             --AND 	COV1.PRODUCT  = C.PRODUCT
-                                                             AND COV1.MODULEC = C.MODULEC
-                                                             AND COV1.POLICY = C.POLICY
-                                                             AND COV1.CERTIF = C.CERTIF
-                                                             AND COV1.CURRENCY = C.CURRENCY
-                                                             AND COV1.COVER = C.COVER
-                                                             AND COV1.EFFECDATE <= CERT.EFFECDATE
-                                                             AND (COV1.NULLDATE IS NULL OR COV1.NULLDATE > CERT.EFFECDATE)) 
-                                           THEN 0
-                                      ELSE CASE WHEN C.NULLDATE = (SELECT MAX(COV1.NULLDATE)
-                                                                   FROM USINSUV01.COVER COV1
-                                                                   WHERE COV1.USERCOMP = C.USERCOMP
-                                                                   AND COV1.CERTYPE = C.CERTYPE
-                                                                   AND COV1.COMPANY = C.COMPANY
-                                                                   AND COV1.BRANCH = C.BRANCH
-                                                                   --AND 	  COV1.PRODUCT  = C.PRODUCT
-                                                                   AND COV1.MODULEC = C.MODULEC
-                                                                   AND COV1.POLICY = C.POLICY
-                                                                   AND COV1.CERTIF = C.CERTIF
-                                                                   AND COV1.CURRENCY = C.CURRENCY
-                                                                   AND COV1.COVER = C.COVER)
-                                           THEN 1
-                                      ELSE 0
-                                      END
-                                      END
-                                      END
-                                      END FLAG
-                                      LEFT JOIN USINSUV01.CERTIFICAT CERT 
-                                      ON C.USERCOMP = CERT.USERCOMP 
-                                      AND C.COMPANY = CERT.COMPANY 
-                                      AND C.CERTYPE = CERT.CERTYPE 
-                                      AND C.BRANCH = CERT.BRANCH 
-                                      AND C.POLICY = CERT.POLICY 
-                                      AND C.CERTIF = CERT.CERTIF
-                                      FROM USINSUV01.COVER C
-                                      JOIN USINSUV01.POLICY POL 
-                                      ON POL.USERCOMP = C.USERCOMP 
-                                      AND POL.COMPANY = C.COMPANY 
-                                      AND POL.CERTYPE = C.CERTYPE 
-                                      AND POL.BRANCH = C.BRANCH 
-                                      AND POL.POLICY = C.POLICY
-                                      WHERE POL.CERTYPE  = '2' 
-                                      AND POL.STATUS_POL NOT IN ('2', '3')
-                                      AND (((POL.POLITYPE <> '1' AND CERT.EXPIRDAT < '{l_fecha_carga_inicial}'  OR  CERT.NULLDATE < '{l_fecha_carga_inicial}') 
-                                      AND EXISTS (SELECT 1 FROM  USINSUV01.CLAIM CLA
-                                                  JOIN  USINSUV01.CLAIM_HIS CLH  
-                                                  ON CLA.USERCOMP = CLH.USERCOMP 
-                                                  AND CLA.COMPANY = CLH.COMPANY 
-                                                  AND CLA.BRANCH = CLH.BRANCH  
-                                                  AND CLH.CLAIM = CLA.CLAIM
-                                                  WHERE CLA.BRANCH   = CERT.BRANCH
-                                                  AND   CLA.POLICY   = CERT.POLICY
-                                                  AND   CLA.CERTIF   = CERT.CERTIF
-                                                  AND   TRIM(CLH.OPER_TYPE) IN (SELECT CAST(TCL.OPERATION AS VARCHAR(2)) 
-                                                                                FROM  USINSUG01.TAB_CL_OPE TCL 
-                                                                                WHERE (TCL.RESERVE = 1 OR TCL.AJUSTES = 1 OR TCL.PAY_AMOUNT = 1)) 
-                                                                                AND  CLH.OPERDATE >= '{l_fecha_carga_inicial}')))
-                                      AND POL.EFFECDATE BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}')/*SE QUITO EL UNION HASTA AQUI */) 
+                                             AND CERT.EXPIRDAT BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
+                                             AND (CERT.NULLDATE IS NULL OR CERT.NULLDATE > '{p_fecha_inicio}')
+                                             AND CERT.EXPIRDAT < '{l_fecha_carga_inicial}')
+                                        ) 
+                                        and (
+                                             (
+                                             (P.POLITYPE = '1' and (P.EXPIRDAT < '{l_fecha_carga_inicial}' OR P.NULLDATE < '{l_fecha_carga_inicial}')) --INDIVIDUAL
+                                             and not exists (SELECT 1 FROM  USINSUV01.CLAIM CLA
+                                                                 JOIN  USINSUV01.CLAIM_HIS CLH 
+                                                                 ON CLH.USERCOMP = CLA.USERCOMP 
+                                                                 AND CLH.COMPANY = CLA.COMPANY 
+                                                                 AND CLH.BRANCH = CLA.BRANCH 
+                                                                 AND CLH.CLAIM = CLA.CLAIM
+                                                                 WHERE CLA.BRANCH = POL.BRANCH 
+                                                                 AND CLA.POLICY = POL.POLICY 
+                                                                 AND TRIM(CLH.OPER_TYPE) 
+                                                                 IN (SELECT CAST(TCL.OPERATION AS VARCHAR(2))
+                                                                      FROM 	USINSUG01.TAB_CL_OPE TCL
+                                                                      WHERE  (TCL.RESERVE = 1 OR TCL.AJUSTES = 1 OR TCL.PAY_AMOUNT = 1)) 
+                                                                 AND   CLH.OPERDATE >= '{l_fecha_carga_inicial}')
+                                             )
+                                             or
+                                             (
+                                             (P.POLITYPE <> '1' and (CERT.EXPIRDAT < '{l_fecha_carga_inicial}' OR CERT.NULLDATE < '{l_fecha_carga_inicial}')) --COLECTIVO
+                                             and not exists (SELECT 1 FROM  USINSUV01.CLAIM CLA
+                                                                 JOIN  USINSUV01.CLAIM_HIS CLH  
+                                                                 ON CLA.USERCOMP = CLH.USERCOMP 
+                                                                 AND CLA.COMPANY = CLH.COMPANY 
+                                                                 AND CLA.BRANCH = CLH.BRANCH  
+                                                                 AND CLH.CLAIM = CLA.CLAIM
+                                                                 WHERE CLA.BRANCH   = CERT.BRANCH
+                                                                 AND   CLA.POLICY   = CERT.POLICY
+                                                                 AND   CLA.CERTIF   = CERT.CERTIF
+                                                                 AND   TRIM(CLH.OPER_TYPE) 
+                                                                 IN (SELECT CAST(TCL.OPERATION AS VARCHAR(2)) 
+                                                            FROM  USINSUG01.TAB_CL_OPE TCL 
+                                                            WHERE (TCL.RESERVE = 1 OR TCL.AJUSTES = 1 OR TCL.PAY_AMOUNT = 1)) 
+                                                            AND  CLH.OPERDATE >= '{l_fecha_carga_inicial}')
+                                             )
+                                             )
+                                    ) 
                             C WHERE C.FLAG = 1) T
                           ) AS TMP '''
  
@@ -1664,21 +1431,20 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                       '' AS VMTCAPREM   --NO
                       FROM USINSIV01."GEN_RISK_COVERED" GRC
                       JOIN USINSIV01."POLICY" POL ON POL."POLICY_ID" = GRC."POLICY_ID" AND POL."INSR_TYPE" = GRC."INSR_TYPE"
-                      WHERE (POL."INSR_END" >= '{l_fecha_carga_inicial}'
-                                    OR  (POL."INSR_END" < '{l_fecha_carga_inicial}' AND EXISTS ( SELECT 1 FROM USINSIV01."CLAIM" C
-                        	      	                              		                             JOIN USINSIV01."CLAIM_OBJECTS" CO 
-                                                                                                 ON CO."CLAIM_ID" = C."CLAIM_ID" 
-                                                                                                 AND CO."POLICY_ID" = C."POLICY_ID"
-                        	      	                              		                             JOIN USINSIV01."CLAIM_RESERVE_HISTORY" CRH 
-                                                                                                 ON CO."CLAIM_ID" = CRH."CLAIM_ID" 
-                                                                                                 AND CO."REQUEST_ID" = CO."REQUEST_ID" 
-                                                                                                 AND CO."CLAIM_OBJ_SEQ" = CRH."CLAIM_OBJECT_SEQ"
-                        	      	                              		                             WHERE C."POLICY_ID" = POL."POLICY_ID"
-                        	      	                              		                             AND "OP_TYPE" IN ('REG','EST','CLC','PAYMCONF','PAYMINV')
-                        	      	                              		                             AND CAST(CRH."REGISTRATION_DATE" AS DATE) >= '{l_fecha_carga_inicial}'
-                        	      	                                                    ))
+                      WHERE (CAST(POL."INSR_END" AS DATE) between '{p_fecha_inicio}' and '{p_fecha_fin}'
+                             CAST(AND POL."INSR_END" AS DATE) < '{l_fecha_carga_inicial}' AND NOT EXISTS ( SELECT 1 FROM USINSIV01."CLAIM" C
+                                                                                            JOIN USINSIV01."CLAIM_OBJECTS" CO 
+                                                                                            ON CO."CLAIM_ID" = C."CLAIM_ID" 
+                                                                                            AND CO."POLICY_ID" = C."POLICY_ID"
+                                                                                            JOIN USINSIV01."CLAIM_RESERVE_HISTORY" CRH 
+                                                                                            ON CO."CLAIM_ID" = CRH."CLAIM_ID" 
+                                                                                            AND CO."REQUEST_ID" = CO."REQUEST_ID" 
+                                                                                            AND CO."CLAIM_OBJ_SEQ" = CRH."CLAIM_OBJECT_SEQ"
+                                                                                            WHERE C."POLICY_ID" = POL."POLICY_ID"
+                                                                                            AND "OP_TYPE" IN ('REG','EST','CLC','PAYMCONF','PAYMINV')
+                                                                                            AND CAST(CRH."REGISTRATION_DATE" AS DATE) >= '{l_fecha_carga_inicial}'     
+                	      	                                                            ) 
                             )
-                      AND POL."REGISTRATION_DATE" BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
                     ) AS TMP
                     '''
     
