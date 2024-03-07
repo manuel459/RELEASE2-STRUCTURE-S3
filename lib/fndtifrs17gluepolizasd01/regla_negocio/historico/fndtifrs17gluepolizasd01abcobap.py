@@ -237,7 +237,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                         ) 
                                    and (
                                              (
-                                             (P.POLITYPE = '1' and (P.EXPIRDAT < '{l_fecha_carga_inicial}' OR P.NULLDATE < '{l_fecha_carga_inicial}')) --INDIVIDUAL
+                                             (POL.POLITYPE = '1' and (POL.EXPIRDAT < '{l_fecha_carga_inicial}' OR POL.NULLDATE < '{l_fecha_carga_inicial}')) --INDIVIDUAL
                                              and not exists (SELECT 1 FROM  USINSUG01.CLAIM CLA    
                                                        JOIN  USINSUG01.CLAIM_HIS CLH 
                                                        ON CLH.USERCOMP = CLA.USERCOMP 
@@ -254,7 +254,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                              )
                                              or
                                              (
-                                             (P.POLITYPE <> '1' and (cert.EXPIRDAT < '{l_fecha_carga_inicial}' OR cert.NULLDATE < '{l_fecha_carga_inicial}')) --COLECTIVA
+                                             (POL.POLITYPE <> '1' and (cert.EXPIRDAT < '{l_fecha_carga_inicial}' OR cert.NULLDATE < '{l_fecha_carga_inicial}')) --COLECTIVA
                                              and not exists (SELECT 1 FROM USINSUG01.CLAIM CLA    
                                                        JOIN  USINSUG01.CLAIM_HIS CLH  
                                                        ON    CLA.USERCOMP = CLH.USERCOMP 
@@ -597,7 +597,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                         ) 
                                         and (
                                              (
-                                             (P.POLITYPE = '1' and (P.EXPIRDAT < '{l_fecha_carga_inicial}' OR P.NULLDATE < '{l_fecha_carga_inicial}')) --INDIVIDUAL
+                                             (POL.POLITYPE = '1' and (POL.EXPIRDAT < '{l_fecha_carga_inicial}' OR POL.NULLDATE < '{l_fecha_carga_inicial}')) --INDIVIDUAL
                                              and not exists (SELECT 1 FROM  USINSUV01.CLAIM CLA
                                                                  JOIN  USINSUV01.CLAIM_HIS CLH 
                                                                  ON CLH.USERCOMP = CLA.USERCOMP 
@@ -614,7 +614,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                              )
                                              or
                                              (
-                                             (P.POLITYPE <> '1' and (CERT.EXPIRDAT < '{l_fecha_carga_inicial}' OR CERT.NULLDATE < '{l_fecha_carga_inicial}')) --COLECTIVO
+                                             (POL.POLITYPE <> '1' and (CERT.EXPIRDAT < '{l_fecha_carga_inicial}' OR CERT.NULLDATE < '{l_fecha_carga_inicial}')) --COLECTIVO
                                              and not exists (SELECT 1 FROM  USINSUV01.CLAIM CLA
                                                                  JOIN  USINSUV01.CLAIM_HIS CLH  
                                                                  ON CLA.USERCOMP = CLH.USERCOMP 
@@ -641,7 +641,8 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
   #-------------------------------------------------------------------------------------------------------------------------------#
 
   l_abcobap_vtime_lpg = f'''
-                        ( SELECT 
+                        (
+                             SELECT 
                           'D' AS INDDETREC,
                           'ABCOBAP' AS TABLAIFRS17,
                           '' AS PK,
@@ -740,20 +741,20 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                 COALESCE(CAST(CAST(C."DEFFECDATE" AS DATE) AS VARCHAR),'') AS TIOCFRM,
                                 C."NBRANCH" ||'-'|| C."NPRODUCT" ||'-'|| C."NPOLICY" ||'-'|| C."NCERTIF" AS KABAPOL,
                                 COALESCE( COALESCE((SELECT CAST(GLC."NCOVERGEN" AS VARCHAR)
-                                                    FROM USBI01."IFRS170_V_GEN_LIFE_COVER_VTIMELPG" GLC
+                                                    FROM USBI01.ifrs170_v_gen_life_cover_vtimelpg GLC
                                                     WHERE GLC."NBRANCH"   = C."NBRANCH" 
                                                     AND   GLC."NPRODUCT"  = C."NPRODUCT"
                                                     AND   GLC."NMODULEC"  = C."NMODULEC"
                                                     AND   GLC."NCOVER"    = C."NCOVER"
                                                     AND   GLC."DEFFECDATE" <= (CASE WHEN C."SPOLITYPE" = '1' THEN C."POL_DSTARTDATE" ELSE C."CERT_DSTARTDATE" END)
                                                     AND   (GLC."DNULLDATE" IS NULL OR GLC."DNULLDATE" > (CASE WHEN C."SPOLITYPE" = '1' THEN C."POL_DSTARTDATE" ELSE C."CERT_DSTARTDATE" END))), ( SELECT CAST(GLC."NCOVERGEN" AS VARCHAR) 
-                                                                                                                                                                                                  FROM USBI01."IFRS170_V_GEN_LIFE_COVER_VTIMELPG" GLC 
+                                                                                                                                                                                                  FROM USBI01.ifrs170_v_gen_life_cover_vtimelpg GLC 
                                                                                                                                                                                                   WHERE GLC."NBRANCH"   = C."NBRANCH" 
                                                                                                                                                                                                   AND   GLC."NPRODUCT"  = C."NPRODUCT"
                                                                                                                                                                                                   AND   GLC."NMODULEC"  = C."NMODULEC"
                                                                                                                                                                                                   AND   GLC."NCOVER"    = C."NCOVER"
                                                                                                                                                                                                   AND   GLC."DNULLDATE" = ( SELECT MAX("DNULLDATE") 
-                                                                                                                                                                                                                            FROM USBI01."IFRS170_V_GEN_LIFE_COVER_VTIMELPG" GLC 
+                                                                                                                                                                                                                            FROM USBI01.ifrs170_v_gen_life_cover_vtimelpg GLC 
                                                                                                                                                                                                                             WHERE GLC."NBRANCH"   = C."NBRANCH" 
                                                                                                                                                                                                                             AND   GLC."NPRODUCT"  = C."NPRODUCT"
                                                                                                                                                                                                                             AND   GLC."NMODULEC"  = C."NMODULEC"
@@ -919,14 +920,14 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                                        AND CLH."NOPER_TYPE" = CSV."SVALUE" 
                                                        AND CLH."DOPERDATE" >= '{l_fecha_carga_inicial}') CLH 
                                                        ON CLH."NCLAIM" = CLA."NCLAIM"
-                                                       WHERE CLA."SCERTYPE" = P."SCERTYPE" 
-                                                       AND CLA."NBRANCH" = P."NBRANCH" 
-                                                       AND CLA."NPOLICY" = P."NPOLICY"  
+                                                       WHERE CLA."SCERTYPE" = POL."SCERTYPE" 
+                                                       AND CLA."NBRANCH" = POL."NBRANCH" 
+                                                       AND CLA."NPOLICY" = POL."NPOLICY"  
                                                        AND CLA."NCERTIF" = 0
-                                                       AND P."SCERTYPE" = '2'
-                                                       AND P."SSTATUS_POL" NOT IN ('2','3') 
-                                                       AND P."SPOLITYPE" = '1' 
-                                                       AND (P."DEXPIRDAT" < '{l_fecha_carga_inicial}' OR P."DNULLDATE" < '{l_fecha_carga_inicial}'))
+                                                       AND POL."SCERTYPE" = '2'
+                                                       AND POL."SSTATUS_POL" NOT IN ('2','3') 
+                                                       AND POL."SPOLITYPE" = '1' 
+                                                       AND (POL."DEXPIRDAT" < '{l_fecha_carga_inicial}' OR POL."DNULLDATE" < '{l_fecha_carga_inicial}'))
                                              or
                                              not exists (select 1 from USVTIMG01."CLAIM" CLA 
                                                        JOIN (SELECT DISTINCT CLH."NCLAIM" FROM (SELECT CAST("SVALUE" AS INT4) "SVALUE" 
@@ -941,20 +942,13 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                                        AND CLA."NBRANCH" = CERT."NBRANCH" 
                                                        AND CLA."NPOLICY" = CERT."NPOLICY"  
                                                        AND CLA."NCERTIF" =  CERT."NCERTIF"
-                                                       AND P."SCERTYPE" = '2'
-                                                       AND P."SSTATUS_POL" NOT IN ('2','3') 
-                                                       AND P."SPOLITYPE" <> '1' 
+                                                       AND POL."SCERTYPE" = '2'
+                                                       AND POL."SSTATUS_POL" NOT IN ('2','3') 
+                                                       AND POL."SPOLITYPE" <> '1' 
                                                        AND (CERT."DEXPIRDAT" < '{l_fecha_carga_inicial}' OR CERT."DNULLDATE" < '{l_fecha_carga_inicial}'))
-                                        ) 
-                                ) CLH 
-                                ON CLH."NCLAIM" = CLA."NCLAIM"
-                                WHERE CLA."SCERTYPE"  = POL."SCERTYPE" 
-                                AND CLA."NBRANCH"  = POL."NBRANCH" 
-                                AND CLA."NPRODUCT" = POL."NPRODUCT"
-                                AND CLA."NPOLICY"  = POL."NPOLICY"  
-                                AND CLA."NCERTIF"  = CERT."NCERTIF"))))))/* SE QUITO EN UNION HASTA AQUI */
+                                        	)
                               ) C WHERE FLAG = 1
-                          ) COVER                                            
+                          ) COVER                               
                         ) AS TMP'''
 
   l_df_abcobap_vtime_lpg = glue_context.read.format('jdbc').options(**connection).option("dbtable", l_abcobap_vtime_lpg).load()
@@ -962,256 +956,257 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
   print("ABCOBAP VTIME LPG EXITOSO")
 
   l_abcobap_vtime_lpv = f'''
-                        ( SELECT 
-                          'D' AS INDDETREC,
-                          'ABCOBAP' AS TABLAIFRS17,
-                          '' AS PK,
-                          '' AS DTPREG,
-                          '' AS TIOCPROC,
-                          TIOCFRM,
-                          '' AS TIOCTO,
-                          'PVV' AS KGIORIGM,
-                          KABAPOL,
-                          '' AS KABUNRIS,
-                          KGCTPCBT,
-                          TINICIO,
-                          TTERMO,
-                          '' AS TSITCOB,
-                          '' AS KACSITCB,
-                          '' AS VMTPRMSP,
-                          VMTCOMR,
-                          '' AS VMTBOMAT,
-                          '' AS VTXBOMAT,
-                          '' AS VMTBOCOM,
-                          '' AS VTXBOCOM,
-                          '' AS VMTDECOM,
-                          '' AS VTXDECOM,
-                          '' AS VMTDETEC,
-                          '' AS VTXDETEC,
-                          '' AS VMTAGRAV,
-                          '' AS VTXAGRAV,
-                          '' AS VMTPRMTR,
-                          '' AS VMTPRLIQ,
-                          VMTPRMBR,
-                          VTXCOB, --TASA APLICAR A LA COBERTURA
-                          VCAPITAL,-- IMPORTE DE CAPITAL ASEGURADO EN EL CERTIFICADO 
-                          '' AS VTXCAPIT,
-                          '' AS KACTPIDX,
-                          '' AS VTXINDX,
-                          'LPV' AS DCOMPA,
-                          '' AS DMARCA,
-                          '' AS TDACECOB,
-                          '' AS TDCANCOB,
-                          '' AS TDCRICOB,
-                          TDRENOVA,
-                          '' AS TDVENTRA,
-                          '' AS DHORAINI,
-                          VMTPREMC,
-                          '' AS VMIBOMAT,
-                          '' AS VMIBOCOM,
-                          '' AS VMIDECOM,
-                          '' AS VMIDETEC,
-                          '' AS VMIRPMSP,
-                          '' AS VMIPRMBR,
-                          '' AS VMICOMR,
-                          '' AS VMIPRLIQ,
-                          '' AS VMICMNQP,
-                          '' AS VMIPRMTR,
-                          '' AS VMIAGRAV,
-                          '' AS KACTIPCB,
-                          '' AS VMTCAPLI,
-                          '' AS KACTRARE,
-                          '' AS KACFMCAL,
-                          '' AS DFACMULT,
-                          VMTCAPIN, 
-                          VMTPREIN,
-                          '' AS KABTRTAB,
-                          '' AS DINDESES,
-                          '' AS DINDMOTO,
-                          '' AS KACSALIN,
-                          '' AS VMTSALMD,
-                          '' AS VTXLMRES,
-                          '' AS VTXEQUIP,
-                          '' AS VTXPRIOR,
-                          '' AS VTXCONTR,
-                          '' AS VTXESPEC,
-                          '' AS DCAPMORT,
-                          VMTPRRES,
-                          '' AS DIDADETAR,
-                          '' AS DIDADLIMCOB,
-                          KACTPDUR,
-                          '' AS KGCRAMO_SAP,
-                          '' AS KACTCOMP,
-                          '' AS KACINDTX,
-                          '' AS KACCALIDA,
-                          '' AS DNCABCALP,
-                          '' AS DINDNIVEL,
-                          DURCOB,
-                          '' AS DURPAGCOB,
-                          '' AS KACTPDURCB,
-                          '' AS DINCOBINDX,
-                          '' AS KACGRCBT,
-                          '' AS KABTRTAB_2,
-                          '' AS VTXAJTBUA,
-                          '' AS VMTCAPREM/*,
-                          MODULO*/
-                          FROM 
-                          (
-                            SELECT                       
-                            COALESCE(CAST(CAST(C."DEFFECDATE" AS DATE ) AS VARCHAR),'') AS TIOCFRM,
-                            C."NBRANCH" ||'-'|| C."NPRODUCT" ||'-'|| C."NPOLICY" ||'-'|| C."NCERTIF" AS KABAPOL,
-                            COALESCE(COALESCE((SELECT COALESCE(CAST(LC."NCOVERGEN" AS VARCHAR),'0') FROM USVTIMV01."LIFE_COVER" LC 
-                            WHERE LC."NBRANCH" = C."NBRANCH" 
-                            AND LC."NPRODUCT" = C."NPRODUCT"
-                            AND LC."NMODULEC" = C."NMODULEC"
-                            AND LC."NCOVER" = C."NCOVER"
-                            AND LC."DEFFECDATE" <= (CASE WHEN C."SPOLITYPE" = '1' THEN C."POL_DSTARTDATE" ELSE C."CERT_DSTARTDATE" END)
-                            AND (LC."DNULLDATE" IS NULL OR LC."DNULLDATE" > (CASE WHEN C."SPOLITYPE" = '1' THEN C."POL_DSTARTDATE" ELSE C."CERT_DSTARTDATE" END))
-                            ), 
-                            (   SELECT CAST(GLC."NCOVERGEN" AS VARCHAR) 
-                                FROM  USBI01."IFRS170_V_GEN_LIFE_COVER_VTIMELPG" GLC 
-                                WHERE GLC."NBRANCH" = C."NBRANCH" 
-                                AND   GLC."NPRODUCT"  = C."NPRODUCT"
-                                AND   GLC."NMODULEC"  = C."NMODULEC"
-                                AND   GLC."NCOVER"    = C."NCOVER"
-                                and   GLC."DNULLDATE" = (SELECT MAX("DNULLDATE")
-                                                         FROM USBI01."IFRS170_V_GEN_LIFE_COVER_VTIMELPG" GLC 
-                                                         WHERE GLC."NBRANCH" = C."NBRANCH" 
-                                                         AND   GLC."NPRODUCT"  = C."NPRODUCT"
-                                                         AND   GLC."NMODULEC"  = C."NMODULEC"
-                                                         AND   GLC."NCOVER"    = C."NCOVER")
-                            )), ('-'||cast(C."NCOVER" as VARCHAR))) AS KGCTPCBT,
-                            COALESCE(CAST(CAST(C."DEFFECDATE" AS DATE )AS VARCHAR),'') AS TINICIO,
-                            COALESCE(CAST(CAST(C."DNULLDATE" AS DATE )AS VARCHAR),'') AS TTERMO,
-                            COALESCE(C."NPREMIUM_O", 0) AS VMTCOMR,
-                            COALESCE(C."NPREMIUM_O", 0) AS VMTPRMBR,
-                            COALESCE(C."NRATECOVE", 0) AS VTXCOB, --TASA APLICAR A LA COBERTURA
-                            COALESCE(CAST(C."NCAPITAL" AS VARCHAR), '0') AS VCAPITAL,
-                            COALESCE(CAST(CAST(C."DEFFECDATE" AS DATE )AS VARCHAR),'') AS TDRENOVA,
-                            COALESCE((CAST(((SELECT COALESCE (CO."NSHARE", 0)  
-                                             FROM USVTIMV01."COINSURAN" CO
-                                             WHERE CO."SCERTYPE" = C."SCERTYPE" 
-                                             AND CO."NBRANCH" = C."NBRANCH" 
-                                             AND CO."NPOLICY" = C."NPOLICY"
-                                             AND CO."NCOMPANY" = 2
-                                             AND CO."DEFFECDATE"  <= C."DEFFECDATE"
-                                             AND (CO."DNULLDATE" IS NULL AND CO."DNULLDATE"  > C."DEFFECDATE") ) * C."NPREMIUM") AS VARCHAR)), '100') AS VMTPREMC,
-                            COALESCE(C."NCAPITALI", 0)  AS VMTCAPIN, -- IMPORTE DE CAPITAL DE LA COBERTURA A LA FECHA DE EMISION DE LA POLIZA,
-                            COALESCE(TRUNC(C."NPREMIUM_O", 2), 0) AS VMTPREIN,
-                            COALESCE((COALESCE ((SELECT (SUM(R."NSHARE"/100)) * C."NPREMIUM"  
-                                                 FROM USVTIMV01."REINSURAN" R 
-                                                 WHERE R."SCERTYPE" = C."SCERTYPE"  
-                                                 AND R."NBRANCH"  = C."NBRANCH"
-                                                 AND R."NPRODUCT" = C."NPRODUCT"
-                                                 AND R."NPOLICY"  = C."NPOLICY"
-                                                 AND R."NCERTIF"  = C."NCERTIF"
-                                                 AND R."NMODULEC" = C."NMODULEC"
-                                                 AND R."NCOVER" = C."NCOVER"
-                                                 AND R."DEFFECDATE" <= C."DEFFECDATE"
-                                                 AND (R."DNULLDATE" IS NULL OR R."DNULLDATE" > C."DEFFECDATE")
-                                                 AND R."NTYPE_REIN" <> 1),(SELECT (SUM(R."NSHARE"/100)) * C."NPREMIUM" 
-                                                                                   FROM USVTIMV01."REINSURAN" R 
-                                                                                   WHERE R."SCERTYPE" = C."SCERTYPE"  
-                                                                                   AND R."NBRANCH"  = C."NBRANCH"
-                                                                                   AND R."NPRODUCT" = C."NPRODUCT"
-                                                                                   AND R."NPOLICY"  = C."NPOLICY"
-                                                                                   AND R."NCERTIF"  = 0
-                                                                                   AND R."NMODULEC" = C."NMODULEC"
-                                                                                   AND R."NCOVER" = C."NCOVER"
-                                                                                   AND R."DEFFECDATE" <= C."DEFFECDATE"
-                                                                                   AND (R."DNULLDATE" IS NULL OR R."DNULLDATE" > C."DEFFECDATE")
-                                                                                   AND R."NTYPE_REIN" <> 1))), 0) AS VMTPRRES,
-                            COALESCE(CAST(C."NTYPDURINS" AS VARCHAR),'0') AS KACTPDUR,
-                            COALESCE(CAST(C."NDURINSUR" AS VARCHAR),'0') AS DURCOB/*,
-                            C."NMODULEC" AS MODULO*/
-                            FROM 
-                            (                               	   
-                                SELECT
-                                   C."SCERTYPE",
-                                   C."NBRANCH",
-                                   C."NPRODUCT",
-                                   C."NPOLICY",
-                                   C."NCERTIF",                                    
-                                   C."DEFFECDATE",
-                                   C."DNULLDATE",
-                                   C."NPREMIUM",
-                                   C."NPREMIUM_O",
-                                   C."NRATECOVE",
-                                   C."NCAPITAL",
-                                   C."NCAPITALI",
-                                   C."NTYPDURINS",
-                                   C."NDURINSUR",
-                                   C."NMODULEC", 
-                                   C."NCOVER",
-                                   C."NCURRENCY",
-                                   POL."SPOLITYPE",
-                                   POL."DSTARTDATE" as "POL_DSTARTDATE",
-                                   CERT."DSTARTDATE" as "CERT_DSTARTDATE"
-                                   FROM USVTIMV01."COVER" C  
-                                   LEFT JOIN USVTIMV01."CERTIFICAT" CERT
-                                   ON  C."SCERTYPE"  = CERT."SCERTYPE"  
-                                   AND C."NBRANCH"   = CERT."NBRANCH"
-                                   AND C."NPRODUCT"  = CERT."NPRODUCT"
-                                   AND C."NPOLICY"   = CERT."NPOLICY"
-                                   AND C."NCERTIF"   = CERT."NCERTIF"
-                                   JOIN USVTIMV01."POLICY" POL
-                                   ON  POL."SCERTYPE"  = C."SCERTYPE"
-                                   AND POL."NBRANCH"   = C."NBRANCH" 
-                                   AND POL."NPRODUCT"  = C."NPRODUCT"
-                                   AND POL."NPOLICY"   = C."NPOLICY" 
-                                   WHERE POL."SCERTYPE" = '2' 
-                                   AND POL."SSTATUS_POL" NOT IN ('2','3') 
-                                   AND (
-                                        (POL."SPOLITYPE" = '1' -- INDIVIDUAL 
-                                             AND POL."DEXPIRDAT" BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
-                                             AND (POL."DNULLDATE" IS NULL OR POL."DNULLDATE" > '{p_fecha_inicio}')
-                                             AND POL."DEXPIRDAT" < '{l_fecha_carga_inicial}')
-                                             OR 
-                                        (POL."SPOLITYPE" <> '1' -- COLECTIVAS 
-                                             AND CERT."DEXPIRDAT" BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
-                                             AND (CERT."DNULLDATE" IS NULL OR CERT."DNULLDATE" > '{p_fecha_inicio}')
-                                             AND CERT."DEXPIRDAT" < '{l_fecha_carga_inicial}')
-                                        )
-                                   and
-                                        (
-                                        not exists (select 1 from USVTIMV01."CLAIM" CLA 
-                                                  JOIN (SELECT DISTINCT CLH."NCLAIM" FROM (SELECT CAST("SVALUE" AS INT4) "SVALUE" 
-                                                            FROM USVTIMV01."CONDITION_SERV" CS 
-                                                            WHERE "NCONDITION" IN (71, 72, 73)) CSV 
-                                                  JOIN USVTIMV01."CLAIM_HIS" CLH 
-                                                  ON COALESCE(CLH."NCLAIM", 0) > 0 
-                                                  AND CLH."NOPER_TYPE" = CSV."SVALUE" 
-                                                  AND CLH."DOPERDATE" >= '{l_fecha_carga_inicial}') CLH 
-                                                  ON CLH."NCLAIM" = CLA."NCLAIM"
-                                                  WHERE CLA."SCERTYPE" = P."SCERTYPE" 
-                                                  AND CLA."NBRANCH" = P."NBRANCH" 
-                                                  AND CLA."NPOLICY" = P."NPOLICY"  
-                                                  AND CLA."NCERTIF" = 0
-                                                  AND P."SCERTYPE" = '2'
-                                                  AND P."SSTATUS_POL" NOT IN ('2','3') 
-                                                  AND P."SPOLITYPE" = '1' 
-                                                  AND (P."DEXPIRDAT" < '{l_fecha_carga_inicial}' OR P."DNULLDATE" < '{l_fecha_carga_inicial}'))
-                                        or
-                                        not exists (select 1 from USVTIMV01."CLAIM" CLA 
-                                                  JOIN (SELECT DISTINCT CLH."NCLAIM" FROM (SELECT CAST("SVALUE" AS INT4) "SVALUE" 
-                                                            FROM USVTIMV01."CONDITION_SERV" CS 
-                                                            WHERE "NCONDITION" IN (71, 72, 73)) CSV 
-                                                  JOIN USVTIMV01."CLAIM_HIS" CLH 
-                                                  ON COALESCE(CLH."NCLAIM", 0) > 0 
-                                                  AND CLH."NOPER_TYPE" = CSV."SVALUE" 
-                                                  AND CLH."DOPERDATE" >= '{l_fecha_carga_inicial}') CLH 
-                                                  ON CLH."NCLAIM" = CLA."NCLAIM"
-                                                  WHERE CLA."SCERTYPE" = CERT."SCERTYPE" 
-                                                  AND CLA."NBRANCH" = CERT."NBRANCH" 
-                                                  AND CLA."NPOLICY" = CERT."NPOLICY"  
-                                                  AND CLA."NCERTIF" =  CERT."NCERTIF"
-                                                  AND P."SCERTYPE" = '2'
-                                                  AND P."SSTATUS_POL" NOT IN ('2','3') 
-                                                  AND P."SPOLITYPE" <> '1' 
-                                                  AND (CERT."DEXPIRDAT" < '{l_fecha_carga_inicial}' OR CERT."DNULLDATE" < '{l_fecha_carga_inicial}'))
-                                        )
-                            ) AS C
-                          ) COVER 
+                        (
+                          SELECT 
+                              'D' AS INDDETREC,
+                              'ABCOBAP' AS TABLAIFRS17,
+                              '' AS PK,
+                              '' AS DTPREG,
+                              '' AS TIOCPROC,
+                              TIOCFRM,
+                              '' AS TIOCTO,
+                              'PVV' AS KGIORIGM,
+                              KABAPOL,
+                              '' AS KABUNRIS,
+                              KGCTPCBT,
+                              TINICIO,
+                              TTERMO,
+                              '' AS TSITCOB,
+                              '' AS KACSITCB,
+                              '' AS VMTPRMSP,
+                              VMTCOMR,
+                              '' AS VMTBOMAT,
+                              '' AS VTXBOMAT,
+                              '' AS VMTBOCOM,
+                              '' AS VTXBOCOM,
+                              '' AS VMTDECOM,
+                              '' AS VTXDECOM,
+                              '' AS VMTDETEC,
+                              '' AS VTXDETEC,
+                              '' AS VMTAGRAV,
+                              '' AS VTXAGRAV,
+                              '' AS VMTPRMTR,
+                              '' AS VMTPRLIQ,
+                              VMTPRMBR,
+                              VTXCOB, --TASA APLICAR A LA COBERTURA
+                              VCAPITAL,-- IMPORTE DE CAPITAL ASEGURADO EN EL CERTIFICADO 
+                              '' AS VTXCAPIT,
+                              '' AS KACTPIDX,
+                              '' AS VTXINDX,
+                              'LPV' AS DCOMPA,
+                              '' AS DMARCA,
+                              '' AS TDACECOB,
+                              '' AS TDCANCOB,
+                              '' AS TDCRICOB,
+                              TDRENOVA,
+                              '' AS TDVENTRA,
+                              '' AS DHORAINI,
+                              VMTPREMC,
+                              '' AS VMIBOMAT,
+                              '' AS VMIBOCOM,
+                              '' AS VMIDECOM,
+                              '' AS VMIDETEC,
+                              '' AS VMIRPMSP,
+                              '' AS VMIPRMBR,
+                              '' AS VMICOMR,
+                              '' AS VMIPRLIQ,
+                              '' AS VMICMNQP,
+                              '' AS VMIPRMTR,
+                              '' AS VMIAGRAV,
+                              '' AS KACTIPCB,
+                              '' AS VMTCAPLI,
+                              '' AS KACTRARE,
+                              '' AS KACFMCAL,
+                              '' AS DFACMULT,
+                              VMTCAPIN, 
+                              VMTPREIN,
+                              '' AS KABTRTAB,
+                              '' AS DINDESES,
+                              '' AS DINDMOTO,
+                              '' AS KACSALIN,
+                              '' AS VMTSALMD,
+                              '' AS VTXLMRES,
+                              '' AS VTXEQUIP,
+                              '' AS VTXPRIOR,
+                              '' AS VTXCONTR,
+                              '' AS VTXESPEC,
+                              '' AS DCAPMORT,
+                              VMTPRRES,
+                              '' AS DIDADETAR,
+                              '' AS DIDADLIMCOB,
+                              KACTPDUR,
+                              '' AS KGCRAMO_SAP,
+                              '' AS KACTCOMP,
+                              '' AS KACINDTX,
+                              '' AS KACCALIDA,
+                              '' AS DNCABCALP,
+                              '' AS DINDNIVEL,
+                              DURCOB,
+                              '' AS DURPAGCOB,
+                              '' AS KACTPDURCB,
+                              '' AS DINCOBINDX,
+                              '' AS KACGRCBT,
+                              '' AS KABTRTAB_2,
+                              '' AS VTXAJTBUA,
+                              '' AS VMTCAPREM/*,
+                              MODULO*/
+                              FROM 
+                              (
+                              SELECT                       
+                              COALESCE(CAST(CAST(C."DEFFECDATE" AS DATE ) AS VARCHAR),'') AS TIOCFRM,
+                              C."NBRANCH" ||'-'|| C."NPRODUCT" ||'-'|| C."NPOLICY" ||'-'|| C."NCERTIF" AS KABAPOL,
+                              COALESCE(COALESCE((SELECT COALESCE(CAST(LC."NCOVERGEN" AS VARCHAR),'0') FROM USVTIMV01."LIFE_COVER" LC 
+                              WHERE LC."NBRANCH" = C."NBRANCH" 
+                              AND LC."NPRODUCT" = C."NPRODUCT"
+                              AND LC."NMODULEC" = C."NMODULEC"
+                              AND LC."NCOVER" = C."NCOVER"
+                              AND LC."DEFFECDATE" <= (CASE WHEN C."SPOLITYPE" = '1' THEN C."POL_DSTARTDATE" ELSE C."CERT_DSTARTDATE" END)
+                              AND (LC."DNULLDATE" IS NULL OR LC."DNULLDATE" > (CASE WHEN C."SPOLITYPE" = '1' THEN C."POL_DSTARTDATE" ELSE C."CERT_DSTARTDATE" END))
+                              ), 
+                              (   SELECT CAST(GLC."NCOVERGEN" AS VARCHAR) 
+                                   FROM  USBI01.ifrs170_v_gen_life_cover_vtimelpg GLC 
+                                   WHERE GLC."NBRANCH" = C."NBRANCH" 
+                                   AND   GLC."NPRODUCT"  = C."NPRODUCT"
+                                   AND   GLC."NMODULEC"  = C."NMODULEC"
+                                   AND   GLC."NCOVER"    = C."NCOVER"
+                                   and   GLC."DNULLDATE" = (SELECT MAX("DNULLDATE")
+                                                            FROM USBI01.ifrs170_v_gen_life_cover_vtimelpg GLC 
+                                                            WHERE GLC."NBRANCH" = C."NBRANCH" 
+                                                            AND   GLC."NPRODUCT"  = C."NPRODUCT"
+                                                            AND   GLC."NMODULEC"  = C."NMODULEC"
+                                                            AND   GLC."NCOVER"    = C."NCOVER")
+                              )), ('-'||cast(C."NCOVER" as VARCHAR))) AS KGCTPCBT,
+                              COALESCE(CAST(CAST(C."DEFFECDATE" AS DATE )AS VARCHAR),'') AS TINICIO,
+                              COALESCE(CAST(CAST(C."DNULLDATE" AS DATE )AS VARCHAR),'') AS TTERMO,
+                              COALESCE(C."NPREMIUM_O", 0) AS VMTCOMR,
+                              COALESCE(C."NPREMIUM_O", 0) AS VMTPRMBR,
+                              COALESCE(C."NRATECOVE", 0) AS VTXCOB, --TASA APLICAR A LA COBERTURA
+                              COALESCE(CAST(C."NCAPITAL" AS VARCHAR), '0') AS VCAPITAL,
+                              COALESCE(CAST(CAST(C."DEFFECDATE" AS DATE )AS VARCHAR),'') AS TDRENOVA,
+                              COALESCE((CAST(((SELECT COALESCE (CO."NSHARE", 0)  
+                                                  FROM USVTIMV01."COINSURAN" CO
+                                                  WHERE CO."SCERTYPE" = C."SCERTYPE" 
+                                                  AND CO."NBRANCH" = C."NBRANCH" 
+                                                  AND CO."NPOLICY" = C."NPOLICY"
+                                                  AND CO."NCOMPANY" = 2
+                                                  AND CO."DEFFECDATE"  <= C."DEFFECDATE"
+                                                  AND (CO."DNULLDATE" IS NULL AND CO."DNULLDATE"  > C."DEFFECDATE") ) * C."NPREMIUM") AS VARCHAR)), '100') AS VMTPREMC,
+                              COALESCE(C."NCAPITALI", 0)  AS VMTCAPIN, -- IMPORTE DE CAPITAL DE LA COBERTURA A LA FECHA DE EMISION DE LA POLIZA,
+                              COALESCE(TRUNC(C."NPREMIUM_O", 2), 0) AS VMTPREIN,
+                              COALESCE((COALESCE ((SELECT (SUM(R."NSHARE"/100)) * C."NPREMIUM"  
+                                                       FROM USVTIMV01."REINSURAN" R 
+                                                       WHERE R."SCERTYPE" = C."SCERTYPE"  
+                                                       AND R."NBRANCH"  = C."NBRANCH"
+                                                       AND R."NPRODUCT" = C."NPRODUCT"
+                                                       AND R."NPOLICY"  = C."NPOLICY"
+                                                       AND R."NCERTIF"  = C."NCERTIF"
+                                                       AND R."NMODULEC" = C."NMODULEC"
+                                                       AND R."NCOVER" = C."NCOVER"
+                                                       AND R."DEFFECDATE" <= C."DEFFECDATE"
+                                                       AND (R."DNULLDATE" IS NULL OR R."DNULLDATE" > C."DEFFECDATE")
+                                                       AND R."NTYPE_REIN" <> 1),(SELECT (SUM(R."NSHARE"/100)) * C."NPREMIUM" 
+                                                                                     FROM USVTIMV01."REINSURAN" R 
+                                                                                     WHERE R."SCERTYPE" = C."SCERTYPE"  
+                                                                                     AND R."NBRANCH"  = C."NBRANCH"
+                                                                                     AND R."NPRODUCT" = C."NPRODUCT"
+                                                                                     AND R."NPOLICY"  = C."NPOLICY"
+                                                                                     AND R."NCERTIF"  = 0
+                                                                                     AND R."NMODULEC" = C."NMODULEC"
+                                                                                     AND R."NCOVER" = C."NCOVER"
+                                                                                     AND R."DEFFECDATE" <= C."DEFFECDATE"
+                                                                                     AND (R."DNULLDATE" IS NULL OR R."DNULLDATE" > C."DEFFECDATE")
+                                                                                     AND R."NTYPE_REIN" <> 1))), 0) AS VMTPRRES,
+                              COALESCE(CAST(C."NTYPDURINS" AS VARCHAR),'0') AS KACTPDUR,
+                              COALESCE(CAST(C."NDURINSUR" AS VARCHAR),'0') AS DURCOB/*,
+                              C."NMODULEC" AS MODULO*/
+                              FROM 
+                              (                               	   
+                                   SELECT
+                                        C."SCERTYPE",
+                                        C."NBRANCH",
+                                        C."NPRODUCT",
+                                        C."NPOLICY",
+                                        C."NCERTIF",                                    
+                                        C."DEFFECDATE",
+                                        C."DNULLDATE",
+                                        C."NPREMIUM",
+                                        C."NPREMIUM_O",
+                                        C."NRATECOVE",
+                                        C."NCAPITAL",
+                                        C."NCAPITALI",
+                                        C."NTYPDURINS",
+                                        C."NDURINSUR",
+                                        C."NMODULEC", 
+                                        C."NCOVER",
+                                        C."NCURRENCY",
+                                        POL."SPOLITYPE",
+                                        POL."DSTARTDATE" as "POL_DSTARTDATE",
+                                        CERT."DSTARTDATE" as "CERT_DSTARTDATE"
+                                        FROM USVTIMV01."COVER" C  
+                                        LEFT JOIN USVTIMV01."CERTIFICAT" CERT
+                                        ON  C."SCERTYPE"  = CERT."SCERTYPE"  
+                                        AND C."NBRANCH"   = CERT."NBRANCH"
+                                        AND C."NPRODUCT"  = CERT."NPRODUCT"
+                                        AND C."NPOLICY"   = CERT."NPOLICY"
+                                        AND C."NCERTIF"   = CERT."NCERTIF"
+                                        JOIN USVTIMV01."POLICY" POL
+                                        ON  POL."SCERTYPE"  = C."SCERTYPE"
+                                        AND POL."NBRANCH"   = C."NBRANCH" 
+                                        AND POL."NPRODUCT"  = C."NPRODUCT"
+                                        AND POL."NPOLICY"   = C."NPOLICY" 
+                                        WHERE POL."SCERTYPE" = '2' 
+                                        AND POL."SSTATUS_POL" NOT IN ('2','3') 
+                                        AND (
+                                             (POL."SPOLITYPE" = '1' -- INDIVIDUAL 
+                                                  AND POL."DEXPIRDAT" BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
+                                                  AND (POL."DNULLDATE" IS NULL OR POL."DNULLDATE" > '{p_fecha_inicio}')
+                                                  AND POL."DEXPIRDAT" < '{l_fecha_carga_inicial}')
+                                                  OR 
+                                             (POL."SPOLITYPE" <> '1' -- COLECTIVAS 
+                                                  AND CERT."DEXPIRDAT" BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
+                                                  AND (CERT."DNULLDATE" IS NULL OR CERT."DNULLDATE" > '{p_fecha_inicio}')
+                                                  AND CERT."DEXPIRDAT" < '{l_fecha_carga_inicial}')
+                                             )
+                                        and
+                                             (
+                                             not exists (select 1 from USVTIMV01."CLAIM" CLA 
+                                                       JOIN (SELECT DISTINCT CLH."NCLAIM" FROM (SELECT CAST("SVALUE" AS INT4) "SVALUE" 
+                                                                 FROM USVTIMV01."CONDITION_SERV" CS 
+                                                                 WHERE "NCONDITION" IN (71, 72, 73)) CSV 
+                                                       JOIN USVTIMV01."CLAIM_HIS" CLH 
+                                                       ON COALESCE(CLH."NCLAIM", 0) > 0 
+                                                       AND CLH."NOPER_TYPE" = CSV."SVALUE" 
+                                                       AND CLH."DOPERDATE" >= '{l_fecha_carga_inicial}') CLH 
+                                                       ON CLH."NCLAIM" = CLA."NCLAIM"
+                                                       WHERE CLA."SCERTYPE" = POL."SCERTYPE" 
+                                                       AND CLA."NBRANCH" = POL."NBRANCH" 
+                                                       AND CLA."NPOLICY" = POL."NPOLICY"  
+                                                       AND CLA."NCERTIF" = 0
+                                                       AND POL."SCERTYPE" = '2'
+                                                       AND POL."SSTATUS_POL" NOT IN ('2','3') 
+                                                       AND POL."SPOLITYPE" = '1' 
+                                                       AND (POL."DEXPIRDAT" < '{l_fecha_carga_inicial}' OR POL."DNULLDATE" < '{l_fecha_carga_inicial}'))
+                                             or
+                                             not exists (select 1 from USVTIMV01."CLAIM" CLA 
+                                                       JOIN (SELECT DISTINCT CLH."NCLAIM" FROM (SELECT CAST("SVALUE" AS INT4) "SVALUE" 
+                                                                 FROM USVTIMV01."CONDITION_SERV" CS 
+                                                                 WHERE "NCONDITION" IN (71, 72, 73)) CSV 
+                                                       JOIN USVTIMV01."CLAIM_HIS" CLH 
+                                                       ON COALESCE(CLH."NCLAIM", 0) > 0 
+                                                       AND CLH."NOPER_TYPE" = CSV."SVALUE" 
+                                                       AND CLH."DOPERDATE" >= '{l_fecha_carga_inicial}') CLH 
+                                                       ON CLH."NCLAIM" = CLA."NCLAIM"
+                                                       WHERE CLA."SCERTYPE" = CERT."SCERTYPE" 
+                                                       AND CLA."NBRANCH" = CERT."NBRANCH" 
+                                                       AND CLA."NPOLICY" = CERT."NPOLICY"  
+                                                       AND CLA."NCERTIF" =  CERT."NCERTIF"
+                                                       AND POL."SCERTYPE" = '2'
+                                                       AND POL."SSTATUS_POL" NOT IN ('2','3') 
+                                                       AND POL."SPOLITYPE" <> '1' 
+                                                       AND (CERT."DEXPIRDAT" < '{l_fecha_carga_inicial}' OR CERT."DNULLDATE" < '{l_fecha_carga_inicial}'))
+                                             )
+                              ) AS C
+                              ) COVER 
                         ) AS TMP
                         '''
 
@@ -1222,7 +1217,8 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
   #-------------------------------------------------------------------------------------------------------------------------------#
 
   l_abcobap_insis = f'''
-                    ( SELECT 
+                    (
+                         SELECT 
                       'D' AS INDDETREC,
                       'ABCOBAP' AS TABLAIFRS17,
                       '' AS PK,
@@ -1316,8 +1312,8 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                       '' AS VMTCAPREM   --NO
                       FROM USINSIV01."GEN_RISK_COVERED" GRC
                       JOIN USINSIV01."POLICY" POL ON POL."POLICY_ID" = GRC."POLICY_ID" AND POL."INSR_TYPE" = GRC."INSR_TYPE"
-                      WHERE (CAST(POL."INSR_END" AS DATE) between '{p_fecha_inicio}' and '{p_fecha_fin}'
-                             CAST(AND POL."INSR_END" AS DATE) < '{l_fecha_carga_inicial}' AND NOT EXISTS ( SELECT 1 FROM USINSIV01."CLAIM" C
+                      WHERE (CAST(POL."INSR_END" AS DATE) between '{p_fecha_inicio}' and '{p_fecha_fin}' and
+                             CAST(POL."INSR_END" AS DATE) < '{l_fecha_carga_inicial}' AND NOT EXISTS ( SELECT 1 FROM USINSIV01."CLAIM" C
                                                                                             JOIN USINSIV01."CLAIM_OBJECTS" CO 
                                                                                             ON CO."CLAIM_ID" = C."CLAIM_ID" 
                                                                                             AND CO."POLICY_ID" = C."POLICY_ID"
@@ -1327,7 +1323,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                                                                             AND CO."CLAIM_OBJ_SEQ" = CRH."CLAIM_OBJECT_SEQ"
                                                                                             WHERE C."POLICY_ID" = POL."POLICY_ID"
                                                                                             AND "OP_TYPE" IN ('REG','EST','CLC','PAYMCONF','PAYMINV')
-                                                                                            AND CAST(CRH."REGISTRATION_DATE" AS DATE) >= '{l_fecha_carga_inicial}'     
+                                                                                            AND CAST(CRH."REGISTRATION_DATE" AS DATE) >= '{l_fecha_carga_inicial}'  
                 	      	                                                            ) 
                             )
                     ) AS TMP

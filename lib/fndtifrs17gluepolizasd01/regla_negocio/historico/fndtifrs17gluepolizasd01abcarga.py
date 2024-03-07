@@ -375,7 +375,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                      AND DX.CERTIF  = P.CERTIF 
                                      AND DX.EFFECDATE <= P.EFFECDATE_VAL 
                                      AND (DX.NULLDATE IS NULL OR DX.NULLDATE > P.EFFECDATE_VAL)
-                                     ) 
+                                     ) DXP
                               ) as tmp
                               '''
    #Ejecutar consulta

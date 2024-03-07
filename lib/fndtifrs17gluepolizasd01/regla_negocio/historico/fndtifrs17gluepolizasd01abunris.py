@@ -567,7 +567,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                               from usinsuv01.roles rol
                               join
                               (
-                                SELECT P.USERCOMP, P.COMPANY, P.CERTYPE, P.BRANCH, P.PRODUCT, P.NULLDATE, PSP.SUB_PRODUCT, P.POLICY, CERT.CERTIF, P.TITULARC, P.EFFECDATE ,P.POLITYPE , CERT.EFFECDATE as EFFECDATE_CERT
+                                SELECT P.USERCOMP, P.COMPANY, P.CERTYPE, P.BRANCH, P.PRODUCT, P.NULLDATE, P.POLICY, CERT.CERTIF, P.TITULARC, P.EFFECDATE ,P.POLITYPE , CERT.EFFECDATE as EFFECDATE_CERT
                                     FROM USINSUV01.POLICY P 
                                     LEFT JOIN USINSUG01.CERTIFICAT CERT 
                                     ON P.USERCOMP = CERT.USERCOMP 
@@ -575,13 +575,6 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                     AND P.CERTYPE = CERT.CERTYPE 
                                     AND P.BRANCH  = CERT.BRANCH 
                                     AND P.POLICY  = CERT.policy
-                                    JOIN USINSUV01.POL_SUBPRODUCT PSP
-                                    ON  PSP.USERCOMP = P.USERCOMP
-                                    AND PSP.COMPANY  = P.COMPANY
-                                    AND PSP.CERTYPE  = P.CERTYPE
-                                    AND PSP.BRANCH   = P.BRANCH		   
-                                    AND PSP.PRODUCT  = P.PRODUCT
-                                    AND PSP.POLICY   = P.POLICY	
                                     JOIN USBI01."IFRS170_T_RAMOS_POR_TIPO_RIESGO" RTR
                                     ON RTR."BRANCHCOM" = P.BRANCH 
                                     AND  RTR."RISKTYPEN" = 1
@@ -1258,7 +1251,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
 
       L_ABUNRIS_INSIS_V = f'''
                             (
-                            (select 
+                             select 
                               'D' AS INDDETREC,
                               'ABUNRIS' AS TABLAIFRS17,
                               '' PK,                                                          
@@ -1330,7 +1323,6 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                               '' as DINREGFL                              
                              from  usinsiv01."INSURED_OBJECT" io 
                              where cast(io."REGISTRATION_DATE" as date)  between  '{p_fecha_inicio}' AND '{p_fecha_fin}'
-                            )
                             ) AS TMP
                            '''
     

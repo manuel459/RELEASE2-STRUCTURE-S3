@@ -3,7 +3,8 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
     l_fecha_carga_inicial = '2021-12-31'
 
     l_abdpvida_insunix_life = f'''
-                              (SELECT 
+                              (
+                                SELECT 
                                 'D' AS INDDETREC,
                                 'ABDPVIDA' AS TABLAIFRS17, 
                                 COALESCE(A.BRANCH, 0) || '-' || COALESCE(A.PRODUCT, 0) || '-' || COALESCE(A.POLICY, 0) || '-' || COALESCE(A.CERTIF, 0) AS KABAPOL,
@@ -82,21 +83,14 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                 FROM USINSUV01.LIFE L 
                                 INNER JOIN 
                                 (
-                                    SELECT P.USERCOMP, P.COMPANY, P.CERTYPE, P.BRANCH, P.PRODUCT, P.NULLDATE, PSP.SUB_PRODUCT, P.POLICY, CERT.CERTIF, P.TITULARC, P.EFFECDATE ,P.POLITYPE , CERT.EFFECDATE as EFFECDATE_CERT
+                                  SELECT P.USERCOMP, P.COMPANY, P.CERTYPE, P.BRANCH, P.PRODUCT, P.NULLDATE, P.POLICY, CERT.CERTIF, P.TITULARC, P.EFFECDATE ,P.POLITYPE , CERT.EFFECDATE as EFFECDATE_CERT
                                   FROM USINSUV01.POLICY P 
-                                  LEFT JOIN USINSUG01.CERTIFICAT CERT 
+                                  LEFT JOIN USINSUV01.CERTIFICAT CERT 
                                   ON P.USERCOMP = CERT.USERCOMP 
                                   AND P.COMPANY = CERT.COMPANY 
                                   AND P.CERTYPE = CERT.CERTYPE 
                                   AND P.BRANCH  = CERT.BRANCH 
                                   AND P.POLICY  = CERT.policy
-                                  JOIN USINSUV01.POL_SUBPRODUCT PSP
-                                  ON  PSP.USERCOMP = P.USERCOMP
-                                  AND PSP.COMPANY  = P.COMPANY
-                                  AND PSP.CERTYPE  = P.CERTYPE
-                                  AND PSP.BRANCH   = P.BRANCH		   
-                                  AND PSP.PRODUCT  = P.PRODUCT
-                                  AND PSP.POLICY   = P.POLICY	
                                   JOIN USBI01."IFRS170_T_RAMOS_POR_TIPO_RIESGO" RTR
                                   ON RTR."BRANCHCOM" = P.BRANCH 
                                   AND  RTR."RISKTYPEN" = 1
@@ -423,7 +417,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                           P."SPOLITYPE" = '1' -- INDIVIDUAL 
                                           AND P."DEXPIRDAT" BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
                                           AND (P."DNULLDATE" IS NULL OR P."DNULLDATE" > '{p_fecha_inicio}' ) 
-                                          AND P."DEXPIRDAT" < '{l_fecha_carga_inicial}
+                                          AND P."DEXPIRDAT" < '{l_fecha_carga_inicial}'
                                         )
                                         OR 
                                         (

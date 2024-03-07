@@ -3,7 +3,7 @@ from pyspark.sql.functions import col , coalesce , lit , format_number
 
 def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
 
-    l_fecha_carga_inicial = '2021-12-30'
+    l_fecha_carga_inicial = '2021-12-31'
     
     l_abclrisp_insunix_lpg = f'''
                              (      select
@@ -329,43 +329,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                               pc.branch ||'-'|| coalesce (pc.product, 0) ||'-'|| pc.policy ||'-'|| pc.certif || '-' || coalesce((select evi.scod_vt from usinsug01.equi_vt_inx evi where evi.scod_inx = r.client), '0') as kabunris,
                               case pc.politype when  '1'
                               then  coalesce ((  select coalesce(gc.covergen, '0')
-	                                           from /*usbi01.ifrs170_v_gen_life_cover_inxlpv gc*/
-	                                           (   select gco.usercomp,
-	                                               gco.company,
-	                                               gco.branch,
-	                                               gco.product,
-	                                               gco.currency,
-	                                               gco.modulec,
-	                                               gco.cover,
-	                                               gco.effecdate,
-	                                               gco.nulldate,
-	                                               (coalesce(gco.covergen, 0) || '-' || coalesce(gco.currency, 0) || '-g' ) as covergen
-	                                               from usinsug01.gen_cover gco
-	                                               where  (( select distinct pro.brancht
-	                                   	                     from usinsuv01.product pro
-	                                                         where pro.usercomp = gco.usercomp 
-	                                                         and pro.company    = gco.company 
-	                                                         and pro.branch     = gco.branch 
-	                                                         and pro.product    = gco.product and pro.nulldate is null)) not in ('1', '5')
-	                                               union
-	                                               select gco.usercomp,
-	                                               gco.company,
-	                                               gco.branch,
-	                                               gco.product,
-	                                               gco.currency,
-	                                               0 as modulec,
-	                                               gco.cover,
-	                                               gco.effecdate,
-	                                               gco.nulldate,
-	                                               (coalesce(gco.covergen, 0) || '-' || coalesce(gco.currency, 0) || '-l') as covergen
-	                                               from usinsug01.life_cover gco
-	                                               where ((( select distinct pro.brancht
-			                                             from usinsuv01.product pro
-			                                             where pro.usercomp = gco.usercomp 
-			                                             and pro.company    = gco.company 
-			                                             and pro.branch     = gco.branch 
-			                                             and pro.product    = gco.product 
-			                                             and pro.nulldate is null))::text) in ('1', '5')) gc 
+	                                           from usbi01.ifrs170_v_gen_life_cover_inxlpv gc
 		                                      join usinsuv01.cover c  
 		                                      on  gc.usercomp = c.usercomp 
 		                                      and gc.company  = c.company 
@@ -387,36 +351,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
 		                                      and  (c.nulldate is null or c.nulldate > pc.effecdate)
 		                                      and  c.cover = 1 limit 1), '0')                                         
                               else  (coalesce((  select coalesce(gc.covergen, '0')
-                                                 from /*usbi01.ifrs170_v_gen_life_cover_inxlpv*/
-                                                 ( select gco.usercomp,
-                                                   gco.company,
-                                                   gco.branch,
-                                                   gco.product,
-                                                   gco.currency,
-                                                   gco.modulec,
-                                                   gco.cover,
-                                                   gco.effecdate,
-                                                   gco.nulldate,
-                                                   ((gco.covergen || '-'::text) || gco.currency) || '-g'::text as covergen
-                                                   from usinsug01.gen_cover gco
-                                                   where ((( select distinct pro.brancht
-                                                             from usinsuv01.product pro
-                                                             where pro.usercomp = gco.usercomp and pro.company = gco.company and pro.branch = gco.branch and pro.product = gco.product and pro.nulldate is null))::text) <> all (array['1'::character varying, '5'::character varying]::text[])
-                                                   union
-                                                   select gco.usercomp,
-                                                   gco.company,
-                                                   gco.branch,
-                                                   gco.product,
-                                                   gco.currency,
-                                                   0 as modulec,
-                                                   gco.cover,
-                                                   gco.effecdate,
-                                                   gco.nulldate,
-                                                   ((gco.covergen || '-'::text) || gco.currency) || '-l'::text as covergen
-                                                   from usinsug01.life_cover gco
-                                                   where ((( select distinct pro.brancht
-                                                             from usinsuv01.product pro
-                                                             where pro.usercomp = gco.usercomp and pro.company = gco.company and pro.branch = gco.branch and pro.product = gco.product and pro.nulldate is null))::text) = any (array['1'::character varying, '5'::character varying]::text[])) gc 
+                                                 from usbi01.ifrs170_v_gen_life_cover_inxlpv gc 
                                                    join usinsuv01.cover c  
                                                    on  gc.usercomp = c.usercomp 
                                                    and gc.company  = c.company 
@@ -586,7 +521,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                     and p.certype = cert.certype 
                                     and p.branch  = cert.branch 
                                     and p.policy  = cert.policy	
-                                    join usbi01."ifrs170_t_ramos_por_tipo_riesgo" rtr on rtr."branchcom" = p.branch and  rtr."risktypen" = 1 and rtr."sourceschema" = 'usinsuv01'
+                                    join usbi01."IFRS170_T_RAMOS_POR_TIPO_RIESGO" rtr on rtr."BRANCHCOM" = p.branch and  rtr."RISKTYPEN" = 1 and rtr."SOURCESCHEMA" = 'usinsuv01'
                                     where p.certype = '2' 
                                     and p.status_pol not in ('2','3') 
                                     and ( 
@@ -887,12 +822,14 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                                     AND P."SSTATUS_POL" NOT IN ('2','3') 
                                     AND (
                                           (P."SPOLITYPE" = '1' -- INDIVIDUAL 
-                                          AND P."DEXPIRDAT" BETWEEN '{p_fecha_inicio}' AND '{l_fecha_carga_inicial}'
-                                          AND (P."DNULLDATE" IS NULL OR P."DNULLDATE" > '{p_fecha_inicio}') )
+                                          AND P."DEXPIRDAT" BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
+                                          AND (P."DNULLDATE" IS NULL OR P."DNULLDATE" > '{p_fecha_inicio}')
+                                          AND P."DEXPIRDAT" < '{l_fecha_carga_inicial}')
                                           OR 
                                           (P."SPOLITYPE" <> '1' -- COLECTIVAS 
-                                          AND CERT."DEXPIRDAT" BETWEEN '{p_fecha_inicio}' AND '{l_fecha_carga_inicial}'
-                                          AND (CERT."DNULLDATE" IS NULL OR CERT."DNULLDATE" > '{p_fecha_inicio}'))
+                                          AND CERT."DEXPIRDAT" BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
+                                          AND (CERT."DNULLDATE" IS NULL OR CERT."DNULLDATE" > '{p_fecha_inicio}')
+                                          AND CERT."DEXPIRDAT" < '{l_fecha_carga_inicial}')
                                           )
                                     and (
                                                 not exists (select 1 from USVTIMG01."CLAIM" CLA 
