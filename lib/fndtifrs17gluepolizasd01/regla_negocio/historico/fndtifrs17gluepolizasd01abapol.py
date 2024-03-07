@@ -2140,7 +2140,7 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                         LEFT JOIN USINSIV01."POLICY_ENG_POLICIES" PP 
                         ON P."POLICY_ID" = PP."POLICY_ID"                       
                         WHERE PP."ENG_POL_TYPE" = 'POLICY'                       
-                        AND (P."INSR_END" >= '{l_fecha_carga_inicial}' OR  (P."INSR_END" < '{l_fecha_carga_inicial}' AND EXISTS ( SELECT 1 FROM USINSIV01."CLAIM" C
+                        AND (P."INSR_END" BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}' OR  (P."INSR_END" < '{p_fecha_inicio}' AND EXISTS ( SELECT 1 FROM USINSIV01."CLAIM" C
 										                        	      	                              		                  JOIN USINSIV01."CLAIM_OBJECTS" CO 
 										                        	      	                              		                  ON CO."CLAIM_ID" = C."CLAIM_ID" 
 										                        	      	                              		                  AND CO."POLICY_ID" = C."POLICY_ID"
@@ -2220,8 +2220,8 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                         LEFT JOIN  USINSIV01."POLICY_ENG_POLICIES" PP 
                         ON P."POLICY_ID" = PP."POLICY_ID"
                         WHERE PP."ENG_POL_TYPE" = 'MASTER'
-                        AND (P."INSR_END" >= '{l_fecha_carga_inicial}'
-                            OR (P."INSR_END" < '{l_fecha_carga_inicial}' AND EXISTS ( SELECT 1 FROM USINSIV01."CLAIM" C
+                        AND (P."INSR_END" BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
+                            OR (P."INSR_END" < '{p_fecha_inicio}' AND EXISTS ( SELECT 1 FROM USINSIV01."CLAIM" C
                         	      	                              		             JOIN USINSIV01."CLAIM_OBJECTS" CO 
                         	      	                              		             ON CO."CLAIM_ID" = C."CLAIM_ID" 
                         	      	                              		             AND CO."POLICY_ID" = C."POLICY_ID"
@@ -2301,8 +2301,8 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                         LEFT JOIN  USINSIV01."POLICY_ENG_POLICIES" PP 
                         ON P."POLICY_ID" = PP."POLICY_ID"
                         WHERE PP."ENG_POL_TYPE" = 'DEPENDENT' 
-                        AND CAST(P."INSR_END" AS DATE) >= '{l_fecha_carga_inicial}'
-                              OR  (CAST(P."INSR_END" AS DATE) < '{l_fecha_carga_inicial}' AND EXISTS (SELECT 1 FROM USINSIV01."CLAIM" C
+                        AND CAST(P."INSR_END" AS DATE) BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
+                              OR  (CAST(P."INSR_END" AS DATE) < '{p_fecha_inicio}' AND NOT EXISTS (SELECT 1 FROM USINSIV01."CLAIM" C
                       	      	                              		                    JOIN USINSIV01."CLAIM_OBJECTS" CO 
                                                                                         ON  CO."CLAIM_ID"  = C."CLAIM_ID" 
                                                                                         AND CO."POLICY_ID" = C."POLICY_ID"
@@ -2316,7 +2316,6 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                       	      	                                                       )))P
                         LEFT JOIN USINSIV01."P_CLIENTS" PC 
                         ON P."CLIENT_ID" = PC."CLIENT_ID"
-                        WHERE P."INSR_END" >= '{l_fecha_carga_inicial}' AND CAST(P."REGISTRATION_DATE" as DATE) BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
                         ) AS TMP
                      '''
 
