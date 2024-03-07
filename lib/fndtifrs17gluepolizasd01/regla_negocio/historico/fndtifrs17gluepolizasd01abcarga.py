@@ -7,159 +7,116 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
 
    l_polizas_vtime_general = f'''
                              (SELECT  
-                              'D' INDDETREC, 
-                              'ABCARGA' TABLAIFRS17, 
-                              '' PK,      
-                              '' DTPREG,   --NO
-                              '' TIOCPROC, --NO
-                              COALESCE(CAST(CAST(DXP."DEFFECDATE" AS DATE) AS VARCHAR), '') TIOCFRM, --PENDIENTE
-                              '' TIOCTO, --NO
-                              'PVG' KGIORIGM, 
-                              COALESCE(DXP."NBRANCH",0) || '-' || COALESCE(DXP."NPRODUCT",0) || '-' || COALESCE(DXP."NPOLICY",0) || '-' || COALESCE(DXP."NCERTIF",0) KABAPOL, --FK
-                              '' KABUNRIS, --FK  
-                              /*
-                              *  DE ACUERDO A JAOS EL DATO SE PUDIERA OBTENER EN BASE A LA PRIMERA COVERTURA PERO LOS SISTEMAS 
-                              NO TIENEN ESA INFORMACION DE MANERA DIRECTA EN LA TABLA DE RECARGOS Y DESCUENTOS
-                              (
-                                SELECT C."NCOVER" FROM USVTIMG01."COVER" C 
-                                WHERE C."SCERTYPE" = '2' 
-                                AND   C."NBRANCH" = DXP."NBRANCH"  
-                                AND   C."NPOLICY" = DXP."NPOLICY"
-                                AND   C."NCERTIF" = DXP."NCERTIF" 
-                                AND   C."NCOVER"  = 1
-                                AND   C."DEFFECDATE" <= DXP."DEFFECDATE" 
-                                AND (C."DNULLDATE" IS NULL OR C."DNULLDATE" > DXP."DEFFECDATE") 
-                              )*/
-                              '' KGCTPCBT, 
-                              '' KACCDFDO, --VALOR VACIO
-                              COALESCE(DXP."SDISEXPRI" , '') KACTPCAG,
-                              COALESCE(DXP."NBRANCH",0) || '-' || COALESCE(DXP."NPRODUCT",0) || '-' || COALESCE(DXP."NDISC_CODE", 0) KACCDCAG, 
-                              DXP."NAMOUNT" VMTCARGA, 
-                              COALESCE(CAST(CAST(DXP."DEFFECDATE" AS DATE) AS VARCHAR), '') TULTMALT, 
-                              '' DUSRUPD, --NO
-                              'LPG' DCOMPA, 
-                              '' DMARCA, --NO
-                              '' DINCPRM, --VALOR VACIO
-                              CASE 
-                              WHEN ( DXP."NAMOUNT" != 0 AND DXP."NAMOUNT" IS NOT NULL) AND ( CAST(DXP."NPERCENT" AS INTEGER)= 0 AND DXP."NPERCENT" IS NULL) 
-                              THEN '1' --IMPORTE 
-                              ELSE '2' --PORCENTAJE
-                              END KACTPVCG, 
-                              '' DDURACAO, 
-                              '' KACTPCBB --valor vacio
-                              FROM
-                              (
-                                (SELECT DX."DEFFECDATE", DX."NBRANCH", DX."NPRODUCT", DX."NPOLICY", DX."NCERTIF", DX."NDISC_CODE", DX."NAMOUNT", DX."NPERCENT", DE."SDISEXPRI" 
-                                FROM USVTIMG01."POLICY" P
-                                LEFT JOIN USVTIMG01."CERTIFICAT" CERT 
-                                ON CERT."SCERTYPE" = P."SCERTYPE" 
-                         		    AND CERT."NBRANCH" = P."NBRANCH" 
-                         		    AND CERT."NPRODUCT" = P."NPRODUCT" 
-                         		    AND CERT."NPOLICY" = P."NPOLICY"
-                                JOIN USVTIMG01."DISC_XPREM" DX        
-                                ON DX."SCERTYPE" = P."SCERTYPE" 
-                         		    AND   DX."NBRANCH" = P."NBRANCH" 
-                         		    AND DX."NPRODUCT" = P."NPRODUCT" 
-                         		    AND DX."NPOLICY" = P."NPOLICY" 
-                         		    AND DX."NCERTIF" = CERT."NCERTIF" 
-                         		    AND DX."DEFFECDATE" <= P."DSTARTDATE" 
-                         		    AND (DX."DNULLDATE" IS NULL OR DX."DNULLDATE" > P."DSTARTDATE")
-                                LEFT JOIN USVTIMG01."DISCO_EXPR" DE   
-                                ON DX."NBRANCH" = DE."NBRANCH" 
-                         		    AND DX."NPRODUCT" = DE."NPRODUCT" 
-                         		    AND DX."NDISC_CODE" = DE."NDISEXPRC"
-                                WHERE P."SCERTYPE" = '2' 
-                                AND P."SSTATUS_POL" NOT IN ('2', '3')
-                                AND ((P."SPOLITYPE" = '1' AND CAST(P."DEXPIRDAT" AS DATE) BETWEEN '{p_fecha_inicio}' AND '{l_fecha_carga_inicial}' AND (P."DNULLDATE" IS NULL OR CAST(P."DNULLDATE" AS DATE) > '{p_fecha_inicio}'))
-                                OR  (P."SPOLITYPE" <> '1' AND CAST(CERT."DEXPIRDAT" AS DATE) BETWEEN '{p_fecha_inicio}' AND '{l_fecha_carga_inicial}' AND (CERT."DNULLDATE" IS NULL OR CAST(CERT."DNULLDATE" AS DATE) > '{p_fecha_inicio}')))
-                                AND CAST(P."DSTARTDATE" AS DATE) BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}')
-
-                                UNION  /*SE QUITO EL UNION DESDE AQUI */
-								
-                                (SELECT DX."DEFFECDATE", DX."NBRANCH", DX."NPRODUCT", DX."NPOLICY", DX."NCERTIF", DX."NDISC_CODE", DX."NAMOUNT", DX."NPERCENT", DE."SDISEXPRI" 
-                                FROM USVTIMG01."POLICY" P
-                                JOIN USVTIMG01."CERTIFICAT" CERT 
-                                ON CERT."SCERTYPE" = P."SCERTYPE" 
-								                AND CERT."NBRANCH" = P."NBRANCH" 
-								                AND CERT."NPRODUCT" = P."NPRODUCT" 
-								                AND CERT."NPOLICY" = P."NPOLICY"
-                                JOIN USVTIMG01."DISC_XPREM" DX        
-                                ON DX."SCERTYPE" = P."SCERTYPE" 
-								                AND   DX."NBRANCH" = P."NBRANCH" 
-								                AND DX."NPRODUCT" = P."NPRODUCT" 
-								                AND DX."NPOLICY" = P."NPOLICY" 
-								                AND DX."NCERTIF" = CERT."NCERTIF" 
-								                AND DX."DEFFECDATE" <= P."DSTARTDATE" 
-								                AND (DX."DNULLDATE" IS NULL OR DX."DNULLDATE" > P."DSTARTDATE")
-                                LEFT JOIN USVTIMG01."DISCO_EXPR" DE   
-                                ON DX."NBRANCH" = DE."NBRANCH" 
-								                AND DX."NPRODUCT" = DE."NPRODUCT" 
-								                AND DX."NDISC_CODE" = DE."NDISEXPRC"
-                                JOIN USVTIMG01."CLAIM" CLA 
-                                ON CLA."SCERTYPE" = P."SCERTYPE" 
-								                AND CLA."NBRANCH" = P."NBRANCH" 
-								                AND CLA."NPRODUCT" = P."NPRODUCT" 
-								                AND CLA."NPOLICY" = P."NPOLICY" 
-								                AND CLA."NCERTIF" = 0
-                                JOIN( SELECT DISTINCT CLH."NCLAIM" 
-                                  	  FROM (SELECT CAST("SVALUE" AS INT4) "SVALUE" 
-                                  	   		FROM USVTIMG01."CONDITION_SERV" CS 
-                                  	   		WHERE "NCONDITION" IN (71, 72, 73)
-                                  	   	   ) CSV 
-                                      JOIN USVTIMG01."CLAIM_HIS" CLH 
-                                      ON COALESCE(CLH."NCLAIM", 0) > 0 
-                                      AND CLH."NOPER_TYPE" = CSV."SVALUE" 
-                                      AND CAST(CLH."DOPERDATE" AS DATE) >= '{l_fecha_carga_inicial}'
-                                    ) CLH ON CLH."NCLAIM" = CLA."NCLAIM"
-                                WHERE P."SCERTYPE" = '2' 
-                                AND P."SSTATUS_POL" NOT IN ('2','3') 
-                                AND P."SPOLITYPE" = '1' 
-                                AND (CAST(P."DEXPIRDAT" AS DATE)< '{l_fecha_carga_inicial}' OR CAST(P."DNULLDATE" AS DATE) < '{l_fecha_carga_inicial}')
-                                AND CAST(P."DSTARTDATE" AS DATE) BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}')
-
-                                UNION 
-
-                                (SELECT DX."DEFFECDATE", DX."NBRANCH", DX."NPRODUCT", DX."NPOLICY", DX."NCERTIF", DX."NDISC_CODE", DX."NAMOUNT", DX."NPERCENT", DE."SDISEXPRI" 
-                                 FROM USVTIMG01."POLICY" P
-                                 LEFT JOIN USVTIMG01."CERTIFICAT" CERT 
-								                 ON CERT."SCERTYPE" = P."SCERTYPE" 
-								                 AND CERT."NBRANCH" = P."NBRANCH" 
-								                 AND CERT."NPRODUCT" = P."NPRODUCT" 
-								                 AND CERT."NPOLICY" = P."NPOLICY"
-                                 JOIN USVTIMG01."DISC_XPREM" DX        
-								                 ON   DX."SCERTYPE" = P."SCERTYPE" 
-								                 AND   DX."NBRANCH" = P."NBRANCH" 
-								                 AND   DX."NPRODUCT" = P."NPRODUCT" 
-								                 AND   DX."NPOLICY" = P."NPOLICY" 
-								                 AND DX."NCERTIF" = CERT."NCERTIF" 
-								                 AND DX."DEFFECDATE" <= P."DSTARTDATE" 
-								                 AND (DX."DNULLDATE" IS NULL OR DX."DNULLDATE" > P."DSTARTDATE")
-                                 LEFT JOIN USVTIMG01."DISCO_EXPR" DE   
-								                 ON   DX."NBRANCH" = DE."NBRANCH" 
-								                 AND DX."NPRODUCT" = DE."NPRODUCT" 
-								                 AND DX."NDISC_CODE" = DE."NDISEXPRC"
-                                 JOIN USVTIMG01."CLAIM" CLA 
-								                 ON CLA."SCERTYPE" = CERT."SCERTYPE" 
-								                 AND CLA."NBRANCH" = CERT."NBRANCH" 
-								                 AND CLA."NPOLICY" = CERT."NPOLICY"  
-								                 AND CLA."NCERTIF" =  CERT."NCERTIF"
-                                 JOIN ( SELECT DISTINCT CLH."NCLAIM" 
-                                        FROM (SELECT CAST("SVALUE" AS INT4) "SVALUE" 
-                                        	  FROM USVTIMG01."CONDITION_SERV" CS 
-                                        	  WHERE "NCONDITION" IN (71, 72, 73)
-                                        	 ) CSV 
-                                       JOIN USVTIMG01."CLAIM_HIS" CLH 
-                                       ON COALESCE(CLH."NCLAIM", 0) > 0 
-									                     AND CLH."NOPER_TYPE" = CSV."SVALUE" 
-									                     AND CAST(CLH."DOPERDATE" AS DATE) >= '{l_fecha_carga_inicial}'
-                                      ) CLH
-                                 ON CLH."NCLAIM" = CLA."NCLAIM"
-                                 WHERE P."SCERTYPE" = '2' 
-                                 AND P."SSTATUS_POL" NOT IN ('2','3') 
-                                 AND P."SPOLITYPE" <> '1' 
-                                 AND (CAST(CERT."DEXPIRDAT" AS DATE) < '{l_fecha_carga_inicial}' OR CAST(CERT."DNULLDATE" AS DATE) < '{l_fecha_carga_inicial}')
-                                 AND CAST(P."DSTARTDATE" AS DATE) BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}') /*SE QUITO EL UNION DESDE AQUI */
-                              ) AS DXP
+                                'D' INDDETREC, 
+                                'ABCARGA' TABLAIFRS17, 
+                                '' PK,      
+                                '' DTPREG,   --NO
+                                '' TIOCPROC, --NO
+                                COALESCE(CAST(CAST(DXP."DEFFECDATE" AS DATE) AS VARCHAR), '') TIOCFRM, --PENDIENTE
+                                '' TIOCTO, --NO
+                                'PVG' KGIORIGM, 
+                                COALESCE(DXP."NBRANCH",0) || '-' || COALESCE(DXP."NPRODUCT",0) || '-' || COALESCE(DXP."NPOLICY",0) || '-' || COALESCE(DXP."NCERTIF",0) KABAPOL, --FK
+                                '' KABUNRIS, --FK  
+                                /*
+                                *  DE ACUERDO A JAOS EL DATO SE PUDIERA OBTENER EN BASE A LA PRIMERA COVERTURA PERO LOS SISTEMAS 
+                                NO TIENEN ESA INFORMACION DE MANERA DIRECTA EN LA TABLA DE RECARGOS Y DESCUENTOS
+                                (
+                                  SELECT C."NCOVER" FROM USVTIMG01."COVER" C 
+                                  WHERE C."SCERTYPE" = '2' 
+                                  AND   C."NBRANCH" = DXP."NBRANCH"  
+                                  AND   C."NPOLICY" = DXP."NPOLICY"
+                                  AND   C."NCERTIF" = DXP."NCERTIF" 
+                                  AND   C."NCOVER"  = 1
+                                  AND   C."DEFFECDATE" <= DXP."DEFFECDATE" 
+                                  AND (C."DNULLDATE" IS NULL OR C."DNULLDATE" > DXP."DEFFECDATE") 
+                                )*/
+                                '' KGCTPCBT, 
+                                '' KACCDFDO, --VALOR VACIO
+                                COALESCE(DXP."SDISEXPRI" , '') KACTPCAG,
+                                COALESCE(DXP."NBRANCH",0) || '-' || COALESCE(DXP."NPRODUCT",0) || '-' || COALESCE(DXP."NDISC_CODE", 0) KACCDCAG, 
+                                DXP."NAMOUNT" VMTCARGA, 
+                                COALESCE(CAST(CAST(DXP."DEFFECDATE" AS DATE) AS VARCHAR), '') TULTMALT, 
+                                '' DUSRUPD, --NO
+                                'LPG' DCOMPA, 
+                                '' DMARCA, --NO
+                                '' DINCPRM, --VALOR VACIO
+                                CASE 
+                                WHEN ( DXP."NAMOUNT" != 0 AND DXP."NAMOUNT" IS NOT NULL) AND ( CAST(DXP."NPERCENT" AS INTEGER)= 0 AND DXP."NPERCENT" IS NULL) 
+                                THEN '1' --IMPORTE 
+                                ELSE '2' --PORCENTAJE
+                                END KACTPVCG, 
+                                '' DDURACAO, 
+                                '' KACTPCBB --valor vacio
+                                FROM
+                                (
+                                    SELECT DX."DEFFECDATE", DX."NBRANCH", DX."NPRODUCT", DX."NPOLICY", DX."NCERTIF", DX."NDISC_CODE", DX."NAMOUNT", DX."NPERCENT", DE."SDISEXPRI" 
+                                    FROM USVTIMG01."POLICY" P
+                                    LEFT JOIN USVTIMG01."CERTIFICAT" CERT 
+                                    ON CERT."SCERTYPE" = P."SCERTYPE" 
+                                    AND CERT."NBRANCH" = P."NBRANCH" 
+                                    AND CERT."NPRODUCT" = P."NPRODUCT" 
+                                    AND CERT."NPOLICY" = P."NPOLICY"
+                                    JOIN USVTIMG01."DISC_XPREM" DX        
+                                    ON DX."SCERTYPE" = P."SCERTYPE" 
+                                    AND   DX."NBRANCH" = P."NBRANCH"  
+                                    AND DX."NPRODUCT" = P."NPRODUCT"  
+                                    AND DX."NPOLICY" = P."NPOLICY" 
+                                    AND DX."NCERTIF" = CERT."NCERTIF" 
+                                    AND DX."DEFFECDATE" <= P."DSTARTDATE" 
+                                    AND (DX."DNULLDATE" IS NULL OR DX."DNULLDATE" > P."DSTARTDATE")
+                                    LEFT JOIN USVTIMG01."DISCO_EXPR" DE   
+                                    ON DX."NBRANCH" = DE."NBRANCH" 
+                                    AND DX."NPRODUCT" = DE."NPRODUCT" 
+                                    AND DX."NDISC_CODE" = DE."NDISEXPRC"
+                                    WHERE P."SCERTYPE" = '2' 
+                                    AND P."SSTATUS_POL" NOT IN ('2', '3')
+                                    AND (
+                                        (P."SPOLITYPE" = '1' AND CAST(P."DEXPIRDAT" AS DATE) BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}' 
+                                        AND (P."DNULLDATE" IS NULL OR CAST(P."DNULLDATE" AS DATE) > '{p_fecha_inicio}')
+                                        and P."DEXPIRDAT" < '{l_fecha_carga_inicial}')
+                                          OR  
+                                          (P."SPOLITYPE" <> '1' AND CAST(CERT."DEXPIRDAT" AS DATE) BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}' 
+                                          AND (CERT."DNULLDATE" IS NULL OR CAST(CERT."DNULLDATE" AS DATE) > '{p_fecha_inicio}')
+                                          and cert."DEXPIRDAT" < '{l_fecha_carga_inicial}')
+                                        )
+                                    and (
+                                        not exists (select 1 from USVTIMG01."CLAIM" CLA 
+                                                      JOIN (SELECT DISTINCT CLH."NCLAIM" FROM (SELECT CAST("SVALUE" AS INT4) "SVALUE" 
+                                                            FROM USVTIMG01."CONDITION_SERV" CS 
+                                                            WHERE "NCONDITION" IN (71, 72, 73)) CSV 
+                                                      JOIN USVTIMG01."CLAIM_HIS" CLH 
+                                                      ON COALESCE(CLH."NCLAIM", 0) > 0 
+                                                      AND CLH."NOPER_TYPE" = CSV."SVALUE" 
+                                                      AND CLH."DOPERDATE" >= '{l_fecha_carga_inicial}') CLH 
+                                                      ON CLH."NCLAIM" = CLA."NCLAIM"
+                                                      WHERE CLA."SCERTYPE" = P."SCERTYPE" 
+                                                      AND CLA."NBRANCH" = P."NBRANCH" 
+                                                      AND CLA."NPOLICY" = P."NPOLICY"  
+                                                      AND CLA."NCERTIF" = 0
+                                                      AND P."SCERTYPE" = '2'
+                                                      AND P."SSTATUS_POL" NOT IN ('2','3') 
+                                                      AND P."SPOLITYPE" = '1' 
+                                                      AND (P."DEXPIRDAT" < '{l_fecha_carga_inicial}' OR P."DNULLDATE" < '{l_fecha_carga_inicial}'))
+                                        or
+                                        not exists (select 1 from USVTIMG01."CLAIM" CLA 
+                                                    JOIN (SELECT DISTINCT CLH."NCLAIM" FROM (SELECT CAST("SVALUE" AS INT4) "SVALUE" 
+                                                          FROM USVTIMG01."CONDITION_SERV" CS 
+                                                          WHERE "NCONDITION" IN (71, 72, 73)) CSV 
+                                                      JOIN USVTIMG01."CLAIM_HIS" CLH 
+                                                      ON COALESCE(CLH."NCLAIM", 0) > 0 
+                                                      AND CLH."NOPER_TYPE" = CSV."SVALUE" 
+                                                      AND CLH."DOPERDATE" >= '{l_fecha_carga_inicial}') CLH 
+                                                      ON CLH."NCLAIM" = CLA."NCLAIM"
+                                                      WHERE CLA."SCERTYPE" = CERT."SCERTYPE" 
+                                                      AND CLA."NBRANCH" = CERT."NBRANCH" 
+                                                      AND CLA."NPOLICY" = CERT."NPOLICY"  
+                                                      AND CLA."NCERTIF" =  CERT."NCERTIF"
+                                                      AND P."SCERTYPE" = '2'
+                                                      AND P."SSTATUS_POL" NOT IN ('2','3') 
+                                                      AND P."SPOLITYPE" <> '1' 
+                                                      AND (CERT."DEXPIRDAT" < '{l_fecha_carga_inicial}' OR CERT."DNULLDATE" < '{l_fecha_carga_inicial}'))
+                                        ) 
+                                ) AS DXP
                               ) AS TMP
                               '''
    
@@ -208,99 +165,75 @@ def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
                              '' KACTPCBB --VALOR VACIO
                              FROM
                              (
-                               (SELECT DX."DEFFECDATE", DX."NBRANCH", DX."NPRODUCT", DX."NPOLICY", DX."NCERTIF", DX."NDISC_CODE", DX."NAMOUNT", DX."NPERCENT", DE."SDISEXPRI" 
-                               FROM USVTIMV01."POLICY" P
-                               LEFT JOIN USVTIMV01."CERTIFICAT" CERT 
-                               ON CERT."SCERTYPE" = P."SCERTYPE" 
-							                 AND CERT."NBRANCH" = P."NBRANCH" 
-							                 AND CERT."NPRODUCT" = P."NPRODUCT" 
-							                 AND CERT."NPOLICY" = P."NPOLICY"
-                               JOIN USVTIMV01."DISC_XPREM" DX 
-                               ON DX."SCERTYPE" = P."SCERTYPE" 
-							                 AND DX."NBRANCH" = P."NBRANCH" 
-							                 AND DX."NPRODUCT" = P."NPRODUCT" 
-							                 AND DX."NPOLICY" = P."NPOLICY" 
-							                 AND DX."NCERTIF" = CERT."NCERTIF" 
-							                 AND DX."DEFFECDATE" <= P."DSTARTDATE" 
-							                 AND (DX."DNULLDATE" IS NULL OR DX."DNULLDATE" > P."DSTARTDATE")
-                               LEFT JOIN USVTIMV01."DISCO_EXPR" DE 
-                               ON DX."NBRANCH" = DE."NBRANCH" 
-							                 AND DX."NPRODUCT" = DE."NPRODUCT" 
-							                 AND DX."NDISC_CODE" = DE."NDISEXPRC"
-                               WHERE P."SCERTYPE" = '2'  
-                               AND P."SSTATUS_POL" NOT IN ('2', '3')
-                               AND ((P."SPOLITYPE" = '1' AND P."DEXPIRDAT" >= '{l_fecha_carga_inicial}' AND (P."DNULLDATE" IS NULL OR P."DNULLDATE" > '{l_fecha_carga_inicial}'))
-                                OR  (P."SPOLITYPE" <> '1' AND CERT."DEXPIRDAT" >= '{l_fecha_carga_inicial}' AND (CERT."DNULLDATE" IS NULL OR CERT."DNULLDATE" > '{l_fecha_carga_inicial}')))
-                               AND P."DSTARTDATE" BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}' )
-
-                               UNION  /*SE QUITO EL UNION DESDE AQUI */
-                              
-                               (SELECT DX."DEFFECDATE", DX."NBRANCH", DX."NPRODUCT", DX."NPOLICY", DX."NCERTIF", DX."NDISC_CODE", DX."NAMOUNT", DX."NPERCENT", DE."SDISEXPRI" 
-                               FROM USVTIMV01."POLICY" P
-                               LEFT JOIN USVTIMV01."CERTIFICAT" CERT ON CERT."SCERTYPE" = P."SCERTYPE" AND CERT."NBRANCH" = P."NBRANCH" AND CERT."NPRODUCT" = P."NPRODUCT" AND CERT."NPOLICY" = P."NPOLICY"
-                               JOIN USVTIMV01."DISC_XPREM" DX ON DX."SCERTYPE" = P."SCERTYPE" AND DX."NBRANCH" = P."NBRANCH" AND DX."NPRODUCT" = P."NPRODUCT" AND DX."NPOLICY" = P."NPOLICY" AND DX."NCERTIF" = CERT."NCERTIF" AND DX."DEFFECDATE" <= P."DSTARTDATE" AND (DX."DNULLDATE" IS NULL OR DX."DNULLDATE" > P."DSTARTDATE")
-                               LEFT JOIN USVTIMV01."DISCO_EXPR" DE ON DX."NBRANCH" = DE."NBRANCH" AND DX."NPRODUCT" = DE."NPRODUCT" AND DX."NDISC_CODE" = DE."NDISEXPRC"                                     
-                                JOIN USVTIMV01."CLAIM" CLA ON CLA."SCERTYPE" = P."SCERTYPE" AND CLA."NPOLICY" = P."NPOLICY" AND CLA."NBRANCH" = P."NBRANCH"
-                                JOIN (
-                                      SELECT DISTINCT CLH."NCLAIM" 
-                                      FROM (SELECT CAST("SVALUE" AS INT4) "SVALUE" 
-                                            FROM USVTIMV01."CONDITION_SERV" CS 
-                                            WHERE "NCONDITION" IN (71, 72, 73)
-                                           ) CSV 
-                                      JOIN USVTIMV01."CLAIM_HIS" CLH 
-                                      ON COALESCE(CLH."NCLAIM", 0) > 0 
-                                      AND CLH."NOPER_TYPE" = CSV."SVALUE" 
-                                      AND CLH."DOPERDATE" >= '{l_fecha_carga_inicial}'
-                                     ) CLH 
-                                ON CLH."NCLAIM" = CLA."NCLAIM"
-                                WHERE P."SCERTYPE" = '2' 
-                                AND P."SSTATUS_POL" NOT IN ('2','3') 
-                                AND P."SPOLITYPE" = '1' 
-                                AND (P."DEXPIRDAT" < '{l_fecha_carga_inicial}' OR P."DNULLDATE" < '{l_fecha_carga_inicial}')
-                                AND P."DSTARTDATE" BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}')
-
-                                UNION
-
-                                (SELECT DX."DEFFECDATE", DX."NBRANCH", DX."NPRODUCT", DX."NPOLICY", DX."NCERTIF", DX."NDISC_CODE", DX."NAMOUNT", DX."NPERCENT", DE."SDISEXPRI" 
-                                 FROM USVTIMV01."POLICY" P
-                                 LEFT JOIN USVTIMV01."CERTIFICAT" CERT 
-                                 ON CERT."SCERTYPE" = P."SCERTYPE" 
-                                 AND CERT."NBRANCH" = P."NBRANCH" 
-                                 AND CERT."NPRODUCT" = P."NPRODUCT" 
-                                 AND CERT."NPOLICY" = P."NPOLICY"
-                                 JOIN USVTIMV01."DISC_XPREM" DX 
-                                 ON DX."SCERTYPE" = P."SCERTYPE" 
-								                 AND DX."NBRANCH" = P."NBRANCH" 
-								                 AND DX."NPRODUCT" = P."NPRODUCT" 
-								                 AND DX."NPOLICY" = P."NPOLICY" 
-								                 AND DX."NCERTIF" = CERT."NCERTIF" 
-								                 AND DX."DEFFECDATE" <= P."DSTARTDATE" 
-								                 AND (DX."DNULLDATE" IS NULL OR DX."DNULLDATE" > P."DSTARTDATE")
-                                 LEFT JOIN USVTIMV01."DISCO_EXPR" DE 
-                                 ON DX."NBRANCH" = DE."NBRANCH" 
-								                 AND DX."NPRODUCT" = DE."NPRODUCT" 
-								                 AND DX."NDISC_CODE" = DE."NDISEXPRC"
-                                 JOIN USVTIMV01."CLAIM" CLA 
-                                 ON CLA."SCERTYPE" = CERT."SCERTYPE" 
-								                 AND CLA."NBRANCH" = CERT."NBRANCH" 
-								                 AND CLA."NPOLICY" = CERT."NPOLICY"  
-								                 AND CLA."NCERTIF" =  CERT."NCERTIF"
-                                 JOIN (
-                                       SELECT DISTINCT CLH."NCLAIM" 
-                                       FROM (SELECT CAST("SVALUE" AS INT4) "SVALUE" 
-                                       		 FROM USVTIMV01."CONDITION_SERV" CS WHERE "NCONDITION" IN (71, 72, 73)
-                                       		) CSV 
-                                       JOIN USVTIMV01."CLAIM_HIS" CLH 
-                                       ON COALESCE(CLH."NCLAIM", 0) > 0 
-                                       AND CLH."NOPER_TYPE" = CSV."SVALUE" 
-                                       AND CLH."DOPERDATE" >= '{l_fecha_carga_inicial}'
-                                      ) CLH 
-                                 ON CLH."NCLAIM" = CLA."NCLAIM"
-                                 WHERE P."SCERTYPE" = '2' 
-                                 AND P."SSTATUS_POL" NOT IN ('2','3') 
-                                 AND P."SPOLITYPE" <> '1' 
-                                 AND (CERT."DEXPIRDAT" < '{l_fecha_carga_inicial}' OR CERT."DNULLDATE" < '{l_fecha_carga_inicial}')  
-                                 AND P."DSTARTDATE" BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}' ) /*SE QUITO EL UNION HASTA AQUI */
+                               SELECT DX."DEFFECDATE", DX."NBRANCH", DX."NPRODUCT", DX."NPOLICY", DX."NCERTIF", DX."NDISC_CODE", DX."NAMOUNT", DX."NPERCENT", DE."SDISEXPRI" 
+                              FROM USVTIMV01."POLICY" P
+                              LEFT JOIN USVTIMV01."CERTIFICAT" CERT 
+                              ON CERT."SCERTYPE" = P."SCERTYPE" 
+                              AND CERT."NBRANCH" = P."NBRANCH" 
+                              AND CERT."NPRODUCT" = P."NPRODUCT" 
+                              AND CERT."NPOLICY" = P."NPOLICY"
+                              JOIN USVTIMV01."DISC_XPREM" DX 
+                              ON DX."SCERTYPE" = P."SCERTYPE" 
+                              AND DX."NBRANCH" = P."NBRANCH" 
+                              AND DX."NPRODUCT" = P."NPRODUCT" 
+                              AND DX."NPOLICY" = P."NPOLICY" 
+                              AND DX."NCERTIF" = CERT."NCERTIF" 
+                              AND DX."DEFFECDATE" <= P."DSTARTDATE" 
+                              AND (DX."DNULLDATE" IS NULL OR DX."DNULLDATE" > P."DSTARTDATE")
+                              LEFT JOIN USVTIMV01."DISCO_EXPR" DE 
+                              ON DX."NBRANCH" = DE."NBRANCH" 
+                              AND DX."NPRODUCT" = DE."NPRODUCT" 
+                              AND DX."NDISC_CODE" = DE."NDISEXPRC"
+                              WHERE P."SCERTYPE" = '2'  
+                              AND P."SSTATUS_POL" NOT IN ('2','3') 
+                              AND ( (P."SPOLITYPE" = '1' -- INDIVIDUAL 
+                                    AND P."DEXPIRDAT" BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
+                                    AND (P."DNULLDATE" IS NULL OR P."DNULLDATE" > '{p_fecha_inicio}')
+                                    AND P."DEXPIRDAT" < '{l_fecha_carga_inicial}' )
+                                    OR 
+                                    (P."SPOLITYPE" <> '1' -- COLECTIVAS 
+                                    AND CERT."DEXPIRDAT" BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
+                                    AND (CERT."DNULLDATE" IS NULL OR CERT."DNULLDATE" > '{p_fecha_inicio}')
+                                    AND CERT."DEXPIRDAT" < '{l_fecha_carga_inicial}')
+                                  ) 
+                              and
+                              (
+                                not exists (select 1 from USVTIMV01."CLAIM" CLA 
+                                          JOIN (SELECT DISTINCT CLH."NCLAIM" FROM (SELECT CAST("SVALUE" AS INT4) "SVALUE" 
+                                                FROM USVTIMV01."CONDITION_SERV" CS 
+                                                WHERE "NCONDITION" IN (71, 72, 73)) CSV 
+                                          JOIN USVTIMV01."CLAIM_HIS" CLH 
+                                          ON COALESCE(CLH."NCLAIM", 0) > 0 
+                                          AND CLH."NOPER_TYPE" = CSV."SVALUE" 
+                                          AND CLH."DOPERDATE" >= '{l_fecha_carga_inicial}') CLH 
+                                          ON CLH."NCLAIM" = CLA."NCLAIM"
+                                          WHERE CLA."SCERTYPE" = P."SCERTYPE" 
+                                          AND CLA."NBRANCH" = P."NBRANCH" 
+                                          AND CLA."NPOLICY" = P."NPOLICY"  
+                                          AND CLA."NCERTIF" = 0
+                                          AND P."SCERTYPE" = '2'
+                                          AND P."SSTATUS_POL" NOT IN ('2','3') 
+                                          AND P."SPOLITYPE" = '1' 
+                                          AND (P."DEXPIRDAT" < '{l_fecha_carga_inicial}' OR P."DNULLDATE" < '{l_fecha_carga_inicial}'))
+                                or
+                                not exists (select 1 from USVTIMV01."CLAIM" CLA 
+                                          JOIN (SELECT DISTINCT CLH."NCLAIM" FROM (SELECT CAST("SVALUE" AS INT4) "SVALUE" 
+                                                FROM USVTIMV01."CONDITION_SERV" CS 
+                                                WHERE "NCONDITION" IN (71, 72, 73)) CSV 
+                                          JOIN USVTIMV01."CLAIM_HIS" CLH 
+                                          ON COALESCE(CLH."NCLAIM", 0) > 0 
+                                          AND CLH."NOPER_TYPE" = CSV."SVALUE" 
+                                          AND CLH."DOPERDATE" >= '{l_fecha_carga_inicial}') CLH 
+                                          ON CLH."NCLAIM" = CLA."NCLAIM"
+                                          WHERE CLA."SCERTYPE" = CERT."SCERTYPE" 
+                                          AND CLA."NBRANCH" = CERT."NBRANCH" 
+                                          AND CLA."NPOLICY" = CERT."NPOLICY"  
+                                          AND CLA."NCERTIF" =  CERT."NCERTIF"
+                                          AND P."SCERTYPE" = '2'
+                                          AND P."SSTATUS_POL" NOT IN ('2','3') 
+                                          AND P."SPOLITYPE" <> '1' 
+                                          AND (CERT."DEXPIRDAT" < '{l_fecha_carga_inicial}' OR CERT."DNULLDATE" < '{l_fecha_carga_inicial}'))
+                              )
                              ) AS DXP
                             ) AS TMP
                           '''
