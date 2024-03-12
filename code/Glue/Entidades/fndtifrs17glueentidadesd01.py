@@ -26,45 +26,6 @@ glue_client = boto3.client('glue')
 id = 'ENTIDADES'
 nombre_error = '-'
 
-def update():
-    table = 'TablaTestIFRS17'
-        
-    mi_json = '''{
-        "bucket": {
-            "artifact": "fndtifrs17s3based01test",
-            "dimensiones": "fndtifrs17s3based02"
-        },
-        "funciones": {
-            "structure": "utils/fstructureIOC.py",
-            "secret": "utils/fgetsecret.py",
-            "log": "utils/flog.py",
-            "read": "utils/fread.py",
-            "structure_test": "utils/fstructureIOC_Test.py"
-        },
-        "fechas": {
-            "dFecha_Inicio": "2021-01-01",
-            "dFecha_Fin": "2021-12-31"
-        },
-        "tipoCarga": "INI"
-    }'''
-
-    mi_json = json.loads(mi_json)
-
-    #Setear el tipo de carga incremental
-    mi_json['tipoCarga'] = 'INI'
-
-    # Obtén las fechas actuales o calcula las fechas dinámicamente
-    fecha_inicio_dinamica = (datetime.now() ).strftime("%Y-%m-%d")
-    fecha_fin_dinamica = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
-
-    # Actualiza las fechas en el diccionario
-    mi_json["fechas"]["dFecha_Inicio"] = fecha_inicio_dinamica
-    mi_json["fechas"]["dFecha_Fin"] = fecha_fin_dinamica
-
-    # Ahora mi_json contiene las fechas actualizadas
-    print(json.dumps(mi_json, indent=2))
-    
-
 #FUNCIÓN PARA EJECUTAR UN SCRIPT GUARDADO EN UN BUCKET S3
 def execute_script(name_bucket, name_object):
         path_temp = 'fileTemp.py'

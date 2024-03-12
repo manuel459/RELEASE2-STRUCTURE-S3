@@ -118,33 +118,31 @@ try:
     
     for config in l_dic_config['ENTIDADES']['path_file_tmp']:
         if config['flag'] == 1:
+            if tipo_carga == 'INI' or tipo_carga == 'INC':
+                #VALIDAR EL TIPO DE CARGA : INI = INICIAL | INC = INCREMENTAL
+                if tipo_carga == 'INI':
+                    script_key = config['script_inicial']
+                elif tipo_carga == 'INC':
+                    script_key = config['script_incremental']
+                
+                structure = execute_script(l_dic_config['GENERAL']['bucket']['artifact'], script_key)
+                
+                #LLAMAR Y LANZAR LOS PARAMETROS A LA FUNCION getData
+                L_DF_ENTIDAD = structure.get_data(glueContext, l_dic_config['GENERAL']['bucket']['artifact'] ,config['tablas'],l_dic_config['GENERAL']['fechas']['dFecha_Inicio'], l_dic_config['GENERAL']['fechas']['dFecha_Fin'])
+                
+                print(L_DF_ENTIDAD)
             
-            #VALIDAR EL TIPO DE CARGA : INI = INICIAL | INC = INCREMENTAL
-            if tipo_carga == 'INI':
-                script_key = config['script_inicial']
-            elif tipo_carga == 'INC':
-                script_key = config['script_incremental']
-            elif tipo_carga == 'HIS':
-                script_key = config['script_historico']
-            
-            structure = execute_script(l_dic_config['GENERAL']['bucket']['artifact'], script_key)
-            
-            #LLAMAR Y LANZAR LOS PARAMETROS A LA FUNCION getData
-            L_DF_ENTIDAD = structure.get_data(glueContext, l_dic_config['GENERAL']['bucket']['artifact'] ,config['tablas'],l_dic_config['GENERAL']['fechas']['dFecha_Inicio'], l_dic_config['GENERAL']['fechas']['dFecha_Fin'])
-            
-            print(L_DF_ENTIDAD)
-        
-            #Trasformar a bit escrito en formato txt
-            L_BUFFER_ENTIDAD = io.BytesIO()
-            L_DF_ENTIDAD.toPandas().to_parquet(L_BUFFER_ENTIDAD, index=False)
-            L_BUFFER_ENTIDAD.seek(0)
-            
-            # Escribir el objeto Parquet en S3
-            s3_client.put_object(
-                Bucket = l_dic_config['GENERAL']['bucket']['artifact'],
-                Key = config['path'],
-                Body=L_BUFFER_ENTIDAD.read()
-            )
+                #Trasformar a bit escrito en formato txt
+                L_BUFFER_ENTIDAD = io.BytesIO()
+                L_DF_ENTIDAD.toPandas().to_parquet(L_BUFFER_ENTIDAD, index=False)
+                L_BUFFER_ENTIDAD.seek(0)
+                
+                # Escribir el objeto Parquet en S3
+                s3_client.put_object(
+                    Bucket = l_dic_config['GENERAL']['bucket']['artifact'],
+                    Key = config['path'],
+                    Body=L_BUFFER_ENTIDAD.read()
+                )
             
     #------------------------------------------------------------------------#        
     # EJECUTAR LA TRAZABILIDAD

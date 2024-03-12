@@ -5,7 +5,6 @@
           "path":"tmp/regla_negocio/Entidades/RN-ENTIDAD-EBENTID.parquet",
           "script_inicial":"lib/fndtifrs17glueentidadesd01/regla_negocio/inicial/fndtifrs17glueentidadesd01ebentid.py",
           "script_incremental":"lib/fndtifrs17glueentidadesd01/regla_negocio/incremental/fndtifrs17glueentidadesd01ebentid.py",
-          "script_historico":"lib/fndtifrs17glueentidadesd01/regla_negocio/historico/fndtifrs17glueentidadesd01ebentid.py",
           "flag":1,
           "tablas" : [
             { 
