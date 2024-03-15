@@ -5,8 +5,6 @@ def get_data(glue_context,connection,p_fecha_inicio, p_fecha_fin):
     L_ABRSSCOB_INSIS = f'''
                         (SELECT
                         '' PK,	                                      --Chave Composta gerada pelo IOC
-                        '' DTPREG,	                                  --Tipo de Registo IOC (Activo, Histórico, Apagado no Sistema Operacional, Posição, etc.) 
-                        '' TIOCPROC,	                              --Data de processamento/integração no IOC
                         ABR.TIOCFRM,	                                  --Data de Início de validade do registo   --OJO
                         '' TIOCTO,                                    --Data de fim de validade do registo
                         'PNV'                                         --KGIORIGM,	Código do Sistema de ORIGEM
@@ -14,12 +12,10 @@ def get_data(glue_context,connection,p_fecha_inicio, p_fecha_fin):
                         ABR.DNUMAPO,                                      --Numero de Apolice
                         ABR.DNMCERT,                                      --Número de Certificado / Aderente
                         ABR.KABUNRIS,                                     --Chave da tabela de Unidades de Risco
-                        '1' DNPESEG,                                  --Nº de Cabeça ou Número de sequência da pessoa segura , Algoritmo para obener secuencia por cada objeto asegurado.
                         ABR.DENTIDSO,	                                  --Número Interno da Entidade no Sistema Operacional.
                         ABR.KEBENTID_PS,                                  --Entidade da Pessoa Segura
                         ABR.KABPRODT,                                     --Chave primária composta da tabela de Produtos
                         ABR.KGCTPCBT,                                     --Código da Cobertura                  -- OJO
-                        ABR.DCDINTTRA,                                    --Código do Tratado de Resseguro Interno no SO
                         ABR.QS_PORCE VTXSBPRE,                            --Percentagem sobre Premios
                         CASE WHEN ABR.TIPO_REASEGURO_CARTERA = 'F' THEN 0 ELSE (ABR.qs_sum_reins - ABR.qs_sum_placed) END VMTCAPRE,                                    --Capital Retido
                         CASE WHEN ABR.TIPO_REASEGURO_CARTERA = 'F' THEN 0 ELSE ABR.qs_sum_placed END VMTCAPCQP,                                                    --Capital Cedido Quota Parte
@@ -34,20 +30,11 @@ def get_data(glue_context,connection,p_fecha_inicio, p_fecha_fin):
                         0 VMTCOMARCFAC,                                                                                                                    --Comissão Anual Resseguro Cedido Facultativo
                         CASE WHEN ABR.TIPO_REASEGURO_CARTERA = 'F' THEN 0 ELSE (ABR.qs_pri + ABR.sp_pri) END VMTPRMPAARES,                                             --Premio Processado Acumulado Ano Resseguro
                         CASE WHEN ABR.TIPO_REASEGURO_CARTERA = 'F' THEN 0 ELSE (ABR.qs_sum_comms + ABR.sp_sum_comms) END VMTCOMPAARES,                                 --Comissão Processada Acumulada Ano Resseguro
-                        '' VMTPMRCQP,                                                                                                                      --Provisão Matemática Resseguro Cedido Quota Parte  NAO
-                        '' VMTPMRCEXC,                                                                                                                     --Provisão Matemática Cedido Excedente    NAO
-                        '' VMTPMRCFAC,                                                                                                                     --Provisão Matemática Cedido Facultativo  NAO
-                        '' TPVMATRES,                                                                                                                      --Data Provisão Matemática Resseguro      NAO
                         'LPV' DCOMPA,                                                                                                                      --Companhia ao que pertence a informação
-                        '' DMARCA,                                                                                                                         --Marca ao que pertence a informação      NAO
-                        '' TDTEFEIT,                                                                                                                       --Data de efeito da informação            NAO
                         CASE WHEN TIPO_REASEGURO_CARTERA = 'A' THEN 0 ELSE ABR.qs_sum_placed END VMTCAPCFACQP,                                                 --Capital_Cedido_Facultativo_Quota_Parte        Se debe ver en Facultativos
                         CASE WHEN TIPO_REASEGURO_CARTERA = 'A' THEN 0 ELSE ABR.sp_sum_placed END VMTCAPCFACEX,                                                 --Capital_Cedido_Facultativo_Excedente          Se debe ver en Facultativos
                         CASE WHEN TIPO_REASEGURO_CARTERA = 'A' THEN 0 ELSE ABR.qs_pri END VMTPRARCFAQP,                                                        --Premio_Anual_Resseguro_Cedido_Facultativo_Quota_Parte Se debe ver en Facultativos
-                        CASE WHEN TIPO_REASEGURO_CARTERA = 'A' THEN 0 ELSE ABR.sp_pri END VMTPRARCFAEX,                                                        --Premio_Anual_Resseguro_Cedido_Facultativo_Excedente   Se debe ver en Facultativos
-                        '' KOCGRCBT,                                                                                                                       --Cobertura resseguro            NAO
-                        '' KACMOEDA,                                                                                                                       --Unidade Monetária              NAO ****  DEBIERA TENER	
-                        '' VCAMBIO                                                                                                                         --Factor de conversão de Câmbio  NAO
+                        CASE WHEN TIPO_REASEGURO_CARTERA = 'A' THEN 0 ELSE ABR.sp_pri END VMTPRARCFAEX                                                        --Premio_Anual_Resseguro_Cedido_Facultativo_Excedente   Se debe ver en Facultativos
                         FROM 
                         (
                         SELECT 	'A' TIPO_REASEGURO_CARTERA,
@@ -67,7 +54,6 @@ def get_data(glue_context,connection,p_fecha_inicio, p_fecha_fin):
                                           RCP."POLICY_ID" 
                                      ELSE 0       
                                 END DNMCERT,
-                                RCPT."RI_TREATY_ID" DCDINTTRA,
                                 POL."INSR_TYPE" AS KABPRODT,
                                 RCP."INSURED_OBJ_ID"  KABUNRIS,
                                 ILPI."LEGACY_ID" KEBENTID_PS,
@@ -98,8 +84,6 @@ def get_data(glue_context,connection,p_fecha_inicio, p_fecha_fin):
                           ON ILPI."MAN_ID" = OA."MAN_ID"
                           JOIN usinsiv01."P_PEOPLE" PP 
                           ON PP."MAN_ID" = OA."MAN_ID"
-                          JOIN usinsiv01."RI_CEDED_PREMIUMS_TREATY" RCPT 
-                          ON RCPT."RI_TREATY_PREM_ID" = RCP."RI_TREATY_PREM_ID"
                           WHERE RCP."PREMIUM_TYPE" = 'DUE'
                           AND RCP."RI_TREATY_PREM_ID" IS NOT NULL
                           AND RCP."POLICY_ID" IN   (SELECT  
@@ -178,7 +162,6 @@ def get_data(glue_context,connection,p_fecha_inicio, p_fecha_fin):
                                           RCP."POLICY_ID"
                                      ELSE 0       
                                  END,
-                                 RCPT."RI_TREATY_ID",
                                  POL."INSR_TYPE",
                                  RCP."INSURED_OBJ_ID",
                                  ILPI."LEGACY_ID" ,
@@ -207,7 +190,6 @@ def get_data(glue_context,connection,p_fecha_inicio, p_fecha_fin):
                                           RCP."POLICY_ID" 
                                      ELSE 0       
                                 END DNMCERT,
-                                RCPF."RI_FAC_ID" DCDINTTRA,
                                 POL."INSR_TYPE" AS KABPRODT,
                                 RCP."INSURED_OBJ_ID"  KABUNRIS,
                                 ILPI."LEGACY_ID" KEBENTID_PS,
@@ -238,8 +220,6 @@ def get_data(glue_context,connection,p_fecha_inicio, p_fecha_fin):
                           ON ILPI."MAN_ID" = OA."MAN_ID"
                           JOIN usinsiv01."P_PEOPLE" PP 
                           ON PP."MAN_ID" = OA."MAN_ID"
-                          JOIN usinsiv01."RI_CEDED_PREMIUMS_FAC" RCPF 
-                          ON RCPF."RI_FAC_PREM_ID" = RCP."RI_FAC_PREM_ID"
                         WHERE RCP."PREMIUM_TYPE" = 'DUE'
                           AND RCP."RI_FAC_PREM_ID" IS NOT NULL
                           AND RCP."POLICY_ID" IN (SELECT  
@@ -302,8 +282,8 @@ def get_data(glue_context,connection,p_fecha_inicio, p_fecha_fin):
                                                  	      	                                                       )))
                           AND POL."INSR_END" >= '{l_fecha_carga_inicial}' AND CAST(POL."REGISTRATION_DATE" as DATE) BETWEEN '{p_fecha_inicio}' AND '{p_fecha_fin}'
                         GROUP BY
-                                 RCP."POLICY_ID",
-                                 CASE WHEN PEP."ENG_POL_TYPE" = 'MASTER' THEN    -- Es una poliza matriz de un colectivo
+                        RCP."POLICY_ID",
+                        CASE WHEN PEP."ENG_POL_TYPE" = 'MASTER' THEN    -- Es una poliza matriz de un colectivo
                                           RCP."POLICY_ID"                        -- Es el numero de poliza
                                      WHEN PEP."ENG_POL_TYPE" = 'POLICY' THEN     -- Es una poliza individual
                                           RCP."POLICY_ID"                        -- Es el numero de poliza 
@@ -318,7 +298,6 @@ def get_data(glue_context,connection,p_fecha_inicio, p_fecha_fin):
                                           RCP."POLICY_ID" 
                                      ELSE 0       
                                  END,
-                                 RCPF."RI_FAC_ID",
                                  POL."INSR_TYPE",
                                  RCP."INSURED_OBJ_ID",
                                  ILPI."LEGACY_ID",
