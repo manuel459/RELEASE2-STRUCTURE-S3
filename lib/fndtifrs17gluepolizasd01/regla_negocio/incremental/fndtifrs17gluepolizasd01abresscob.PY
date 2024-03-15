@@ -1,6 +1,5 @@
 def get_data(glue_context,connection,p_fecha_inicio, p_fecha_fin):
 
-    l_fecha_carga_inicial = '2021-12-31'
 
     L_ABRSSCOB_INSIS = f'''
                         (SELECT
@@ -102,30 +101,7 @@ def get_data(glue_context,connection,p_fecha_inicio, p_fecha_fin):
                           ON RCPT."RI_TREATY_PREM_ID" = RCP."RI_TREATY_PREM_ID"
                           WHERE RCP."PREMIUM_TYPE" = 'DUE'
                           AND RCP."RI_TREATY_PREM_ID" IS NOT NULL
-                          AND RCP."POLICY_ID" IN   (SELECT  
-                                                   P."POLICY_ID"
-                                                   FROM USINSIV01."POLICY" P 
-                                                   LEFT JOIN USINSIV01."POLICY_ENG_POLICIES" PP 
-                                                   ON P."POLICY_ID" = PP."POLICY_ID"                       
-                                                   WHERE PP."ENG_POL_TYPE" = 'POLICY'                       
-                                                   AND (P."REGISTRATION_DATE" BETWEEN  '{p_fecha_inicio}' AND '{p_fecha_fin}')
-                                                   UNION ALL
-                                                   SELECT
-                                                   P."POLICY_ID"
-                                                   FROM USINSIV01."POLICY" P 
-                                                   LEFT JOIN  USINSIV01."POLICY_ENG_POLICIES" PP 
-                                                   ON P."POLICY_ID" = PP."POLICY_ID"
-                                                   WHERE PP."ENG_POL_TYPE" = 'MASTER'
-                                                   AND (P."REGISTRATION_DATE" BETWEEN  '{p_fecha_inicio}' AND '{p_fecha_fin}')
-                                                   UNION ALL
-                                                   SELECT  
-                                                   P."POLICY_ID"
-                                                   FROM USINSIV01."POLICY" P
-                                                   LEFT JOIN  USINSIV01."POLICY_ENG_POLICIES" PP 
-                                                   ON P."POLICY_ID" = PP."POLICY_ID"
-                                                   WHERE PP."ENG_POL_TYPE" = 'DEPENDENT' 
-                                                   AND (P."REGISTRATION_DATE" BETWEEN  '{p_fecha_inicio}' AND '{p_fecha_fin}')
-                                                   )
+                          AND (RCP."REGISTRATION_DATE" BETWEEN  '{p_fecha_inicio}' AND '{p_fecha_fin}')
                         GROUP BY
                                  RCP."POLICY_ID",
                                  CASE WHEN PEP."ENG_POL_TYPE" = 'MASTER' THEN    -- Es una poliza matriz de un colectivo
@@ -207,30 +183,7 @@ def get_data(glue_context,connection,p_fecha_inicio, p_fecha_fin):
                           ON RCPF."RI_FAC_PREM_ID" = RCP."RI_FAC_PREM_ID"
                         WHERE RCP."PREMIUM_TYPE" = 'DUE'
                           AND RCP."RI_FAC_PREM_ID" IS NOT NULL
-                          AND RCP."POLICY_ID" IN (SELECT  
-                                                   P."POLICY_ID"
-                                                   FROM USINSIV01."POLICY" P 
-                                                   LEFT JOIN USINSIV01."POLICY_ENG_POLICIES" PP 
-                                                   ON P."POLICY_ID" = PP."POLICY_ID"                       
-                                                   WHERE PP."ENG_POL_TYPE" = 'POLICY'                       
-                                                   AND (P."REGISTRATION_DATE" BETWEEN  '{p_fecha_inicio}' AND '{p_fecha_fin}')
-                                                   UNION ALL
-                                                   SELECT
-                                                   P."POLICY_ID"
-                                                   FROM USINSIV01."POLICY" P 
-                                                   LEFT JOIN  USINSIV01."POLICY_ENG_POLICIES" PP 
-                                                   ON P."POLICY_ID" = PP."POLICY_ID"
-                                                   WHERE PP."ENG_POL_TYPE" = 'MASTER'
-                                                   AND (P."REGISTRATION_DATE" BETWEEN  '{p_fecha_inicio}' AND '{p_fecha_fin}')
-                                                   UNION ALL
-                                                   SELECT  
-                                                   P."POLICY_ID"
-                                                   FROM USINSIV01."POLICY" P
-                                                   LEFT JOIN  USINSIV01."POLICY_ENG_POLICIES" PP 
-                                                   ON P."POLICY_ID" = PP."POLICY_ID"
-                                                   WHERE PP."ENG_POL_TYPE" = 'DEPENDENT' 
-                                                   AND (P."REGISTRATION_DATE" BETWEEN  '{p_fecha_inicio}' AND '{p_fecha_fin}')
-                                                   )
+                          AND (RCP."REGISTRATION_DATE" BETWEEN  '{p_fecha_inicio}' AND '{p_fecha_fin}')
                         GROUP BY
                                  RCP."POLICY_ID",
                                  CASE WHEN PEP."ENG_POL_TYPE" = 'MASTER' THEN    -- Es una poliza matriz de un colectivo

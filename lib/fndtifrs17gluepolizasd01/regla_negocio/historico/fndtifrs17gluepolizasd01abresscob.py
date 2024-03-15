@@ -1,6 +1,8 @@
 def get_data(glue_context,connection,p_fecha_inicio, p_fecha_fin):
 
-    L_ABRSSCOB_INSIS = '''
+    l_fecha_carga_inicial = '2021-12-31'
+    
+    L_ABRSSCOB_INSIS = f'''
                         (SELECT
                         '' PK,	                                      --Chave Composta gerada pelo IOC
                         '' DTPREG,	                                  --Tipo de Registo IOC (Activo, Histórico, Apagado no Sistema Operacional, Posição, etc.) 
