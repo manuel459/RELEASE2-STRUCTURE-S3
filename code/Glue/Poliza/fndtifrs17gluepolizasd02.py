@@ -63,7 +63,7 @@ try:
     #-------------------------------------#
     #   OBTENER LA FECHA INICIO DEL JOB
     #-------------------------------------#
-    job_name = f'fndtifrs17gluepolizas{env}02_test'
+    job_name = f'fndtifrs17gluepolizas{env}02'
     
     response = glue_client.get_job_runs(JobName=job_name, MaxResults=1)
     
@@ -79,8 +79,7 @@ try:
     l_configuraciones = [{ "DOMINIO": "GENERAL" , "COLUMNA": "ESTRUCTURA" }, { "DOMINIO": "POLIZAS" , "COLUMNA": "ESTRUCTURA" }]
     
     #NOMBRE DE LA TABLA DE CONFIGURACIONES
-    nombre_tabla = 'TablaTestIFRS17'
-    #nombre_tabla = f'fndtifrs17dydb{env}01'
+    nombre_tabla = f'fndtifrs17dydb{env}01'
     
     #EXTRAER CONFIGURACIONES
     l_dic_config = extract_config(l_configuraciones, nombre_tabla)
