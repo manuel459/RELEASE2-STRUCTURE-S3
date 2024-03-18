@@ -1,1509 +1,863 @@
 
-def get_data(glue_context, connection):
+def get_data(glue_context, connection, p_fecha_inicio, p_fecha_fin):
 
-    LPG_NEGOCIO1_INSUNIX = '''
-                            (
-                                select	'D' as INDDETREC,
-                                        'SBCOSSEG' as TABLAIFRS17,
-                                        ''/*cla.claim || par.sep || par.cia || par.sep || coi.companyc*/ as  PK,
-                                        '' as DTPREG,
-                                        '' as TIOCPROC,
-                                        COALESCE(CAST(coi.EFFECDATE as VARCHAR) , '') as TIOCFRM,
-                                        '' as TIOCTO,
-                                        'PIG' as KGIORIGM,
-                                        'LPG' as  DCOMPA,
-                                        '' as DMARCA,
-                                        cla.claim as KSBSIN,
-                                        cast (coi.companyc as varchar ) as  DCODCSG,
-                                        '' as DNUMSEQ,
-                                        '' as TDPLANO,
-                                        cast ( coalesce ( case    when    exists
-                                                        (   select  1
-                                                            from    usinsug01.cover cov
-                                                            join    usinsug01.gen_cover gco
-                                                            on      cov.usercomp = cla.usercomp
-                                                            and     cov.company = cla.company
-                                                            and     cov.certype = pol.certype
-                                                            and     cov.branch = cla.branch
-                                                            and     cov.policy = cla.policy
-                                                            and     cov.certif = cla.certif
-                                                            and     cov.effecdate <= cla.occurdat
-                                                            and     (cov.nulldate is null or cov.nulldate > cla.occurdat)
-                                                            and     gco.ctid =
-                                                                    coalesce(coalesce(coalesce(coalesce((   select  max(ctid)
-                                                                                                            from    usinsug01.gen_cover
-                                                                                                            where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                            and     modulec = cov.modulec and cover = cov.cover --variaci�n 1 con modulec
-                                                                                                            and     effecdate <= cla.occurdat and (nulldate is null or nulldate > cla.occurdat) --variaci�n 2 vigencias
-                                                                                                            and     statregt <> '4' and addsuini ='3'), --variaci�n 3 reg. v�lido
-                                                                                                        (   select  max(ctid)
-                                                                                                            from    usinsug01.gen_cover
-                                                                                                            where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                            and     cover = cov.cover --variaci�n 1 sin modulec
-                                                                                                            and     effecdate <= cla.occurdat and (nulldate is null or nulldate > cla.occurdat) --variaci�n 2 vigencias
-                                                                                                            and     statregt <> '4' and addsuini ='3')), --variaci�n 3 reg. v�lido
-                                                                                                    coalesce((  select  max(ctid)
-                                                                                                                from    usinsug01.gen_cover
-                                                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                and     modulec = cov.modulec and cover = cov.cover
-                                                                                                                and     effecdate <= cla.occurdat and (nulldate is null or nulldate > cla.occurdat)
-                                                                                                                and     statregt = '4' and addsuini ='3'),
-                                                                                                            (   select  max(ctid)
-                                                                                                                from    usinsug01.gen_cover
-                                                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                and     cover = cov.cover
-                                                                                                                and     effecdate <= cla.occurdat and (nulldate is null or nulldate > cla.occurdat)
-                                                                                                                and     statregt = '4' and addsuini ='3'))), --no est� cortado
-                                                                                                coalesce(coalesce(( select  max(ctid)
-                                                                                                                    from    usinsug01.gen_cover
-                                                                                                                    where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                    and     modulec = cov.modulec and cover = cov.cover
-                                                                                                                    and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
-                                                                                                                    and     statregt <> '4' and addsuini ='3'),
-                                                                                                                (   select  max(ctid)
-                                                                                                                    from usinsug01.gen_cover
-                                                                                                                    where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                    and     cover = cov.cover
-                                                                                                                    and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
-                                                                                                                    and     statregt <> '4' and addsuini ='3')), -- no est� cortado, pero fue anulado antes del efecto del registro
-                                                                                                    coalesce((  select  max(ctid)
-                                                                                                                from    usinsug01.gen_cover
-                                                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                and     modulec = cov.modulec and cover = cov.cover
-                                                                                                                and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
-                                                                                                                and     statregt = '4' and addsuini ='3'),
-                                                                                                            (   select  max(ctid)
-                                                                                                                from    usinsug01.gen_cover
-                                                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                and     cover = cov.cover
-                                                                                                                and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
-                                                                                                                and     statregt = '4' and addsuini ='3')))), --no est� cortado y aparte fue anulado antes del efecto del registro
-                                                                                            coalesce(coalesce(( select  max(ctid)
-                                                                                                                from    usinsug01.gen_cover
-                                                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                and     modulec = cov.modulec and cover = cov.cover
-                                                                                                                and     effecdate > cla.occurdat
-                                                                                                                and     statregt <> '4' and addsuini ='3'),
-                                                                                                            (   select  max(ctid)
-                                                                                                                from    usinsug01.gen_cover
-                                                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                and     cover = cov.cover
-                                                                                                                and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
-                                                                                                                and     statregt <> '4' and addsuini ='3')), -- no est� cortado, pero tampoco al efecto de la tabla de datos particular
-                                                                                                coalesce((  select  max(ctid)
-                                                                                                            from    usinsug01.gen_cover
-                                                                                                            where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                            and     modulec = cov.modulec and cover = cov.cover
-                                                                                                            and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
-                                                                                                            and     statregt = '4' and addsuini ='3'),
-                                                                                                        (   select  max(ctid)
-                                                                                                            from    usinsug01.gen_cover
-                                                                                                            where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                            and     cover = cov.cover
-                                                                                                            and     effecdate > cla.occurdat
-                                                                                                            and     statregt = '4' and addsuini ='3'))))) --est� cortado y no al efecto de la tabla de datos particular adem�s de estar cortado
-                                                then    (   select  max(cov.capital)
-                                                            from    usinsug01.cover cov
-                                                            join    usinsug01.gen_cover gco
-                                                            on      cov.usercomp = cla.usercomp
-                                                            and     cov.company = cla.company
-                                                            and     cov.certype = pol.certype
-                                                            and     cov.branch = cla.branch
-                                                            and     cov.policy = cla.policy
-                                                            and     cov.certif = cla.certif
-                                                            and     cov.effecdate <= cla.occurdat
-                                                            and     (cov.nulldate is null or cov.nulldate > cla.occurdat)
-                                                            and     gco.ctid =
-                                                                    coalesce(coalesce(coalesce(coalesce((   select  max(ctid)
-                                                                                                            from    usinsug01.gen_cover
-                                                                                                            where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                            and     modulec = cov.modulec and cover = cov.cover --variaci�n 1 con modulec
-                                                                                                            and     effecdate <= cla.occurdat and (nulldate is null or nulldate > cla.occurdat) --variaci�n 2 vigencias
-                                                                                                            and     statregt <> '4' and addsuini ='3'), --variaci�n 3 reg. v�lido
-                                                                                                        (   select  max(ctid)
-                                                                                                            from    usinsug01.gen_cover
-                                                                                                            where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                            and     cover = cov.cover --variaci�n 1 sin modulec
-                                                                                                            and     effecdate <= cla.occurdat and (nulldate is null or nulldate > cla.occurdat) --variaci�n 2 vigencias
-                                                                                                            and     statregt <> '4' and addsuini ='3')), --variaci�n 3 reg. v�lido
-                                                                                                    coalesce((  select  max(ctid)
-                                                                                                                from    usinsug01.gen_cover
-                                                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                and     modulec = cov.modulec and cover = cov.cover
-                                                                                                                and     effecdate <= cla.occurdat and (nulldate is null or nulldate > cla.occurdat)
-                                                                                                                and     statregt = '4' and addsuini ='3'),
-                                                                                                            (   select  max(ctid)
-                                                                                                                from    usinsug01.gen_cover
-                                                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                and     cover = cov.cover
-                                                                                                                and     effecdate <= cla.occurdat and (nulldate is null or nulldate > cla.occurdat)
-                                                                                                                and     statregt = '4' and addsuini ='3'))), --no est� cortado
-                                                                                                coalesce(coalesce(( select  max(ctid)
-                                                                                                                    from    usinsug01.gen_cover
-                                                                                                                    where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                    and     modulec = cov.modulec and cover = cov.cover
-                                                                                                                    and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
-                                                                                                                    and     statregt <> '4' and addsuini ='3'),
-                                                                                                                (   select  max(ctid)
-                                                                                                                        from  usinsug01.gen_cover
-                                                                                                                        where usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                    and     cover = cov.cover
-                                                                                                                    and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
-                                                                                                                    and     statregt <> '4' and addsuini ='3')), -- no est� cortado, pero fue anulado antes del efecto del registro
-                                                                                                    coalesce((  select  max(ctid)
-                                                                                                                from  usinsug01.gen_cover
-                                                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                and     modulec = cov.modulec and cover = cov.cover
-                                                                                                                and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
-                                                                                                                and     statregt = '4' and addsuini ='3'),
-                                                                                                            (   select  max(ctid)
-                                                                                                                from usinsug01.gen_cover
-                                                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                and     cover = cov.cover
-                                                                                                                and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
-                                                                                                                and     statregt = '4' and addsuini ='3')))), --no est� cortado y aparte fue anulado antes del efecto del registro
-                                                                                            coalesce(coalesce(( select  max(ctid)
-                                                                                                                from usinsug01.gen_cover
-                                                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                and     modulec = cov.modulec and cover = cov.cover
-                                                                                                                and     effecdate > cla.occurdat
-                                                                                                                and     statregt <> '4' and addsuini ='3'),
-                                                                                                            (   select  max(ctid)
-                                                                                                                from    usinsug01.gen_cover
-                                                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                and     cover = cov.cover
-                                                                                                                and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
-                                                                                                                and     statregt <> '4' and addsuini ='3')), -- no est� cortado, pero tampoco al efecto de la tabla de datos particular
-                                                                                                coalesce((  select  max(ctid)
-                                                                                                            from    usinsug01.gen_cover
-                                                                                                            where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                            and     modulec = cov.modulec and cover = cov.cover
-                                                                                                            and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
-                                                                                                            and     statregt = '4' and addsuini ='3'),
-                                                                                                        (   select  max(ctid)
-                                                                                                            from    usinsug01.gen_cover
-                                                                                                            where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                            and     cover = cov.cover
-                                                                                                            and     effecdate > cla.occurdat
-                                                                                                            and     statregt = '4' and addsuini ='3'))))) --est� cortado y no al efecto de la tabla de datos particular adem�s de estar cortado
-                                                Else
-                                                        (   select  sum(cov.capital)
-                                                            from    usinsug01.cover cov
-                                                            join    usinsug01.gen_cover gco
-                                                            on cov.usercomp = cla.usercomp
-                                                            and     cov.company = cla.company
-                                                            and     cov.certype = pol.certype
-                                                            and     cov.branch = cla.branch
-                                                            and     cov.policy = cla.policy
-                                                            and     cov.certif = cla.certif
-                                                            and     cov.effecdate <= cla.occurdat
-                                                            and     (cov.nulldate is null or cov.nulldate > cla.occurdat)
-                                                            and     gco.ctid =
-                                                                    coalesce(coalesce(coalesce(coalesce((   select  max(ctid)
-                                                                                                            from    usinsug01.gen_cover
-                                                                                                            where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                            and     modulec = cov.modulec and cover = cov.cover --variaci�n 1 con modulec
-                                                                                                            and     effecdate <= cla.occurdat and (nulldate is null or nulldate > cla.occurdat) --variaci�n 2 vigencias
-                                                                                                            and     statregt <> '4' and addsuini = '1'), --variaci�n 3 reg. v�lido
-                                                                                                        (   select  max(ctid)
-                                                                                                            from    usinsug01.gen_cover
-                                                                                                            where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                            and     cover = cov.cover --variaci�n 1 sin modulec
-                                                                                                            and     effecdate <= cla.occurdat and (nulldate is null or nulldate > cla.occurdat) --variaci�n 2 vigencias
-                                                                                                            and     statregt <> '4' and addsuini = '1')), --variaci�n 3 reg. v�lido
-                                                                                                    coalesce((  select  max(ctid)
-                                                                                                                from    usinsug01.gen_cover
-                                                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                and     modulec = cov.modulec and cover = cov.cover
-                                                                                                                and     effecdate <= cla.occurdat and (nulldate is null or nulldate > cla.occurdat)
-                                                                                                                and     statregt = '4' and addsuini = '1'),
-                                                                                                            (   select  max(ctid)
-                                                                                                                from    usinsug01.gen_cover
-                                                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                and     cover = cov.cover
-                                                                                                                and     effecdate <= cla.occurdat and (nulldate is null or nulldate > cla.occurdat)
-                                                                                                                and     statregt = '4' and addsuini = '1'))), --no est� cortado
-                                                                                                coalesce(coalesce(( select  max(ctid)
-                                                                                                                    from    usinsug01.gen_cover
-                                                                                                                    where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                    and     modulec = cov.modulec and cover = cov.cover
-                                                                                                                    and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
-                                                                                                                    and     statregt <> '4' and addsuini = '1'),
-                                                                                                                (   select  max(ctid)
-                                                                                                                    from    usinsug01.gen_cover
-                                                                                                                    where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                    and     cover = cov.cover
-                                                                                                                    and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
-                                                                                                                    and     statregt <> '4' and addsuini = '1')), -- no est� cortado, pero fue anulado antes del efecto del registro
-                                                                                                    coalesce((  select  max(ctid)
-                                                                                                                from    usinsug01.gen_cover
-                                                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                and     modulec = cov.modulec and cover = cov.cover
-                                                                                                                and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
-                                                                                                                and     statregt = '4' and addsuini = '1'),
-                                                                                                            (   select  max(ctid)
-                                                                                                                from    usinsug01.gen_cover
-                                                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                and     cover = cov.cover
-                                                                                                                and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
-                                                                                                                and     statregt = '4' and addsuini = '1')))), --no est� cortado y aparte fue anulado antes del efecto del registro
-                                                                                            coalesce(coalesce(( select  max(ctid)
-                                                                                                                from    usinsug01.gen_cover
-                                                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                and     modulec = cov.modulec and cover = cov.cover
-                                                                                                                and     effecdate > cla.occurdat
-                                                                                                                and     statregt <> '4' and addsuini = '1'),
-                                                                                                            (   select  max(ctid)
-                                                                                                                from    usinsug01.gen_cover
-                                                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                and     cover = cov.cover
-                                                                                                                and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
-                                                                                                                and     statregt <> '4' and addsuini = '1')), -- no est� cortado, pero tampoco al efecto de la tabla de datos particular
-                                                                                                coalesce((  select  max(ctid)
-                                                                                                            from    usinsug01.gen_cover
-                                                                                                            where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                            and     modulec = cov.modulec and cover = cov.cover
-                                                                                                            and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
-                                                                                                            and     statregt = '4' and addsuini = '1'),
-                                                                                                        (   select  max(ctid)
-                                                                                                            from    usinsug01.gen_cover
-                                                                                                            where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                            and     cover = cov.cover
-                                                                                                            and     effecdate > cla.occurdat
-                                                                                                            and     statregt = '4' and addsuini = '1'))))) --est� cortado y no al efecto de la tabla de datos particular adem�s de estar cortado
-                                                                                end *
-                                            case    when    cla.branch = 66
-                                                    then    (   select  max(exc.exchange)
-                                                                from   usinsug01.exchange exc
-                                                                where exc.usercomp = cla.usercomp
-                                                                and     exc.company = cla.company
-                                                                and     exc.currency = 99
-                                                                and     exc.effecdate <= cla.occurdat
-                                                                and     (exc.nulldate is null or exc.nulldate > cla.occurdat))
-                                                    else    1 end , 0) as varchar) as  VMTCAPIT ,
-                                        coi.share VTXQUOTA,
-                                        '' VMTINDEM, --NOAPP	
-                                        cast(cla.policy as varchar) DNUMAPO_CSG,
-                                        cast ( coalesce(   coalesce((  select  max(cpl.currency)
-                                                                from    usinsug01.curren_pol cpl
-                                                                where	cpl.usercomp = cla.usercomp
-                                                                and     cpl.company = cla.company
-                                                                and     cpl.certype = pol.certype
-                                                                and     cpl.branch = cla.branch
-                                                                and     cpl.policy = cla.policy
-                                                                and     cpl.certif = cla.certif),
-                                                            (   select  max(cpl.currency)
-                                                                from    usinsug01.curren_pol cpl
-                                                                where	cpl.usercomp = cla.usercomp
-                                                                and     cpl.company = cla.company
-                                                                and     cpl.certype = pol.certype
-                                                                and     cpl.branch = cla.branch
-                                                                and     cpl.policy = cla.policy)),0) as varchar ) as KSCMOEDA
-                                from 	(	select	case 	when 	(cla.staclaim <> '6' or (cla.branch = 23 and cla.staclaim = '6'))
-                                                                    and pol.certype = '2' and pol.bussityp = '1'
-                                                            then	cla.ctid
-                                                            else	null 
-                                                    end cla_id,
-                                                    case 	when 	pol.certype = '2' and pol.bussityp = '1'
-                                                            then 	pol.ctid
-                                                            else	null 
-                                                    end pol_id
-                                            from    usinsug01.policy pol
-                                            JOIN    usinsug01.claim cla on	cla.usercomp = pol.usercomp
-                                                                        and     cla.company = pol.company
-                                                                        and     cla.branch = pol.branch
-                                                                        and     cla.policy = pol.policy 
-                                                                        and     cla.branch  not in (60)
-                                            join   (   select  distinct clh.claim
-                                                    from    ( select  cast(tcl.operation as varchar(2)) operation
-                                                                from    usinsug01.tab_cl_ope tcl
-                                                                where   (tcl.reserve = 1 or tcl.ajustes = 1 or pay_amount = 1)) tcl --reservas, ajustes o pagos
-                                                        JOIN    usinsug01.claim_his clh  ON coalesce (clh.claim,0) > 0
-                                                                                        and trim(clh.oper_type) = tcl.operation
-                                                                                        and clh.operdate >= '12/31/2022'
-                                                    limit 10                                  
-                                                    ) clh ON clh.claim = cla.claim /*4m 29 s*/limit 10) cl0
-                                JOIN   usinsug01.claim cla ON cla.ctid = cl0.cla_id
-                                JOIN   usinsug01.policy pol ON pol.ctid = cl0.pol_id
-                                JOIN   usinsug01.coinsuran coi 	ON  coi.usercomp = cla.usercomp
-                                                    and     coi.company = cla.company
-                                                    and     coi.certype = pol.certype
-                                                    and     coi.branch = cla.branch
-                                                    and     coi.policy = cla.policy
-                                                    and     coi.effecdate <= cla.occurdat
-                                                    and     (coi.nulldate is null or coi.nulldate > cla.occurdat)  
-                            ) AS TMP    
-                            '''
+    INSUNIX_LPG = f'''
+                      (select	
+                       'D' INDDETREC,
+                       'SBCOSSEG' TABLAIFRS17,
+                        '' PK,
+                        '' DTPREG, --excluido
+                        '' TIOCPROC, --excluido
+                        cast(cl0.xxxxdate as varchar) TIOCFRM,
+                        '' TIOCTO, --excluido
+                       'PIG' KGIORIGM,
+                       'LPG' DCOMPA,
+                        '' DMARCA, --excluido
+                        cast(cl0.claim as varchar) KSBSIN,
+                        cast(case when cl0.bussityp = '2' then 1 else coalesce(coi.companyc,0) end as varchar) DCODCSG,
+                        '' DNUMSEQ, --excluido
+                        '' TDPLANO, --excluido
+                        cast(cl0.capital as numeric(14,2)) VMTCAPIT,
+                        cast(case when cl0.bussityp = '2' then 100 else coalesce(coi.share,0) end as numeric (9,6)) VTXQUOTA,
+                        '' VMTINDEM, --NOAPP
+                        case when cl0.bussityp = '2' then cl0.leadpoli else cast(cl0.policy as varchar) end DNUMAPO_CSG,
+                        cast(cl0.moneda_cod as varchar) KSCMOEDA
+                        from	(	select	cla.usercomp,
+                                            cla.company,
+                                            cla.branch,
+                                            cla.policy,
+                                            cla.certif,
+                                            cla.occurdat,
+                                            cla.claim,
+                                            cl0.pol_certype certype, --se renombr� de vuelta solo para el �ndice en el siguiente nivel
+                                            cl0.leadpoli,
+                                            cl0.bussityp,
+                                            cl0.xxxxdate,
+                                            coalesce(
+                                                (	select	max(cpl.currency)
+                                                    from	usinsug01.curren_pol cpl
+                                                    where 	cpl.usercomp = cla.usercomp and cpl.company = cla.company and cpl.certype = cl0.pol_certype
+                                                    and		cpl.branch = cla.branch and cpl.policy = cla.policy and	cpl.certif = cla.certif),
+                                                (	select	max(cpl.currency)
+                                                    from	usinsug01.curren_pol cpl
+                                                    where 	cpl.usercomp = cla.usercomp and cpl.company = cla.company and cpl.certype = cl0.pol_certype
+                                                    and		cpl.branch = cla.branch and cpl.policy = cla.policy),0) moneda_cod,
+                                            coalesce((	select  case	when	max(gco.addsuini) = '3'
+                                                                        then	max(case when gco.addsuini = '3' then coalesce(cov.capital,0) else 0 end)
+                                                                        else	sum(case when gco.addsuini = '1' then coalesce(cov.capital,0) else 0 end) end
+                                                        from    usinsug01.cover cov
+                                                        join	usinsug01.gen_cover gco on gco.ctid =
+                                                                coalesce(
+                                                                    (   select  max(ctid)
+                                                                        from	usinsug01.gen_cover
+                                                                        where	usercomp = cla.usercomp and company = cla.company and branch = cla.branch --�ndice regular (1)
+                                                                        and		product = cl0.pol_product and coalesce(sub_product,0) = 0 and currency = cov.currency --�ndice regular (2)
+                                                                        and     modulec = cov.modulec and cover = cov.cover --variaci�n 1 con modulec
+                                                                        and     effecdate <= cla.occurdat and (nulldate is null or nulldate > cla.occurdat) --variaci�n 2 vigencias
+                                                                        and     statregt <> '4'), --variaci�n 3 reg. v�lido
+                                                                    (   select  max(ctid)
+                                                                        from	usinsug01.gen_cover
+                                                                        where	usercomp = cla.usercomp and company = cla.company and branch = cla.branch --�ndice regular (1)
+                                                                        and		product = cl0.pol_product and coalesce(sub_product,0) = 0 and currency = cov.currency --�ndice regular (2)
+                                                                        and     coalesce(modulec,0) = 0 and cover = cov.cover --variaci�n 1 sin modulec
+                                                                        and     effecdate <= cla.occurdat and (nulldate is null or nulldate > cla.occurdat) --variaci�n 2 vigencias
+                                                                        and     statregt <> '4'), --variaci�n 3 reg. v�lido
+                                                                    (	select  max(ctid)
+                                                                        from	usinsug01.gen_cover
+                                                                        where	usercomp = cla.usercomp and company = cla.company and branch = cla.branch --�ndice regular (1)
+                                                                        and		product = cl0.pol_product and coalesce(sub_product,0) = 0 and currency = cov.currency --�ndice regular (2)
+                                                                        and     modulec = cov.modulec and cover = cov.cover
+                                                                        and     effecdate <= cla.occurdat and (nulldate is null or nulldate > cla.occurdat)
+                                                                        and     statregt = '4'),
+                                                                    (	select  max(ctid)
+                                                                        from	usinsug01.gen_cover
+                                                                        where	usercomp = cla.usercomp and company = cla.company and branch = cla.branch --�ndice regular (1)
+                                                                        and		product = cl0.pol_product and coalesce(sub_product,0) = 0 and currency = cov.currency --�ndice regular (2)
+                                                                        and     coalesce(modulec,0) = 0 and cover = cov.cover
+                                                                        and     effecdate <= cla.occurdat and (nulldate is null or nulldate > cla.occurdat)
+                                                                        and     statregt = '4'), --no est� cortado
+                                                                    (	select  max(ctid)
+                                                                        from	usinsug01.gen_cover
+                                                                        where	usercomp = cla.usercomp and company = cla.company and branch = cla.branch --�ndice regular (1)
+                                                                        and		product = cl0.pol_product and coalesce(sub_product,0) = 0 and currency = cov.currency --�ndice regular (2)
+                                                                        and     modulec = cov.modulec and cover = cov.cover
+                                                                        and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
+                                                                        and     statregt <> '4'),
+                                                                    (   select  max(ctid)
+                                                                        from	usinsug01.gen_cover
+                                                                        where	usercomp = cla.usercomp and company = cla.company and branch = cla.branch --�ndice regular (1)
+                                                                        and		product = cl0.pol_product and coalesce(sub_product,0) = 0 and currency = cov.currency --�ndice regular (2)
+                                                                        and     coalesce(modulec,0) = 0 and cover = cov.cover
+                                                                        and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
+                                                                        and     statregt <> '4'), -- no est� cortado, pero fue anulado antes del efecto del registro
+                                                                    (	select  max(ctid)
+                                                                        from	usinsug01.gen_cover
+                                                                        where	usercomp = cla.usercomp and company = cla.company and branch = cla.branch --�ndice regular (1)
+                                                                        and		product = cl0.pol_product and coalesce(sub_product,0) = 0 and currency = cov.currency --�ndice regular (2)
+                                                                        and     modulec = cov.modulec and cover = cov.cover
+                                                                        and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
+                                                                        and     statregt = '4'),
+                                                                    (   select  max(ctid)
+                                                                        from	usinsug01.gen_cover
+                                                                        where	usercomp = cla.usercomp and company = cla.company and branch = cla.branch --�ndice regular (1)
+                                                                        and		product = cl0.pol_product and coalesce(sub_product,0) = 0 and currency = cov.currency --�ndice regular (2)
+                                                                        and     coalesce(modulec,0) = 0 and cover = cov.cover
+                                                                        and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
+                                                                        and     statregt = '4'), --no est� cortado y aparte fue anulado antes del efecto del registro
+                                                                    (	select  max(ctid)
+                                                                        from	usinsug01.gen_cover
+                                                                        where	usercomp = cla.usercomp and company = cla.company and branch = cla.branch --�ndice regular (1)
+                                                                        and		product = cl0.pol_product and coalesce(sub_product,0) = 0 and currency = cov.currency --�ndice regular (2)
+                                                                        and     modulec = cov.modulec and cover = cov.cover
+                                                                        and     effecdate > cla.occurdat
+                                                                        and     statregt <> '4'),
+                                                                    (   select  max(ctid)
+                                                                        from	usinsug01.gen_cover
+                                                                        where	usercomp = cla.usercomp and company = cla.company and branch = cla.branch --�ndice regular (1)
+                                                                        and		product = cl0.pol_product and coalesce(sub_product,0) = 0 and currency = cov.currency --�ndice regular (2)
+                                                                        and     coalesce(modulec,0) = 0 and cover = cov.cover
+                                                                        and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
+                                                                        and     statregt <> '4'), -- no est� cortado, pero tampoco al efecto de la tabla de datos particular
+                                                                    (	select  max(ctid)
+                                                                        from	usinsug01.gen_cover
+                                                                        where	usercomp = cla.usercomp and company = cla.company and branch = cla.branch --�ndice regular (1)
+                                                                        and		product = cl0.pol_product and coalesce(sub_product,0) = 0 and currency = cov.currency --�ndice regular (2)
+                                                                        and     modulec = cov.modulec and cover = cov.cover
+                                                                        and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
+                                                                        and     statregt = '4'),
+                                                                    (   select  max(ctid)
+                                                                        from	usinsug01.gen_cover
+                                                                        where	usercomp = cla.usercomp and company = cla.company and branch = cla.branch --�ndice regular (1)
+                                                                        and		product = cl0.pol_product and coalesce(sub_product,0) = 0 and currency = cov.currency --�ndice regular (2)
+                                                                        and     coalesce(modulec,0) = 0 and cover = cov.cover
+                                                                        and     effecdate > cla.occurdat
+                                                                        and     statregt = '4')) --est� cortado y no al efecto de la tabla de datos particular adem�s de estar cortado
+                                                        where   cov.usercomp = cla.usercomp
+                                                        and     cov.company = cla.company
+                                                        and     cov.certype = cl0.pol_certype
+                                                        and     cov.branch = cla.branch
+                                                        and     cov.policy = cla.policy
+                                                        and     cov.certif = cla.certif
+                                                        and     cov.effecdate <= cla.occurdat
+                                                        and     (cov.nulldate is null or cov.nulldate > cla.occurdat)),0) *
+                                            case	when	cla.branch = 66
+                                                    then	coalesce((	select	max(exc.exchange)
+                                                                        from 	usinsug01.exchange exc
+                                                                        where	exc.usercomp = cla.usercomp
+                                                                        and 	exc.company = cla.company 
+                                                                        and 	exc.currency = 99
+                                                                        and 	exc.effecdate <= cla.occurdat
+                                                                        and 	(exc.nulldate is null or exc.nulldate > cla.occurdat)),0)
+                                                    else	1 end capital
+                                    from	(	select	cla.ctid cla_id,
+                                                        pol.certype pol_certype,
+                                                        pol.product pol_product,
+                                                        pol.leadpoli,
+                                                        pol.bussityp,
+                                                        coalesce((	select	sub_product
+                                                                    from	usinsug01.pol_subproduct
+                                                                    where	usercomp = cla.usercomp
+                                                                    and 	company = cla.company
+                                                                    and		certype = pol.certype
+                                                                    and		branch = cla.branch
+                                                                    and		policy = cla.policy
+                                                                    and		product = pol.product),0) sub_product,
+                                                        case	when	pol.bussityp = '2'
+                                                                then	cla.occurdat
+                                                                else	(	select 	max(greatest(
+                                                                                        case when cla.occurdat <= dat.dat_lim then cla.occurdat else '0001-01-01'::date end,
+                                                                                        case when coi.effecdate <= dat.dat_lim then coi.effecdate else '0001-01-01'::date end,
+                                                                                        case when coi.compdate <= dat.dat_lim then coi.compdate else '0001-01-01'::date end))
+                                                                            from	usinsug01.coinsuran coi
+                                                                            where	coi.usercomp = cla.usercomp
+                                                                            and     coi.company = cla.company
+                                                                            and     coi.certype = pol.certype
+                                                                            and     coi.branch = cla.branch
+                                                                            and     coi.policy = cla.policy
+                                                                            and		coi.effecdate <= cla.occurdat
+                                                                            and		(coi.nulldate is null or coi.nulldate > cla.occurdat))
+                                                                end xxxxdate
+                                                from 	(	select	prv.cla_id,
+                                                                    prv.par_fin dat_lim
+                                                            from 	(	--revisi�n fechas cabecera
+                                                                        select	cla.ctid cla_id,
+                                                                                dat.par_ini,
+                                                                                dat.par_fin
+                                                                        from	(	select	cast('{p_fecha_inicio}' as date) par_ini, --ejecutar al a�o 2021 (2019 es para pruebas)
+                                                                                            cast('{p_fecha_fin}' as date) par_fin) dat --limitador para la carga inicial (fecha l�mite a�o 2023, 2022 para prueba)
+                                                                        join	usinsug01.claim cla
+                                                                                on		cla.usercomp = 1
+                                                                                and 	cla.company = 1
+                                                                                and		cla.branch in (select branch from usinsug01.table10b where company = 1)
+                                                                                and		(cla.staclaim <> '6' or (cla.staclaim = '6' and cla.branch = 23))
+                                                                                and		cla.compdate between dat.par_ini and dat.par_fin
+                                                                        union
+                                                                        --revisi�n fechas transacciones
+                                                                        select	cla.ctid cla_id,
+                                                                                dat.par_ini,
+                                                                                dat.par_fin
+                                                                        from	(	select	cast('{p_fecha_inicio}' as date) par_ini, --ejecutar al a�o 2021 (2019 es para pruebas)
+                                                                                            cast('{p_fecha_fin}' as date) par_fin) dat --limitador para la carga inicial (fecha l�mite a�o 2023, 2022 para prueba)
+                                                                        join	usinsug01.claim cla
+                                                                                on		cla.usercomp = 1
+                                                                                and 	cla.company = 1
+                                                                                and		cla.branch in (select branch from usinsug01.table10b where company = 1)
+                                                                                and		(cla.staclaim <> '6' or (cla.staclaim = '6' and cla.branch = 23))
+                                                                        join	usinsug01.claim_his clh
+                                                                                on		clh.claim = cla.claim
+                                                                                and		trim(clh.oper_type) in 
+                                                                                        (select cast(operation as varchar(2)) from usinsug01.tab_cl_ope where reserve = 1 or ajustes = 1 or pay_amount = 1)
+                                                                                and     (clh.operdate between dat.par_ini and dat.par_fin --se consideran siniestros con operaciones entre los rangos (limitaci�n carga inicial)
+                                                                                        or clh.compdate between dat.par_ini and dat.par_fin)
+                                                                        union
+                                                                        --revisi�n fechas coberturas asociadas a transacciones
+                                                                        select	cla.ctid cla_id,
+                                                                                dat.par_ini,
+                                                                                dat.par_fin
+                                                                        from	(	select	cast('{p_fecha_inicio}' as date) par_ini, --ejecutar al a�o 2021 (2019 es para pruebas)
+                                                                                            cast('{p_fecha_fin}' as date) par_fin) dat --limitador para la carga inicial (fecha l�mite a�o 2023, 2022 para prueba)
+                                                                        join	usinsug01.claim cla
+                                                                                on		cla.usercomp = 1
+                                                                                and 	cla.company = 1
+                                                                                and		cla.branch in (select branch from usinsug01.table10b where company = 1)
+                                                                                and		(cla.staclaim <> '6' or (cla.staclaim = '6' and cla.branch = 23))
+                                                                        join	usinsug01.claim_his clh
+                                                                                on		clh.claim = cla.claim
+                                                                                and		trim(clh.oper_type) in 
+                                                                                        (select cast(operation as varchar(2)) from usinsug01.tab_cl_ope where reserve = 1 or ajustes = 1 or pay_amount = 1)
+                                                                        join	usinsug01.cl_m_cover clm
+                                                                                on		clm.usercomp = clh.usercomp
+                                                                                and		clm.company = clh.company
+                                                                                and		clm.claim = clh.claim
+                                                                                and		clm.movement = clh.transac
+                                                                                and		clm.compdate between dat.par_ini and dat.par_fin) prv
+                                                            where	exists
+                                                                    (	select 	1
+                                                                        from	usinsug01.claim cla
+                                                                        join	usinsug01.coinsuran coi
+                                                                                on		coi.usercomp = cla.usercomp
+                                                                                and     coi.company = cla.company
+                                                                                and     coi.certype = '2'
+                                                                                and     coi.branch = cla.branch
+                                                                                and     coi.policy = cla.policy
+                                                                                and		coi.effecdate <= cla.occurdat
+                                                                                and		(coi.nulldate is null or coi.nulldate > cla.occurdat)
+                                                                        where	cla.ctid = prv.cla_id)
+                                                                    or exists
+                                                                    (	select 	1
+                                                                        from	usinsug01.claim cla
+                                                                        join	usinsug01.policy pol
+                                                                                on		pol.usercomp = cla.usercomp
+                                                                                and     pol.company = cla.company
+                                                                                and     pol.certype = '2'
+                                                                                and     pol.branch = cla.branch
+                                                                                and     pol.policy = cla.policy
+                                                                                and		pol.bussityp = '2'
+                                                                        where	cla.ctid = prv.cla_id)) dat
+                                            join	usinsug01.claim cla on cla.ctid = dat.cla_id
+                                            join	usinsug01.policy pol
+                                                    on		pol.usercomp = cla.usercomp
+                                                    and 	pol.company = cla.company
+                                                    and 	pol.certype = '2'
+                                                    and 	pol.branch = cla.branch
+                                                    and 	pol.policy = cla.policy) cl0
+                                join	usinsug01.claim cla on cla.ctid = cl0.cla_id) cl0
+                    left 	join usinsug01.coinsuran coi
+                            on		coi.usercomp = cl0.usercomp
+                            and     coi.company = cl0.company
+                            and     coi.certype = cl0.certype
+                            and     coi.branch = cl0.branch
+                            and     coi.policy = cl0.policy
+                            and		coi.effecdate <= cl0.occurdat
+                            and		(coi.nulldate is null or coi.nulldate > cl0.occurdat)
+                      ) AS TMP    
+                  '''
 
-    DF_LPG_NEGOCIO1_INSUNIX = glue_context.read.format('jdbc').options(**connection).option("fetchsize",10000).option("dbtable",LPG_NEGOCIO1_INSUNIX).load()
-
-    LPG_NEGOCIO2_INSUNIX = '''
-                             (
-                                select	'D' as INDDETREC,
-                                        'SBCOSSEG' as TABLAIFRS17, 
-                                        '' /*cla.claim || par.sep || par.cia || par.sep || 1*/ as PK,
-                                        '' as DTPREG,
-                                        '' as TIOCPROC,
-                                    coalesce ( CASE WHEN cla.certif = 0 
-                                            THEN cast (pol.effecdate as varchar)
-                                        ELSE 
-                                            (SELECT cast (c.effecdate as varchar)
-                                            FROM usinsug01.certificat c 
-                                            WHERE c.usercomp = cla.usercomp
-                                            AND c.company = cla.company
-                                            AND c.certype = pol.certype
-                                            AND c.branch = cla.branch
-                                            AND c.policy = cla.policy
-                                            AND c.certif = cla.certif
-                                            )
-                                        end, '')
-                                        as TIOCFRM,
-                                        '' as TIOCTO,
-                                        'PIG' as KGIORIGM,
-                                        'LPG' as DCOMPA,
-                                        '' as DMARCA,
-                                        cla.claim AS KSBSIN,
-                                        '1' AS DCODCSG ,
-                                        '' as DNUMSEQ,
-                                        '' as TDPLANO,
-                                    cast ( coalesce ( case    when    exists
-                                                        (   select  1
-                                                            from    usinsug01.cover cov
-                                                            join    usinsug01.gen_cover gco
-                                                            on cov.usercomp = cla.usercomp
-                                                            and     cov.company = cla.company
-                                                            and     cov.certype = pol.certype
-                                                            and     cov.branch = cla.branch
-                                                            and     cov.policy = cla.policy
-                                                            and     cov.certif = cla.certif
-                                                            and     cov.effecdate <= cla.occurdat
-                                                            and     (cov.nulldate is null or cov.nulldate > cla.occurdat)
-                                                            and     gco.ctid =
-                                                                    coalesce(coalesce(coalesce(coalesce((   select  max(ctid)
-                                                                                                            from usinsug01.gen_cover
-                                                                                                            where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                            and     modulec = cov.modulec and cover = cov.cover --variaci�n 1 con modulec
-                                                                                                            and     effecdate <= cla.occurdat and (nulldate is null or nulldate > cla.occurdat) --variaci�n 2 vigencias
-                                                                                                            and     statregt <> '4' and addsuini ='3'), --variaci�n 3 reg. v�lido
-                                                                                                        (   select  max(ctid)
-                                                                                                            from usinsug01.gen_cover
-                                                                                                            where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                            and     cover = cov.cover --variaci�n 1 sin modulec
-                                                                                                            and     effecdate <= cla.occurdat and (nulldate is null or nulldate > cla.occurdat) --variaci�n 2 vigencias
-                                                                                                            and     statregt <> '4' and addsuini ='3')), --variaci�n 3 reg. v�lido
-                                                                                                    coalesce((  select  max(ctid)
-                                                                                                                from  usinsug01.gen_cover
-                                                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                and     modulec = cov.modulec and cover = cov.cover
-                                                                                                                and     effecdate <= cla.occurdat and (nulldate is null or nulldate > cla.occurdat)
-                                                                                                                and     statregt = '4' and addsuini ='3'),
-                                                                                                            (   select  max(ctid)
-                                                                                                                from  usinsug01.gen_cover
-                                                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                and     cover = cov.cover
-                                                                                                                and     effecdate <= cla.occurdat and (nulldate is null or nulldate > cla.occurdat)
-                                                                                                                and     statregt = '4' and addsuini ='3'))), --no est� cortado
-                                                                                                coalesce(coalesce(( select  max(ctid)
-                                                                                                                    from  usinsug01.gen_cover
-                                                                                                                    where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                    and     modulec = cov.modulec and cover = cov.cover
-                                                                                                                    and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
-                                                                                                                    and     statregt <> '4' and addsuini ='3'),
-                                                                                                                (   select  max(ctid)
-                                                                                                                    from usinsug01.gen_cover
-                                                                                                                    where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                    and     cover = cov.cover
-                                                                                                                    and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
-                                                                                                                    and     statregt <> '4' and addsuini ='3')), -- no est� cortado, pero fue anulado antes del efecto del registro
-                                                                                                    coalesce((  select  max(ctid)
-                                                                                                                from   usinsug01.gen_cover
-                                                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                and     modulec = cov.modulec and cover = cov.cover
-                                                                                                                and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
-                                                                                                                and     statregt = '4' and addsuini ='3'),
-                                                                                                            (   select  max(ctid)
-                                                                                                                from  usinsug01.gen_cover
-                                                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                and     cover = cov.cover
-                                                                                                                and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
-                                                                                                                and     statregt = '4' and addsuini ='3')))), --no est� cortado y aparte fue anulado antes del efecto del registro
-                                                                                            coalesce(coalesce(( select  max(ctid)
-                                                                                                                from usinsug01.gen_cover
-                                                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                and     modulec = cov.modulec and cover = cov.cover
-                                                                                                                and     effecdate > cla.occurdat
-                                                                                                                and     statregt <> '4' and addsuini ='3'),
-                                                                                                            (   select  max(ctid)
-                                                                                                                from  usinsug01.gen_cover
-                                                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                and     cover = cov.cover
-                                                                                                                and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
-                                                                                                                and     statregt <> '4' and addsuini ='3')), -- no est� cortado, pero tampoco al efecto de la tabla de datos particular
-                                                                                                coalesce((  select  max(ctid)
-                                                                                                            from  usinsug01.gen_cover
-                                                                                                            where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                            and     modulec = cov.modulec and cover = cov.cover
-                                                                                                            and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
-                                                                                                            and     statregt = '4' and addsuini ='3'),
-                                                                                                        (   select  max(ctid)
-                                                                                                            from usinsug01.gen_cover
-                                                                                                            where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                            and     cover = cov.cover
-                                                                                                            and     effecdate > cla.occurdat
-                                                                                                            and     statregt = '4' and addsuini ='3'))))) --est� cortado y no al efecto de la tabla de datos particular adem�s de estar cortado
-                                                then    (   select  max(cov.capital) 
-                                                            from    usinsug01.cover cov
-                                                            join    usinsug01.gen_cover gco
-                                                            on     cov.usercomp = cla.usercomp
-                                                            and     cov.company = cla.company
-                                                            and     cov.certype = pol.certype
-                                                            and     cov.branch = cla.branch
-                                                            and     cov.policy = cla.policy
-                                                            and     cov.certif = cla.certif
-                                                            and     cov.effecdate <= cla.occurdat
-                                                            and     (cov.nulldate is null or cov.nulldate > cla.occurdat)
-                                                            and     gco.ctid =
-                                                                    coalesce(coalesce(coalesce(coalesce((   select  max(ctid)
-                                                                                                            from    usinsug01.gen_cover
-                                                                                                            where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                            and     modulec = cov.modulec and cover = cov.cover --variaci�n 1 con modulec
-                                                                                                            and     effecdate <= cla.occurdat and (nulldate is null or nulldate > cla.occurdat) --variaci�n 2 vigencias
-                                                                                                            and     statregt <> '4' and addsuini ='3'), --variaci�n 3 reg. v�lido
-                                                                                                        (   select  max(ctid)
-                                                                                                            from    usinsug01.gen_cover
-                                                                                                            where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                            and     cover = cov.cover --variaci�n 1 sin modulec
-                                                                                                            and     effecdate <= cla.occurdat and (nulldate is null or nulldate > cla.occurdat) --variaci�n 2 vigencias
-                                                                                                            and     statregt <> '4' and addsuini ='3')), --variaci�n 3 reg. v�lido
-                                                                                                    coalesce((  select  max(ctid)
-                                                                                                                from    usinsug01.gen_cover
-                                                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                and     modulec = cov.modulec and cover = cov.cover
-                                                                                                                and     effecdate <= cla.occurdat and (nulldate is null or nulldate > cla.occurdat)
-                                                                                                                and     statregt = '4' and addsuini ='3'),
-                                                                                                            (   select  max(ctid)
-                                                                                                                from    usinsug01.gen_cover
-                                                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                and     cover = cov.cover
-                                                                                                                and     effecdate <= cla.occurdat and (nulldate is null or nulldate > cla.occurdat)
-                                                                                                                and     statregt = '4' and addsuini ='3'))), --no est� cortado
-                                                                                                coalesce(coalesce(( select  max(ctid)
-                                                                                                                    from usinsug01.gen_cover
-                                                                                                                    where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                    and     modulec = cov.modulec and cover = cov.cover
-                                                                                                                    and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
-                                                                                                                    and     statregt <> '4' and addsuini ='3'),
-                                                                                                                (   select  max(ctid)
-                                                                                                                        from  usinsug01.gen_cover
-                                                                                                                        where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                    and     cover = cov.cover
-                                                                                                                    and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
-                                                                                                                    and     statregt <> '4' and addsuini ='3')), -- no est� cortado, pero fue anulado antes del efecto del registro
-                                                                                                    coalesce((  select  max(ctid)
-                                                                                                                from  usinsug01.gen_cover
-                                                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                and     modulec = cov.modulec and cover = cov.cover
-                                                                                                                and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
-                                                                                                                and     statregt = '4' and addsuini ='3'),
-                                                                                                            (   select  max(ctid)
-                                                                                                                from   usinsug01.gen_cover
-                                                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                and     cover = cov.cover
-                                                                                                                and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
-                                                                                                                and     statregt = '4' and addsuini ='3')))), --no est� cortado y aparte fue anulado antes del efecto del registro
-                                                                                            coalesce(coalesce(( select  max(ctid)
-                                                                                                                from  usinsug01.gen_cover
-                                                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                and     modulec = cov.modulec and cover = cov.cover
-                                                                                                                and     effecdate > cla.occurdat
-                                                                                                                and     statregt <> '4' and addsuini ='3'),
-                                                                                                            (   select  max(ctid)
-                                                                                                                from usinsug01.gen_cover
-                                                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                and     cover = cov.cover
-                                                                                                                and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
-                                                                                                                and     statregt <> '4' and addsuini ='3')), -- no est� cortado, pero tampoco al efecto de la tabla de datos particular
-                                                                                                coalesce((  select  max(ctid)
-                                                                                                            from  usinsug01.gen_cover
-                                                                                                            where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                            and     modulec = cov.modulec and cover = cov.cover
-                                                                                                            and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
-                                                                                                            and     statregt = '4' and addsuini ='3'),
-                                                                                                        (   select  max(ctid)
-                                                                                                            from usinsug01.gen_cover
-                                                                                                            where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                            and     cover = cov.cover
-                                                                                                            and     effecdate > cla.occurdat
-                                                                                                            and     statregt = '4' and addsuini ='3'))))) --est� cortado y no al efecto de la tabla de datos particular adem�s de estar cortado
-                                                Else
-                                                        (   select  sum(cov.capital)
-                                                            from    usinsug01.cover cov
-                                                            join    usinsug01.gen_cover gco
-                                                            on cov.usercomp = cla.usercomp
-                                                            and     cov.company = cla.company
-                                                            and     cov.certype = pol.certype
-                                                            and     cov.branch = cla.branch
-                                                            and     cov.policy = cla.policy
-                                                            and     cov.certif = cla.certif
-                                                            and     cov.effecdate <= cla.occurdat
-                                                            and     (cov.nulldate is null or cov.nulldate > cla.occurdat)
-                                                            and     gco.ctid =
-                                                                    coalesce(coalesce(coalesce(coalesce((   select  max(ctid)
-                                                                                                            from  usinsug01.gen_cover
-                                                                                                            where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                            and     modulec = cov.modulec and cover = cov.cover --variaci�n 1 con modulec
-                                                                                                            and     effecdate <= cla.occurdat and (nulldate is null or nulldate > cla.occurdat) --variaci�n 2 vigencias
-                                                                                                            and     statregt <> '4' and addsuini = '1'), --variaci�n 3 reg. v�lido
-                                                                                                        (   select  max(ctid)
-                                                                                                            from usinsug01.gen_cover
-                                                                                                            where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                            and     cover = cov.cover --variaci�n 1 sin modulec
-                                                                                                            and     effecdate <= cla.occurdat and (nulldate is null or nulldate > cla.occurdat) --variaci�n 2 vigencias
-                                                                                                            and     statregt <> '4' and addsuini = '1')), --variaci�n 3 reg. v�lido
-                                                                                                    coalesce((  select  max(ctid)
-                                                                                                                from  usinsug01.gen_cover
-                                                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                and     modulec = cov.modulec and cover = cov.cover
-                                                                                                                and     effecdate <= cla.occurdat and (nulldate is null or nulldate > cla.occurdat)
-                                                                                                                and     statregt = '4' and addsuini = '1'),
-                                                                                                            (   select  max(ctid)
-                                                                                                                from usinsug01.gen_cover
-                                                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                and     cover = cov.cover
-                                                                                                                and     effecdate <= cla.occurdat and (nulldate is null or nulldate > cla.occurdat)
-                                                                                                                and     statregt = '4' and addsuini = '1'))), --no est� cortado
-                                                                                                coalesce(coalesce(( select  max(ctid)
-                                                                                                                    from  usinsug01.gen_cover
-                                                                                                                    where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                    and     modulec = cov.modulec and cover = cov.cover
-                                                                                                                    and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
-                                                                                                                    and     statregt <> '4' and addsuini = '1'),
-                                                                                                                (   select  max(ctid)
-                                                                                                                    from  usinsug01.gen_cover
-                                                                                                                    where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                    and     cover = cov.cover
-                                                                                                                    and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
-                                                                                                                    and     statregt <> '4' and addsuini = '1')), -- no est� cortado, pero fue anulado antes del efecto del registro
-                                                                                                    coalesce((  select  max(ctid)
-                                                                                                                from  usinsug01.gen_cover
-                                                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                and     modulec = cov.modulec and cover = cov.cover
-                                                                                                                and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
-                                                                                                                and     statregt = '4' and addsuini = '1'),
-                                                                                                            (   select  max(ctid)
-                                                                                                                from usinsug01.gen_cover
-                                                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                and     cover = cov.cover
-                                                                                                                and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
-                                                                                                                and     statregt = '4' and addsuini = '1')))), --no est� cortado y aparte fue anulado antes del efecto del registro
-                                                                                            coalesce(coalesce(( select  max(ctid)
-                                                                                                                from  usinsug01.gen_cover
-                                                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                and     modulec = cov.modulec and cover = cov.cover
-                                                                                                                and     effecdate > cla.occurdat
-                                                                                                                and     statregt <> '4' and addsuini = '1'),
-                                                                                                            (   select  max(ctid)
-                                                                                                                from usinsug01.gen_cover
-                                                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                and     cover = cov.cover
-                                                                                                                and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
-                                                                                                                and     statregt <> '4' and addsuini = '1')), -- no est� cortado, pero tampoco al efecto de la tabla de datos particular
-                                                                                                coalesce((  select  max(ctid)
-                                                                                                            from  usinsug01.gen_cover
-                                                                                                            where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                            and     modulec = cov.modulec and cover = cov.cover
-                                                                                                            and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
-                                                                                                            and     statregt = '4' and addsuini = '1'),
-                                                                                                        (   select  max(ctid)
-                                                                                                            from usinsug01.gen_cover
-                                                                                                            where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                            and     cover = cov.cover
-                                                                                                            and     effecdate > cla.occurdat
-                                                                                                            and     statregt = '4' and addsuini = '1'))))) --est� cortado y no al efecto de la tabla de datos particular adem�s de estar cortado
-                                                                                end *
-                                            case    when    cla.branch = 66
-                                                    then    (   select  max(exc.exchange)
-                                                                from    usinsug01.exchange exc
-                                                                where exc.usercomp = cla.usercomp
-                                                                and     exc.company = cla.company
-                                                                and     exc.currency = 99
-                                                                and     exc.effecdate <= cla.occurdat
-                                                                and     (exc.nulldate is null or exc.nulldate > cla.occurdat))
-                                                    else    1 end, 0) as varchar ) as VMTCAPIT,
-                                        '100'  as VTXQUOTA,
-                                        '' as VMTINDEM,
-                                        pol.leadpoli as DNUMAPO_CSG,
-                                        cast ( coalesce(   coalesce((  select  max(cpl.currency)
-                                                                from    usinsug01.curren_pol cpl
-                                                                where	cpl.usercomp = cla.usercomp
-                                                                and     cpl.company = cla.company
-                                                                and     cpl.certype = pol.certype
-                                                                and     cpl.branch = cla.branch
-                                                                and     cpl.policy = cla.policy
-                                                                and     cpl.certif = cla.certif),
-                                                            (   select  max(cpl.currency)
-                                                                from    usinsug01.curren_pol cpl
-                                                                where	cpl.usercomp = cla.usercomp
-                                                                and     cpl.company = cla.company
-                                                                and     cpl.certype = pol.certype
-                                                                and     cpl.branch = cla.branch
-                                                                and     cpl.policy = cla.policy)),0) as varchar ) as KSCMOEDA
-                                from 	(	select	
-                                                case 	when 	(cla.staclaim <> '6' or (cla.branch = 23 and cla.staclaim = '6'))
-                                                                    and pol.certype = '2' 
-                                                                    and pol.bussityp = '2'
-                                                            then	cla.ctid
-                                                            else	null 
-                                                end as cla_id,
-                                                case 	when 	pol.certype = '2' 
-                                                                and pol.bussityp = '2'
-                                                        then 	pol.ctid
-                                                        else	null 
-                                                end  as pol_id
-                                            from    usinsug01.policy pol
-                                            join    usinsug01.claim cla on cla.usercomp = pol.usercomp
-                                                                        AND cla.company = pol.company
-                                                                        AND cla.branch = pol.branch
-                                                                        AND cla.policy = pol.policy
-                                                                        and cla.branch  not in (60)
-                                                        
-                                            join        (   select  distinct clh.claim
-                                                            from    (   select  cast(tcl.operation as varchar(2)) operation
-                                                                        from    usinsug01.tab_cl_ope tcl
-                                                                        where   (tcl.reserve = 1 or tcl.ajustes = 1 or pay_amount = 1)) tcl --reservas, ajustes o pagos
-                                                            join    usinsug01.claim_his clh  on   coalesce (clh.claim,0) > 0
-                                                                                            and     trim(clh.oper_type) = tcl.operation
-                                                                                            and     clh.operdate >= '12/31/2015'
-                                                        limit 10                            
-                                                        ) clh
-                                            on	clh.claim = cla.claim limit 10) cl0
-                                join  usinsug01.claim cla on	cla.ctid = cl0.cla_id
-                                join usinsug01.policy pol on pol.ctid = cl0.pol_id
-                             ) AS TMP   
-                             '''
-
-    DF_LPG_NEGOCIO2_INSUNIX = glue_context.read.format('jdbc').options(**connection).option("fetchsize",10000).option("dbtable",LPG_NEGOCIO2_INSUNIX).load()
+    DF_INSUNIX_LPG = glue_context.read.format('jdbc').options(**connection).option("fetchsize",10000).option("dbtable",INSUNIX_LPG).load()
   
-    LPV_NEGOCIO1_INSUNIX = '''
-                            (
-                                select       'D' as INDDETREC,
-                                                'SBCOSSEG' as TABLAIFRS17,
-                                                '' /*cla.claim || par.sep || par.cia || par.sep || coi.companyc*/ as PK,
-                                                '' as DTPREG,
-                                                '' as TIOCPROC,
-                                                COALESCE(CAST(coi.EFFECDATE as VARCHAR) , '') as TIOCFRM,
-                                                '' as TIOCTO,
-                                                'PIV' as  KGIORIGM,
-                                                'LPV'  as DCOMPA,
-                                                '' as DMARCA,
-                                                cast (cla.claim as varchar) as KSBSIN,
-                                                cast (coi.companyc as varchar ) as  DCODCSG,
-                                                '' as DNUMSEQ,
-                                                '' as TDPLANO,
-                                                cast ( coalesce ( case    when    coalesce((  select  distinct pro.brancht
-                                                                            from    usinsuv01.product pro
-                                                                            where pro.usercomp = cla.usercomp
-                                                                            and     pro.company = cla.company
-                                                                            and     pro.branch = cla.branch
-                                                                            and     pro.product = pol.product
-                                                                            and     pro.effecdate <= cla.occurdat
-                                                                            and     (pro.nulldate is null or pro.nulldate > cla.occurdat)),'0')
-                                                                not in ('1')
-                                                        then    (   select  sum(cov.capital)
-                                                                    from    usinsuv01.cover cov
-                                                                    join    usinsuv01.gen_cover gco
-                                                                    on      cov.usercomp = cla.usercomp
-                                                                    and     cov.company = cla.company
-                                                                    and     cov.certype = pol.certype
-                                                                    and     cov.branch = cla.branch
-                                                                    and     cov.policy = cla.policy
-                                                                    and     cov.certif = cla.certif
-                                                                    and     cov.effecdate <= cla.occurdat
-                                                                    and     (cov.nulldate is null or cov.nulldate > cla.occurdat)
-                                                                    and     gco.ctid =
-                                                                            coalesce(coalesce(coalesce(coalesce((   select  max(ctid)
-                                                                                                                    from usinsuv01.gen_cover
-                                                                                                                    where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency -- ndice regular
-                                                                                                                    and     modulec = cov.modulec and cover = cov.cover --variaci n 1 con modulec
-                                                                                                                    and     effecdate <= cla.occurdat and (nulldate is null or nulldate > cla.occurdat) --variaci n 2 vigencias
-                                                                                                                    and     statregt <> '4' and addsuini = '1'), --variaci n 3 reg. v lido
-                                                                                                                (   select  max(ctid)
-                                                                                                                    from    usinsuv01.gen_cover
-                                                                                                                    where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency -- ndice regular
-                                                                                                                    and     cover = cov.cover --variaci n 1 sin modulec
-                                                                                                                    and     effecdate <= cla.occurdat and (nulldate is null or nulldate > cla.occurdat) --variaci n 2 vigencias
-                                                                                                                    and     statregt <> '4' and addsuini = '1')), --variaci n 3 reg. v lido
-                                                                                                            coalesce((  select  max(ctid)
-                                                                                                                        from    usinsuv01.gen_cover
-                                                                                                                        where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency -- ndice regular
-                                                                                                                        and     modulec = cov.modulec and cover = cov.cover
-                                                                                                                        and     effecdate <= cla.occurdat and (nulldate is null or nulldate > cla.occurdat)
-                                                                                                                        and     statregt = '4' and addsuini = '1'),
-                                                                                                                    (   select  max(ctid)
-                                                                                                                        from    usinsuv01.gen_cover
-                                                                                                                        where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency -- ndice regular
-                                                                                                                        and     cover = cov.cover
-                                                                                                                        and     effecdate <= cla.occurdat and (nulldate is null or nulldate > cla.occurdat)
-                                                                                                                        and     statregt = '4' and addsuini = '1'))), --no est  cortado
-                                                                                                        coalesce(coalesce(( select  max(ctid)
-                                                                                                                            from    usinsuv01.gen_cover
-                                                                                                                            where    usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency -- ndice regular
-                                                                                                                            and     modulec = cov.modulec and cover = cov.cover
-                                                                                                                            and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
-                                                                                                                            and     statregt <> '4' and addsuini = '1'),
-                                                                                                                        (   select  max(ctid)
-                                                                                                                            from    usinsuv01.gen_cover
-                                                                                                                            where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency -- ndice regular
-                                                                                                                            and     cover = cov.cover
-                                                                                                                            and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
-                                                                                                                            and     statregt <> '4' and addsuini = '1')), -- no est  cortado, pero fue anulado antes del efecto del registro
-                                                                                                            coalesce((  select  max(ctid)
-                                                                                                                        from    usinsuv01.gen_cover
-                                                                                                                        where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency -- ndice regular
-                                                                                                                        and     modulec = cov.modulec and cover = cov.cover
-                                                                                                                        and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
-                                                                                                                        and     statregt = '4' and addsuini = '1'),
-                                                                                                                    (   select  max(ctid)
-                                                                                                                        from  usinsuv01.gen_cover
-                                                                                                                        where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency -- ndice regular
-                                                                                                                        and     cover = cov.cover
-                                                                                                                        and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
-                                                                                                                        and     statregt = '4' and addsuini = '1')))), --no est  cortado y aparte fue anulado antes del efecto del registro
-                                                                                                    coalesce(coalesce(( select  max(ctid)
-                                                                                                                        from  usinsuv01.gen_cover
-                                                                                                                        where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency -- ndice regular
-                                                                                                                        and     modulec = cov.modulec and cover = cov.cover
-                                                                                                                        and     effecdate > cla.occurdat
-                                                                                                                        and     statregt <> '4' and addsuini = '1'),
-                                                                                                                    (   select  max(ctid)
-                                                                                                                        from    usinsuv01.gen_cover
-                                                                                                                        where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency -- ndice regular
-                                                                                                                        and     cover = cov.cover
-                                                                                                                        and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
-                                                                                                                        and     statregt <> '4' and addsuini = '1')), -- no est  cortado, pero tampoco al efecto de la tabla de datos particular
-                                                                                                        coalesce((  select  max(ctid)
-                                                                                                                    from  usinsuv01.gen_cover
-                                                                                                                    where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency -- ndice regular
-                                                                                                                    and     modulec = cov.modulec and cover = cov.cover
-                                                                                                                    and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
-                                                                                                                    and     statregt = '4' and addsuini = '1'),
-                                                                                                                (   select  max(ctid)
-                                                                                                                    from  usinsuv01.gen_cover
-                                                                                                                    where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency -- ndice regular
-                                                                                                                    and     cover = cov.cover
-                                                                                                                    and     effecdate > cla.occurdat
-                                                                                                                    and     statregt = '4' and addsuini = '1'))))) --est  cortado y no al efecto de la tabla de datos particular adem s de estar cortado
-                                                        else    (   select  sum(cov.capital)
-                                                                    from    usinsuv01.cover cov
-                                                                    join    usinsuv01.life_cover gco
-                                                                    on      cov.usercomp = cla.usercomp
-                                                                    and     cov.company = cla.company
-                                                                    and     cov.certype = pol.certype
-                                                                    and     cov.branch = cla.branch
-                                                                    and     cov.policy = cla.policy
-                                                                    and     cov.certif = cla.certif
-                                                                    and     cov.effecdate <= cla.occurdat
-                                                                    and     (cov.nulldate is null or cov.nulldate > cla.occurdat)
-                                                                    and     gco.ctid =
-                                                                            coalesce(coalesce(coalesce((    select  max(ctid)
-                                                                                                            from usinsuv01.life_cover
-                                                                                                            where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency -- ndice regular
-                                                                                                            and     cover = cov.cover
-                                                                                                            and     effecdate <= cla.occurdat and (nulldate is null or nulldate > cla.occurdat)
-                                                                                                            and     statregt <> '4'  and addcapii = '1'), --que no est  cortado
-                                                                                                        (   select  max(ctid)
-                                                                                                            from usinsuv01.life_cover
-                                                                                                            where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency -- ndice regular
-                                                                                                            and     cover = cov.cover
-                                                                                                            and     effecdate <= cla.occurdat and (nulldate is null or nulldate > cla.occurdat)
-                                                                                                            and     statregt = '4'  and addcapii = '1')),--est  cortado
-                                                                                                    coalesce((  select  max(ctid)
-                                                                                                                from usinsuv01.life_cover
-                                                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency -- ndice regular
-                                                                                                                and     cover = cov.cover
-                                                                                                                and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
-                                                                                                                and     statregt <> '4' and addcapii = '1'),--no est  cortado pero fue anulado antes del efecto del registro
-                                                                                                            (   select  max(ctid)
-                                                                                                                from usinsuv01.life_cover
-                                                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency -- ndice regular
-                                                                                                                and     cover = cov.cover
-                                                                                                                and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
-                                                                                                                and     statregt = '4' and addcapii = '1'))), --est  cortado y aparte fue anulado antes del efecto del registro
-                                                                                                coalesce((  select  max(ctid)
-                                                                                                            from usinsuv01.life_cover
-                                                                                                            where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency -- ndice regular
-                                                                                                            and     cover = cov.cover
-                                                                                                            and     effecdate > cla.occurdat
-                                                                                                            and     statregt <> '4' and addcapii = '1'),
-                                                                                                    (   select  max(ctid)
-                                                                                                        from usinsuv01.life_cover
-                                                                                                        where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency -- ndice regular
-                                                                                                        and     cover = cov.cover
-                                                                                                        and     effecdate > cla.occurdat --est  cortado pero no al efecto de la tabla de datos particular
-                                                                                                        and     statregt = '4' and addcapii = '1')))) end , 0)  as varchar) VMTCAPIT, --agregar c lculo
-                                                coi.share VTXQUOTA,
-                                                '' VMTINDEM, --NOAPP
-                                                cast(cla.policy as varchar) DNUMAPO_CSG,
-                                                cast (coalesce(   coalesce((  select  max(cpl.currency)
-                                                                        from    usinsuv01.curren_pol cpl
-                                                                        where   cpl.usercomp = cla.usercomp
-                                                                        and     cpl.company = cla.company
-                                                                        and     cpl.certype = pol.certype
-                                                                        and     cpl.branch = cla.branch
-                                                                        and     cpl.policy = cla.policy
-                                                                        and     cpl.certif = cla.certif),
-                                                                    (   select  max(cpl.currency)
-                                                                        from    usinsuv01.curren_pol cpl
-                                                                        where   cpl.usercomp = cla.usercomp
-                                                                        and     cpl.company = cla.company
-                                                                        and     cpl.certype = pol.certype
-                                                                        and     cpl.branch = cla.branch
-                                                                        and     cpl.policy = cla.policy)),0) as varchar) KSCMOEDA
-                                    from    (   select  case    when    cla.staclaim <> '6' and pol.certype = '2' and pol.bussityp = '1'
-                                                                then    cla.ctid
-                                                                else    null end cla_id,
-                                                        case    when    pol.certype = '2' and pol.bussityp = '1'
-                                                                then    pol.ctid
-                                                                else    null end pol_id
-                                                from    usinsuv01.policy pol
-                                                join    usinsuv01.claim cla 
-                                                        on  cla.usercomp = pol.usercomp
-                                                        and cla.company = pol.company
-                                                        and cla.branch = pol.branch
-                                                        and cla.policy = pol.policy 
-                                                join    (   select  distinct clh.claim
-                                                            from    (   select  cast(tcl.operation as varchar(2)) operation
-                                                                        from    usinsug01.tab_cl_ope tcl
-                                                                        where   (tcl.reserve = 1 or tcl.ajustes = 1 or pay_amount = 1)
-                                                                    ) tcl --reservas, ajustes o pagos
-                                                            join usinsuv01.claim_his clh
-                                                                on  coalesce (clh.claim,0) > 0
-                                                                and trim(clh.oper_type) = tcl.operation
-                                                                and clh.operdate >= '12/31/2015'
-                                                        ) clh 
-                                                        on      clh.claim = cla.claim
-                                            ) cl0
-                                    join    usinsuv01.claim cla 
-                                            on cla.ctid = cl0.cla_id
-                                    join    usinsuv01.policy pol 
-                                            on pol.ctid = cl0.pol_id
-                                    join    usinsuv01.coinsuran coi     
-                                            on      /*coi.usercomp = cla.usercomp
-                                            and     coi.company = cla.company
-                                            and     coi.certype = pol.certype
-                                            and */    coi.branch = cla.branch
-                                            and     coi.policy = cla.policy
-                                            and     coi.effecdate <= cla.occurdat
-                                            and     (coi.nulldate is null or coi.nulldate > cla.occurdat)       
-                                    /*1.769 s dev comentando los indices coinsuran hasta certype*/    
-                            ) AS TMP    
-                            '''    
+    INSUNIX_LPV = f'''
+                     (select	
+                     'D' INDDETREC,
+                     'SBCOSSEG' TABLAIFRS17,
+                     '' PK,
+                     '' DTPREG, --excluido
+                     '' TIOCPROC, --excluido
+                     cast(cl0.xxxxdate as varchar) TIOCFRM,
+                     '' TIOCTO, --excluido
+                     'PIV' KGIORIGM,
+                     'LPV' DCOMPA,
+                     '' DMARCA, --excluido
+                     cast(cl0.claim as varchar) KSBSIN,
+                     cast(case when cl0.bussityp = '2' then 1 else coalesce(coi.companyc,0) end as varchar) DCODCSG,
+                     '' DNUMSEQ, --excluido
+                     '' TDPLANO, --excluido
+                     cast(cl0.capital as numeric(14,2)) VMTCAPIT,
+                     cast(case when cl0.bussityp = '2' then 100 else coalesce(coi.share,0) end as numeric (9,6)) VTXQUOTA,
+                     '' VMTINDEM, --NOAPP
+                     case when cl0.bussityp = '2' then cl0.leadpoli else cast(cl0.policy as varchar) end DNUMAPO_CSG,
+                     cast(cl0.moneda_cod as varchar) KSCMOEDA
+                     from	(	select	cla.usercomp,
+                                        cla.company,
+                                        cla.branch,
+                                        cla.policy,
+                                        cla.certif,
+                                        cla.occurdat,
+                                        cla.claim,
+                                        pol.certype, --se renombr� de vuelta solo para el �ndice en el siguiente nivel
+                                        pol.leadpoli,
+                                        pol.bussityp,
+                                        case	when	pol.bussityp = '2'
+                                                then	cla.occurdat
+                                                else	(	select 	max(greatest(
+                                                                        case when cla.occurdat <= dat.dat_lim then cla.occurdat else '0001-01-01'::date end,
+                                                                        case when coi.effecdate <= dat.dat_lim then coi.effecdate else '0001-01-01'::date end,
+                                                                        case when coi.compdate <= dat.dat_lim then coi.compdate else '0001-01-01'::date end))
+                                                            from	usinsuv01.coinsuran coi
+                                                            where	coi.usercomp = cla.usercomp
+                                                            and     coi.company = cla.company
+                                                            and     coi.certype = pol.certype
+                                                            and     coi.branch = cla.branch
+                                                            and     coi.policy = cla.policy
+                                                            and		coi.effecdate <= cla.occurdat
+                                                            and		(coi.nulldate is null or coi.nulldate > cla.occurdat))
+                                                end xxxxdate,
+                                        coalesce(
+                                            (	select	max(cpl.currency)
+                                                from	usinsuv01.curren_pol cpl
+                                                where 	cpl.usercomp = cla.usercomp and cpl.company = cla.company and cpl.certype = pol.certype
+                                                and		cpl.branch = cla.branch and cpl.policy = cla.policy and	cpl.certif = cla.certif),
+                                            (	select	max(cpl.currency)
+                                                from	usinsuv01.curren_pol cpl
+                                                where 	cpl.usercomp = cla.usercomp and cpl.company = cla.company and cpl.certype = pol.certype
+                                                and		cpl.branch = cla.branch and cpl.policy = cla.policy),0) moneda_cod,
+                                        coalesce(	case    when    coalesce((  select  distinct pro.brancht
+                                                            from    usinsuv01.product pro
+                                                            where	pro.usercomp = cla.usercomp
+                                                            and		pro.company = cla.company
+                                                            and		pro.branch = cla.branch
+                                                            and		pro.product = pol.product
+                                                            and		pro.effecdate <= cla.occurdat
+                                                            and		(pro.nulldate is null or pro.nulldate > cla.occurdat)),'0') not in ('1','5')
+                                                    then    (   select  sum(coalesce(cov.capital,0))
+                                                                from    usinsuv01.cover cov
+                                                                join	usinsuv01.gen_cover gco on gco.ctid =
+                                                                        coalesce(
+                                                                            (   select  max(ctid)
+                                                                                from	usinsuv01.gen_cover
+                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
+                                                                                and		modulec = cov.modulec and cover = cov.cover --variaci�n 1 con modulec
+                                                                                and		effecdate <= cla.occurdat and (nulldate is null or nulldate > cla.occurdat) --variaci�n 2 vigencias
+                                                                                and		statregt <> '4' and addsuini = '1'), --variaci�n 3 reg. v�lido
+                                                                            (   select  max(ctid)
+                                                                                from	usinsuv01.gen_cover
+                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
+                                                                                and		coalesce(modulec,0) = 0 and cover = cov.cover --variaci�n 1 sin modulec
+                                                                                and		effecdate <= cla.occurdat and (nulldate is null or nulldate > cla.occurdat) --variaci�n 2 vigencias
+                                                                                and		statregt <> '4' and addsuini = '1'), --variaci�n 3 reg. v�lido
+                                                                            (  select  max(ctid)
+                                                                                from	usinsuv01.gen_cover
+                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
+                                                                                and		modulec = cov.modulec and cover = cov.cover
+                                                                                and		effecdate <= cla.occurdat and (nulldate is null or nulldate > cla.occurdat)
+                                                                                and		statregt = '4' and addsuini = '1'),
+                                                                            (   select  max(ctid)
+                                                                                from	usinsuv01.gen_cover
+                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
+                                                                                and		coalesce(modulec,0) = 0 and cover = cov.cover
+                                                                                and		effecdate <= cla.occurdat and (nulldate is null or nulldate > cla.occurdat)
+                                                                                and		statregt = '4' and addsuini = '1'), --no est� cortado
+                                                                            (   select  max(ctid)
+                                                                                from	usinsuv01.gen_cover
+                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
+                                                                                and		modulec = cov.modulec and cover = cov.cover
+                                                                                and		effecdate <= cla.occurdat and nulldate <= cla.occurdat
+                                                                                and		statregt <> '4' and addsuini = '1'),
+                                                                            (   select  max(ctid)
+                                                                                from	usinsuv01.gen_cover
+                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
+                                                                                and		coalesce(modulec,0) = 0 and cover = cov.cover
+                                                                                and		effecdate <= cla.occurdat and nulldate <= cla.occurdat
+                                                                                and		statregt <> '4' and addsuini = '1'), -- no est� cortado, pero fue anulado antes del efecto del registro
+                                                                            (   select  max(ctid)
+                                                                                from	usinsuv01.gen_cover
+                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
+                                                                                and		modulec = cov.modulec and cover = cov.cover
+                                                                                and		effecdate <= cla.occurdat and nulldate <= cla.occurdat
+                                                                                and		statregt = '4' and addsuini = '1'),
+                                                                            (   select  max(ctid)
+                                                                                from	usinsuv01.gen_cover
+                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
+                                                                                and		coalesce(modulec,0) = 0 and cover = cov.cover
+                                                                                and		effecdate <= cla.occurdat and nulldate <= cla.occurdat
+                                                                                and		statregt = '4' and addsuini = '1'), --no est� cortado y aparte fue anulado antes del efecto del registro
+                                                                            (   select  max(ctid)
+                                                                                from	usinsuv01.gen_cover
+                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
+                                                                                and		modulec = cov.modulec and cover = cov.cover
+                                                                                and		effecdate > cla.occurdat
+                                                                                and		statregt <> '4' and addsuini = '1'),
+                                                                            (   select  max(ctid)
+                                                                                from	usinsuv01.gen_cover
+                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
+                                                                                and		coalesce(modulec,0) = 0 and cover = cov.cover
+                                                                                and		effecdate <= cla.occurdat and nulldate <= cla.occurdat
+                                                                                and		statregt <> '4' and addsuini = '1'), -- no est� cortado, pero tampoco al efecto de la tabla de datos particular
+                                                                            (   select  max(ctid)
+                                                                                from	usinsuv01.gen_cover
+                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
+                                                                                and		modulec = cov.modulec and cover = cov.cover
+                                                                                and		effecdate <= cla.occurdat and nulldate <= cla.occurdat
+                                                                                and		statregt = '4' and addsuini = '1'),
+                                                                            (   select  max(ctid)
+                                                                                from	usinsuv01.gen_cover
+                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
+                                                                                and		coalesce(modulec,0) = 0 and cover = cov.cover
+                                                                                and		effecdate > cla.occurdat
+                                                                                and		statregt = '4' and addsuini = '1')) --est� cortado y no al efecto de la tabla de datos particular adem�s de estar cortado
+                                                                where	cov.usercomp = cla.usercomp
+                                                                and		cov.company = cla.company
+                                                                and		cov.certype = pol.certype
+                                                                and		cov.branch = cla.branch
+                                                                and		cov.policy = cla.policy
+                                                                and		cov.certif = cla.certif
+                                                                and		cov.effecdate <= cla.occurdat
+                                                                and		(cov.nulldate is null or cov.nulldate > cla.occurdat))
+                                                    else    (   select  sum(cov.capital)
+                                                                from    usinsuv01.cover cov
+                                                                join	usinsuv01.life_cover gco on gco.ctid =
+                                                                        coalesce(
+                                                                            (	select  max(ctid)
+                                                                                from 	usinsuv01.life_cover
+                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
+                                                                                and		cover = cov.cover
+                                                                                and		effecdate <= cla.occurdat and (nulldate is null or nulldate > cla.occurdat)
+                                                                                and		statregt <> '4'  and addcapii = '1'), --que no est� cortado
+                                                                            (   select  max(ctid)
+                                                                                from 	usinsuv01.life_cover
+                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
+                                                                                and		cover = cov.cover
+                                                                                and		effecdate <= cla.occurdat and (nulldate is null or nulldate > cla.occurdat)
+                                                                                and		statregt = '4'  and addcapii = '1'),--est� cortado
+                                                                            (   select  max(ctid)
+                                                                                from 	usinsuv01.life_cover
+                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
+                                                                                and		cover = cov.cover
+                                                                                and		effecdate <= cla.occurdat and nulldate <= cla.occurdat
+                                                                                and		statregt <> '4' and addcapii = '1'),--no est� cortado pero fue anulado antes del efecto del registro
+                                                                            (   select  max(ctid)
+                                                                                from 	usinsuv01.life_cover
+                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
+                                                                                and		cover = cov.cover
+                                                                                and		effecdate <= cla.occurdat and nulldate <= cla.occurdat
+                                                                                and		statregt = '4' and addcapii = '1'), --est� cortado y aparte fue anulado antes del efecto del registro
+                                                                            (   select  max(ctid)
+                                                                                from 	usinsuv01.life_cover
+                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
+                                                                                and		cover = cov.cover
+                                                                                and		effecdate > cla.occurdat
+                                                                                and		statregt <> '4' and addcapii = '1'),
+                                                                            (   select  max(ctid)
+                                                                                from 	usinsuv01.life_cover
+                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
+                                                                                and		cover = cov.cover
+                                                                                and		effecdate > cla.occurdat --est� cortado pero no al efecto de la tabla de datos particular
+                                                                                and		statregt = '4' and addcapii = '1'))
+                                                                where	cov.usercomp = cla.usercomp
+                                                                and		cov.company = cla.company
+                                                                and		cov.certype = pol.certype
+                                                                and		cov.branch = cla.branch
+                                                                and		cov.policy = cla.policy
+                                                                and		cov.certif = cla.certif
+                                                                and		cov.effecdate <= cla.occurdat
+                                                                and		(cov.nulldate is null or cov.nulldate > cla.occurdat))
+                                                    end, 0)  capital
+                                from 	(	select	prv.cla_id,
+                                                    prv.par_fin dat_lim
+                                            from 	(	--revisi�n fechas cabecera
+                                                        select	cla.ctid cla_id,
+                                                                dat.par_ini,
+                                                                dat.par_fin
+                                                        from	(	select	cast('{p_fecha_inicio}' as date) par_ini, --ejecutar al a�o 2021 (2019 es para pruebas)
+                                                                            cast('{p_fecha_fin}' as date) par_fin) dat --limitador para la carga inicial (fecha l�mite a�o 2023, 2022 para prueba)
+                                                        join	usinsuv01.claim cla
+                                                                on		cla.usercomp = 1
+                                                                and 	cla.company = 1
+                                                                and		cla.branch in (select branch from usinsug01.table10b where company = 2)
+                                                                and		cla.staclaim <> '6'
+                                                                and		cla.compdate between dat.par_ini and dat.par_fin
+                                                        union
+                                                        --revisi�n fechas transacciones
+                                                        select	cla.ctid cla_id,
+                                                                dat.par_ini,
+                                                                dat.par_fin
+                                                        from	(	select	cast('{p_fecha_inicio}' as date) par_ini, --ejecutar al a�o 2021 (2019 es para pruebas)
+                                                                            cast('{p_fecha_fin}' as date) par_fin) dat --limitador para la carga inicial (fecha l�mite a�o 2023, 2022 para prueba)
+                                                        join	usinsuv01.claim cla
+                                                                on		cla.usercomp = 1
+                                                                and 	cla.company = 1
+                                                                and		cla.branch in (select branch from usinsug01.table10b where company = 2)
+                                                                and		cla.staclaim <> '6'
+                                                        join	usinsuv01.claim_his clh
+                                                                on		clh.claim = cla.claim
+                                                                and		trim(clh.oper_type) in 
+                                                                        (select cast(operation as varchar(2)) from usinsug01.tab_cl_ope where reserve = 1 or ajustes = 1 or pay_amount = 1)
+                                                                and     (clh.operdate between dat.par_ini and dat.par_fin --se consideran siniestros con operaciones entre los rangos (limitaci�n carga inicial)
+                                                                        or clh.compdate between dat.par_ini and dat.par_fin)
+                                                        union
+                                                        --revisi�n fechas coberturas asociadas a transacciones
+                                                        select	cla.ctid cla_id,
+                                                                dat.par_ini,
+                                                                dat.par_fin
+                                                        from	(	select	cast('{p_fecha_inicio}' as date) par_ini, --ejecutar al a�o 2021 (2019 es para pruebas)
+                                                                            cast('{p_fecha_fin}' as date) par_fin) dat --limitador para la carga inicial (fecha l�mite a�o 2023, 2022 para prueba)
+                                                        join	usinsuv01.claim cla
+                                                                on		cla.usercomp = 1
+                                                                and 	cla.company = 1
+                                                                and		cla.branch in (select branch from usinsug01.table10b where company = 2)
+                                                                and		cla.staclaim <> '6'
+                                                        join	usinsuv01.claim_his clh
+                                                                on		clh.claim = cla.claim
+                                                                and		trim(clh.oper_type) in 
+                                                                        (select cast(operation as varchar(2)) from usinsug01.tab_cl_ope where reserve = 1 or ajustes = 1 or pay_amount = 1)
+                                                        join	usinsuv01.cl_m_cover clm
+                                                                on		clm.usercomp = clh.usercomp
+                                                                and		clm.company = clh.company
+                                                                and		clm.claim = clh.claim
+                                                                and		clm.movement = clh.transac
+                                                                and		clm.compdate between dat.par_ini and dat.par_fin) prv
+                                            where	exists
+                                                    (	select 	1
+                                                        from	usinsuv01.claim cla
+                                                        join	usinsuv01.coinsuran coi
+                                                                on		coi.usercomp = cla.usercomp
+                                                                and     coi.company = cla.company
+                                                                and     coi.certype = '2'
+                                                                and     coi.branch = cla.branch
+                                                                and     coi.policy = cla.policy
+                                                                and		coi.effecdate <= cla.occurdat
+                                                                and		(coi.nulldate is null or coi.nulldate > cla.occurdat)
+                                                        where	cla.ctid = prv.cla_id)
+                                                    or exists
+                                                    (	select 	1
+                                                        from	usinsuv01.claim cla
+                                                        join	usinsuv01.policy pol
+                                                                on		pol.usercomp = cla.usercomp
+                                                                and     pol.company = cla.company
+                                                                and     pol.certype = '2'
+                                                                and     pol.branch = cla.branch
+                                                                and     pol.policy = cla.policy
+                                                                and		pol.bussityp = '2'
+                                                        where	cla.ctid = prv.cla_id)) dat
+                            join	usinsuv01.claim cla on cla.ctid = dat.cla_id
+                            join	usinsuv01.policy pol
+                                    on		pol.usercomp = cla.usercomp
+                                    and 	pol.company = cla.company
+                                    and 	pol.certype = '2'
+                                    and 	pol.branch = cla.branch
+                                    and 	pol.policy = cla.policy) cl0
+                    left	join usinsuv01.coinsuran coi
+                        on		coi.usercomp = cl0.usercomp
+                        and     coi.company = cl0.company
+                        and     coi.certype = cl0.certype
+                        and     coi.branch = cl0.branch
+                        and     coi.policy = cl0.policy
+                        and		coi.effecdate <= cl0.occurdat
+                        and		(coi.nulldate is null or coi.nulldate > cl0.occurdat)
+                     ) AS TMP    
+                  '''    
 
-    DF_LPV_NEGOCIO1_INSUNIX = glue_context.read.format('jdbc').options(**connection).option("fetchsize",10000).option("dbtable",LPV_NEGOCIO1_INSUNIX).load()
+    DF_INSUNIX_LPV = glue_context.read.format('jdbc').options(**connection).option("fetchsize",10000).option("dbtable",INSUNIX_LPV).load()
   
-    LPV_NEGOCIO2_INSUNIX = '''
-                            (
-                                select	'D' as INDDETREC,
-                                        'SBCOSSEG' as TABLAIFRS17,
-                                        '' /*cla.claim || par.sep || par.cia || par.sep || 1*/ as PK,
-                                        '' as DTPREG,
-                                        '' as TIOCPROC,
-                                        coalesce (CASE WHEN cla.certif = 0 
-                                            THEN cast (pol.effecdate as varchar)
-                                        ELSE 
-                                            (SELECT cast (c.effecdate as varchar)
-                                            FROM usinsuv01.certificat c 
-                                            WHERE c.usercomp = cla.usercomp
-                                            AND c.company = cla.company
-                                            AND c.certype = pol.certype
-                                            AND c.branch = cla.branch
-                                            AND c.policy = cla.policy
-                                            AND c.certif = cla.certif
-                                            )
-                                        end,'')
-                                        as TIOCFRM,
-                                        '' as TIOCTO,
-                                        'PIV' as KGIORIGM,
-                                        'LPV' DCOMPA,
-                                        '' as DMARCA,
-                                        cast (cla.claim as varchar) as KSBSIN,
-                                        '1' as DCODCSG,
-                                        '' as DNUMSEQ,
-                                        '' as TDPLANO,
-                                        cast ( coalesce ( case    when    coalesce((  select  distinct pro.brancht
-                                                                    from    usinsuv01.product pro
-                                                                    where   pro.usercomp = cla.usercomp
-                                                                    and     pro.company = cla.company
-                                                                    and     pro.branch = cla.branch
-                                                                    and     pro.product = pol.product
-                                                                    and     pro.effecdate <= cla.occurdat
-                                                                    and     (pro.nulldate is null or pro.nulldate > cla.occurdat)),'0')
-                                                        not in ('1','5')
-                                                then    (   select  sum(cov.capital)
-                                                            from    usinsuv01.cover cov
-                                                            join    usinsuv01.gen_cover gco
-                                                            on   cov.usercomp = cla.usercomp
-                                                            and     cov.company = cla.company
-                                                            and     cov.certype = pol.certype
-                                                            and     cov.branch = cla.branch
-                                                            and     cov.policy = cla.policy
-                                                            and     cov.certif = cla.certif
-                                                            and     cov.effecdate <= cla.occurdat
-                                                            and     (cov.nulldate is null or cov.nulldate > cla.occurdat)
-                                                            and     gco.ctid =
-                                                                    coalesce(coalesce(coalesce(coalesce((   select  max(ctid)
-                                                                                                            from    usinsuv01.gen_cover
-                                                                                                            where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                            and     modulec = cov.modulec and cover = cov.cover --variaci�n 1 con modulec
-                                                                                                            and     effecdate <= cla.occurdat and (nulldate is null or nulldate > cla.occurdat) --variaci�n 2 vigencias
-                                                                                                            and     statregt <> '4' and addsuini = '1'), --variaci�n 3 reg. v�lido
-                                                                                                        (   select  max(ctid)
-                                                                                                            from    usinsuv01.gen_cover
-                                                                                                            where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                            and     cover = cov.cover --variaci�n 1 sin modulec
-                                                                                                            and     effecdate <= cla.occurdat and (nulldate is null or nulldate > cla.occurdat) --variaci�n 2 vigencias
-                                                                                                            and     statregt <> '4' and addsuini = '1')), --variaci�n 3 reg. v�lido
-                                                                                                    coalesce((  select  max(ctid)
-                                                                                                                from 	usinsuv01.gen_cover
-                                                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                and     modulec = cov.modulec and cover = cov.cover
-                                                                                                                and     effecdate <= cla.occurdat and (nulldate is null or nulldate > cla.occurdat)
-                                                                                                                and     statregt = '4' and addsuini = '1'),
-                                                                                                            (   select  max(ctid)
-                                                                                                                from 	usinsuv01.gen_cover
-                                                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                and     cover = cov.cover
-                                                                                                                and     effecdate <= cla.occurdat and (nulldate is null or nulldate > cla.occurdat)
-                                                                                                                and     statregt = '4' and addsuini = '1'))), --no est� cortado
-                                                                                                coalesce(coalesce(( select  max(ctid)
-                                                                                                                    from 	usinsuv01.gen_cover
-                                                                                                                    where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                    and     modulec = cov.modulec and cover = cov.cover
-                                                                                                                    and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
-                                                                                                                    and     statregt <> '4' and addsuini = '1'),
-                                                                                                                (   select  max(ctid)
-                                                                                                                    from    usinsuv01.gen_cover
-                                                                                                                    where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                    and     cover = cov.cover
-                                                                                                                    and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
-                                                                                                                    and     statregt <> '4' and addsuini = '1')), -- no est� cortado, pero fue anulado antes del efecto del registro
-                                                                                                    coalesce((  select  max(ctid)
-                                                                                                                from 	usinsuv01.gen_cover
-                                                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                and     modulec = cov.modulec and cover = cov.cover
-                                                                                                                and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
-                                                                                                                and     statregt = '4' and addsuini = '1'),
-                                                                                                            (   select  max(ctid)
-                                                                                                                from 	usinsuv01.gen_cover
-                                                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                and     cover = cov.cover
-                                                                                                                and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
-                                                                                                                and     statregt = '4' and addsuini = '1')))), --no est� cortado y aparte fue anulado antes del efecto del registro
-                                                                                            coalesce(coalesce(( select  max(ctid)
-                                                                                                                from 	usinsuv01.gen_cover
-                                                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                and     modulec = cov.modulec and cover = cov.cover
-                                                                                                                and     effecdate > cla.occurdat
-                                                                                                                and     statregt <> '4' and addsuini = '1'),
-                                                                                                            (   select  max(ctid)
-                                                                                                                from 	usinsuv01.gen_cover
-                                                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                                and     cover = cov.cover
-                                                                                                                and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
-                                                                                                                and     statregt <> '4' and addsuini = '1')), -- no est� cortado, pero tampoco al efecto de la tabla de datos particular
-                                                                                                coalesce((  select  max(ctid)
-                                                                                                            from  	usinsuv01.gen_cover
-                                                                                                            where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                            and     modulec = cov.modulec and cover = cov.cover
-                                                                                                            and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
-                                                                                                            and     statregt = '4' and addsuini = '1'),
-                                                                                                        (   select  max(ctid)
-                                                                                                            from 	usinsuv01.gen_cover
-                                                                                                            where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                            and     cover = cov.cover
-                                                                                                            and     effecdate > cla.occurdat
-                                                                                                            and     statregt = '4' and addsuini = '1'))))) --est� cortado y no al efecto de la tabla de datos particular adem�s de estar cortado
-                                                else    (   select  sum(cov.capital)
-                                                            from    usinsuv01.cover cov
-                                                            join    usinsuv01.life_cover gco
-                                                            on      cov.usercomp = cla.usercomp
-                                                            and     cov.company = cla.company
-                                                            and     cov.certype = pol.certype
-                                                            and     cov.branch = cla.branch
-                                                            and     cov.policy = cla.policy
-                                                            and     cov.certif = cla.certif
-                                                            and     cov.effecdate <= cla.occurdat
-                                                            and     (cov.nulldate is null or cov.nulldate > cla.occurdat)
-                                                            and     gco.ctid =
-                                                                    coalesce(coalesce(coalesce((    select  max(ctid)
-                                                                                                    from    usinsuv01.life_cover
-                                                                                                    where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                    and     cover = cov.cover
-                                                                                                    and     effecdate <= cla.occurdat and (nulldate is null or nulldate > cla.occurdat)
-                                                                                                    and     statregt <> '4'  and addcapii = '1'), --que no est� cortado
-                                                                                                (   select  max(ctid)
-                                                                                                    from    usinsuv01.life_cover
-                                                                                                    where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                    and     cover = cov.cover
-                                                                                                    and     effecdate <= cla.occurdat and (nulldate is null or nulldate > cla.occurdat)
-                                                                                                    and     statregt = '4'  and addcapii = '1')),--est� cortado
-                                                                                            coalesce((  select  max(ctid)
-                                                                                                        from    usinsuv01.life_cover
-                                                                                                        where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                        and     cover = cov.cover
-                                                                                                        and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
-                                                                                                        and     statregt <> '4' and addcapii = '1'),--no est� cortado pero fue anulado antes del efecto del registro
-                                                                                                    (   select  max(ctid)
-                                                                                                        from 	usinsuv01.life_cover
-                                                                                                        where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                        and     cover = cov.cover
-                                                                                                        and     effecdate <= cla.occurdat and nulldate <= cla.occurdat
-                                                                                                        and     statregt = '4' and addcapii = '1'))), --est� cortado y aparte fue anulado antes del efecto del registro
-                                                                                        coalesce((  select  max(ctid)
-                                                                                                    from 	usinsuv01.life_cover
-                                                                                                    where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                    and     cover = cov.cover
-                                                                                                    and     effecdate > cla.occurdat
-                                                                                                    and     statregt <> '4' and addcapii = '1'),
-                                                                                            (   select  max(ctid)
-                                                                                                from 	usinsuv01.life_cover
-                                                                                                where   usercomp = cla.usercomp and company = cla.company and branch = cla.branch and product = pol.product and currency = cov.currency --�ndice regular
-                                                                                                and     cover = cov.cover
-                                                                                                and     effecdate > cla.occurdat --est� cortado pero no al efecto de la tabla de datos particular
-                                                                                                and     statregt = '4' and addcapii = '1')))) end, 0 ) as varchar ) as VMTCAPIT,
-                                        '100' as VTXQUOTA,
-                                        '' as  VMTINDEM,
-                                        pol.leadpoli as DNUMAPO_CSG,
-                                        cast (coalesce(   coalesce((  select  max(cpl.currency)
-                                                                from    usinsuv01.curren_pol cpl
-                                                                where	cpl.usercomp = cla.usercomp
-                                                                and     cpl.company = cla.company
-                                                                and     cpl.certype = pol.certype
-                                                                and     cpl.branch = cla.branch
-                                                                and     cpl.policy = cla.policy
-                                                                and     cpl.certif = cla.certif),
-                                                            (   select  max(cpl.currency)
-                                                                from    usinsuv01.curren_pol cpl
-                                                                where	cpl.usercomp = cla.usercomp
-                                                                and     cpl.company = cla.company
-                                                                and     cpl.certype = pol.certype
-                                                                and     cpl.branch = cla.branch
-                                                                and     cpl.policy = cla.policy)),0) as varchar ) KSCMOEDA
-                                from 	(	select	case 	when 	cla.staclaim <> '6' and pol.certype = '2' and pol.bussityp = '2'
-                                                            then	cla.ctid
-                                                            else	null end cla_id,
-                                                    case 	when 	pol.certype = '2' and pol.bussityp = '2'
-                                                            then 	pol.ctid
-                                                            else	null end pol_id
-                                            from    usinsuv01.policy pol
-                                            join    usinsuv01.claim cla on cla.usercomp = pol.usercomp
-                                                                        and     cla.company = pol.company
-                                                                        and     cla.branch = pol.branch
-                                                                        and     cla.policy = pol.policy
-                                            join       (select  distinct clh.claim
-                                                        from    (   select  cast(tcl.operation as varchar(2)) operation
-                                                                    from    usinsug01.tab_cl_ope tcl
-                                                                    where   (tcl.reserve = 1 or tcl.ajustes = 1 or pay_amount = 1)) tcl, --reservas, ajustes o pagos
-                                                                usinsuv01.claim_his  clh
-                                                        where   coalesce (clh.claim,0) > 0
-                                                        and     trim(clh.oper_type) = tcl.operation
-                                                        and     clh.operdate >= '12/31/2015') clh
-                                            ON	clh.claim = cla.claim) cl0
-                                join usinsuv01.claim cla on cla.ctid = cl0.cla_id
-                                join usinsuv01.policy pol on pol.ctid = cl0.pol_id
-                            ) AS TMP
-                            '''
+    VTIME_LPG =  f'''
+                    (select	
+                    'D' INDDETREC,
+                    'SBCOSSEG' TABLAIFRS17,
+                    '' PK,
+                    '' DTPREG, --excluido
+                    '' TIOCPROC, --excluido
+                    cast(cl0.xxxxdate as varchar) TIOCFRM,
+                    '' TIOCTO, --excluido
+                    'PVG' KGIORIGM,
+                    'LPG' DCOMPA,
+                    '' DMARCA, --excluido
+                    cast(cl0.nclaim as varchar) KSBSIN,
+                    cast(case when cl0.sbussityp = '2' then 1 else coalesce(coi."NCOMPANY",0) end as varchar) DCODCSG,
+                    '' DNUMSEQ, --excluido
+                    '' TDPLANO, --excluido
+                    cast(cl0.ncapital as numeric(14,2)) VMTCAPIT,
+                    cast(case when cl0.sbussityp = '2' then 100 else coalesce(coi."NSHARE",0) end as numeric (9,6)) VTXQUOTA,
+                    '' VMTINDEM, --NOAPP
+                    case when cl0.sbussityp = '2' then cl0.sleadpoli else cast(cl0.npolicy as varchar) end DNUMAPO_CSG,
+                    cast(cl0.moneda_cod as varchar) KSCMOEDA
+                    from	(	select  cla."NBRANCH" nbranch,
+                                        cla."NPOLICY" npolicy,
+                                        cla."NCERTIF" ncertif,
+                                        cla."NCLAIM" nclaim,
+                                        cast(cla."DOCCURDAT" as date) doccurdat,
+                                        pol."SCERTYPE" scertype,
+                                        pol."NPRODUCT" nproduct,
+                                        pol."SLEADPOLI" sleadpoli,
+                                        pol."SBUSSITYP" sbussityp,
+                                        coalesce(
+                                            (	select  max(cpl."NCURRENCY")
+                                                from    usvtimg01."CURREN_POL" cpl
+                                                where 	cpl."SCERTYPE" = cla."SCERTYPE" and	cpl."NBRANCH" = cla."NBRANCH" 
+                                                and		cpl."NPRODUCT" = pol."NPRODUCT" and cpl."NPOLICY" = cla."NPOLICY"
+                                                and		cpl."NCERTIF" = cla."NCERTIF"),
+                                            (   select  max(cpl."NCURRENCY")
+                                                from    usvtimg01."CURREN_POL" cpl
+                                                where 	cpl."SCERTYPE" = cla."SCERTYPE" and	cpl."NBRANCH" = cla."NBRANCH" 
+                                                and		cpl."NPRODUCT" = pol."NPRODUCT" and cpl."NPOLICY" = cla."NPOLICY"),0) moneda_cod,
+                                        coalesce(	case	when	cla."NBRANCH" = 21 
+                                                            then	(	select	case	when	max(gen."SADDSUINI") = '3'
+                                                                                        then	max(case when gen."SADDSUINI" = '3' then coalesce(cov."NCAPITAL",0) else 0 end)
+                                                                                        else	sum(case when gen."SADDSUINI" = '1' then coalesce(cov."NCAPITAL",0) else 0 end) end
+                                                                        from    usvtimg01."COVER" cov
+                                                                        join	usvtimg01."LIFE_COVER" gen
+                                                                                on		gen."NBRANCH" = cov."NBRANCH"
+                                                                                and     gen."NPRODUCT" = cov."NPRODUCT"
+                                                                                and     gen."NMODULEC" = cov."NMODULEC"
+                                                                                and     gen."NCOVER" = cov."NCOVER"
+                                                                                and     gen."DEFFECDATE" <= cast(cla."DOCCURDAT" as date)
+                                                                                and     (gen."DNULLDATE" is null or gen."DNULLDATE" > cast(cla."DOCCURDAT" as date))
+                                                                                and     gen."SSTATREGT" <> '4'
+                                                                                and     gen."SADDSUINI" in ('1','3') --NO HAY '3' EN VTIME
+                                                                        where   cov."SCERTYPE"  = pol."SCERTYPE" 
+                                                                        and     cov."NBRANCH" = cla."NBRANCH"
+                                                                        and     cov."NPRODUCT" = cla."NPRODUCT"
+                                                                        and     cov."NPOLICY" = cla."NPOLICY"
+                                                                        and     cov."NCERTIF" = cla."NCERTIF"
+                                                                        and     cast(cov."DEFFECDATE" as date) <= cast(cla."DOCCURDAT" as date)
+                                                                        and     (cov."DNULLDATE" is null or cast(cov."DNULLDATE" as date) > cast(cla."DOCCURDAT" as date)))
+                                                            else 	(	select	case	when	max(gen."SADDSUINI") = '3'
+                                                                                        then	max(case when gen."SADDSUINI" = '3' then coalesce(cov."NCAPITAL",0) else 0 end)
+                                                                                        else	sum(case when gen."SADDSUINI" = '1' then coalesce(cov."NCAPITAL",0) else 0 end)
+                                                                                        end
+                                                                        from    usvtimg01."COVER" cov
+                                                                        join	usvtimg01."GEN_COVER" gen
+                                                                                on		gen."NBRANCH" = cov."NBRANCH"
+                                                                                and     gen."NPRODUCT" = cov."NPRODUCT"
+                                                                                and     gen."NMODULEC" = cov."NMODULEC"
+                                                                                and     gen."NCOVER" = cov."NCOVER"
+                                                                                and     cast(gen."DEFFECDATE" as date) <= cast(cla."DOCCURDAT" as date)
+                                                                                and     (gen."DNULLDATE" is null or cast(gen."DNULLDATE" as date) > cast(cla."DOCCURDAT" as date))
+                                                                                and     gen."SSTATREGT" <> '4'
+                                                                                and     gen."SADDSUINI" in ('1','3')
+                                                                        where   cov."SCERTYPE"  = pol."SCERTYPE" 
+                                                                        and     cov."NBRANCH" = cla."NBRANCH"
+                                                                        and     cov."NPRODUCT" = cla."NPRODUCT"
+                                                                        and     cov."NPOLICY" = cla."NPOLICY"
+                                                                        and     cov."NCERTIF" = cla."NCERTIF"
+                                                                        and     cast(cov."DEFFECDATE" as date) <= cast(cla."DOCCURDAT" as date)
+                                                                        and     (cov."DNULLDATE" is null or cast(cov."DNULLDATE" as date) > cast(cla."DOCCURDAT" as date))) --NO HAY '3' EN VTIME
+                                                            end, 0) ncapital,
+                                        case	when	pol."SBUSSITYP" = '2'
+                                                then 	cast(cla."DOCCURDAT" as date)
+                                                else	(	select 	max(greatest(
+                                                                        case when cast(cla."DOCCURDAT" as date) <= dat.par_fin then cast(cla."DOCCURDAT" as date) else '0001-01-01'::date end,
+                                                                        case when cast(coi."DEFFECDATE" as date) <= dat.par_fin then cast(coi."DEFFECDATE" as date) else '0001-01-01'::date end,
+                                                                        case when cast(coi."DCOMPDATE" as date) <= dat.par_fin then cast(coi."DCOMPDATE" as date) else '0001-01-01'::date end))
+                                                            from	usvtimg01."COINSURAN" coi
+                                                            where	coi."SCERTYPE" = cla."SCERTYPE"
+                                                            and     coi."NBRANCH" = cla."NBRANCH"
+                                                            and     coi."NPRODUCT" = cla."NPRODUCT"
+                                                            and     coi."NPOLICY" = cla."NPOLICY"
+                                                            and 	coi."NCOMPANY" is not null
+                                                            and     cast(coi."DEFFECDATE" as date) <= cast("DOCCURDAT" as date)
+                                                            and     (coi."DNULLDATE" is null or cast(coi."DNULLDATE" as date) > cast("DOCCURDAT" as date)))
+                                                end xxxxdate
+                                from    (	select	ctid pol_id
+                                            from	usvtimg01."POLICY"
+                                            where	"SCERTYPE" = '2') po0
+                                join	(	select	cast('{p_fecha_inicio}' as date) par_ini, --ejecutar al a�o 2021 (2019 es para pruebas)
+                                                    cast('{p_fecha_fin}' as date) par_fin --limitador para la carga inicial (fecha l�mite a�o 2023, 2022 para prueba)
+                                        ) dat on 1 = 1
+                                join	usvtimg01."POLICY" pol on pol.ctid = po0.pol_id
+                                join	usvtimg01."CLAIM" cla
+                                        on		cla."SCERTYPE" = pol."SCERTYPE"
+                                        and     cla."NPOLICY" = pol."NPOLICY"
+                                        and     cla."NBRANCH" = pol."NBRANCH"
+                                        and     cla."SSTACLAIM" <> '6'
+                                        and		(cast(cla."DCOMPDATE" as date) between dat.par_ini and dat.par_fin
+                                                or	exists
+                                                    (   select  1
+                                                        from    usvtimg01."CLAIM_HIS" clh
+                                                        where	clh."NCLAIM" = cla."NCLAIM"
+                                                        and		coalesce(clh."NCASE_NUM",0) >= 0
+                                                        and     (cast(clh."DOPERDATE" as date) between dat.par_ini and dat.par_fin --se consideran siniestros con operaciones entre los rangos (limitaci�n carga inicial)
+                                                                or cast(clh."DCOMPDATE" as date) between dat.par_ini and dat.par_fin) --se consideran siniestros con modificaciones entre los rangos (limitaci�n carga inicial)
+                                                        and		clh."NOPER_TYPE" in 
+                                                                (select	cast("SVALUE" as INT4) from	usvtimg01."CONDITION_SERV" cs  where "NCONDITION" in (71,72,73)))
+                                                or	exists
+                                                    (   select  1
+                                                        from    usvtimg01."CLAIM_HIS" clh
+                                                                join	usvtimg01."CL_M_COVER" clm
+                                                                on		clm."NCLAIM" = clh."NCLAIM"
+                                                                and		clm."NCASE_NUM" = clH."NCASE_NUM"
+                                                                and		clm."NDEMAN_TYPE" = clh."NDEMAN_TYPE"
+                                                                and		clm."NTRANSAC" = clh."NTRANSAC"
+                                                                and		cast(clm."DCOMPDATE" as date) between dat.par_ini and dat.par_fin --se consideran coberturas con modificaciones entre los rangos (limitaci�n carga inicial)
+                                                        where	clh."NCLAIM" = cla."NCLAIM"
+                                                        and		coalesce(clh."NCASE_NUM",0) >= 0
+                                                        and		clh."NOPER_TYPE" in 
+                                                                (select	cast("SVALUE" as INT4) from	usvtimg01."CONDITION_SERV" cs  where "NCONDITION" in (71,72,73))))
+                                        and		(	(pol."SBUSSITYP" = '1' and exists
+                                                    (	select	1
+                                                        from	usvtimg01."COINSURAN" coi
+                                                        where	coi."SCERTYPE" = cla."SCERTYPE"
+                                                        and     coi."NBRANCH" = cla."NBRANCH"
+                                                        and     coi."NPRODUCT" = cla."NPRODUCT"
+                                                        and     coi."NPOLICY" = cla."NPOLICY"
+                                                        and 	coi."NCOMPANY" is not null
+                                                        and     cast(coi."DEFFECDATE" as date) <= cast("DOCCURDAT" as date)
+                                                        and     (coi."DNULLDATE" is null or cast(coi."DNULLDATE" as date) > cast("DOCCURDAT" as date))))
+                                                    or pol."SBUSSITYP" = '2')) cl0
+                left	join usvtimg01."COINSURAN" coi
+                    on		coi."SCERTYPE" = cl0.scertype
+                    and     coi."NBRANCH" = cl0.nbranch
+                    and     coi."NPRODUCT" = cl0.nproduct
+                    and     coi."NPOLICY" = cl0.npolicy
+                    and 	coi."NCOMPANY" is not null
+                    and     cast(coi."DEFFECDATE" as date) <= cl0.doccurdat
+                    and     (coi."DNULLDATE" is null or cast(coi."DNULLDATE" as date) > cl0.doccurdat)
+                    ) AS TMP
+                 '''
 
-    DF_LPV_NEGOCIO2_INSUNIX = glue_context.read.format('jdbc').options(**connection).option("fetchsize",10000).option("dbtable",LPV_NEGOCIO2_INSUNIX).load()
-                                
-
-    L_DF_SBCOSSEG_INSUNIX =  DF_LPG_NEGOCIO1_INSUNIX.union(DF_LPG_NEGOCIO2_INSUNIX).union(DF_LPV_NEGOCIO1_INSUNIX).union(DF_LPV_NEGOCIO2_INSUNIX)
-
+    DF_VTIME_LPG = glue_context.read.format('jdbc').options(**connection).option("fetchsize",10000).option("dbtable",VTIME_LPG).load()
   
-    LPG_NEGOCIO1_VTIME = '''
-                           ( 
-                             select	'D' as INDDETREC,
-                                    'SBCOSSEG' as TABLAIFRS17,
-                                    ''/*cla."NCLAIM" || par.sep || par.cia || par.sep || coi."NCOMPANY"*/ as  PK,
-                                    '' as DTPREG,
-                                    '' as TIOCPROC,
-                                    CAST(coi."DEFFECDATE" AS DATE) as TIOCFRM,
-                                    '' as TIOCTO,
-                                    'PVG' as KGIORIGM,
-                                    'LPG'  as  DCOMPA,
-                                    '' as DMARCA,
-                                    cla."NCLAIM" as KSBSIN,
-                                    cast (coi."NCOMPANY" as varchar) as DCODCSG,
-                                    '' as DNUMSEQ,
-                                    ''  as TDPLANO,
-                                    cast (coalesce ( case	when	cla."NBRANCH" = 21 
-                                            then	(	select	sum(cov."NCAPITAL")
-                                                        from    usvtimg01."COVER" cov
-                                                        join    usvtimg01."LIFE_COVER" gen
-                                                        on   cov."SCERTYPE"  = pol."SCERTYPE" 
-                                                        and     cov."NBRANCH" = cla."NBRANCH"
-                                                        and     cov."NPRODUCT" = cla."NPRODUCT"
-                                                        and     cov."NPOLICY" = cla."NPOLICY"
-                                                        and     cov."NCERTIF" = cla."NCERTIF"
-                                                        and     cov."DEFFECDATE" <= "DOCCURDAT"
-                                                        and     (cov."DNULLDATE" is null or cov."DNULLDATE" > "DOCCURDAT")
-                                                        and     gen."NCOVER" = cov."NCOVER"
-                                                        and     gen."NPRODUCT" = cov."NPRODUCT"
-                                                        and     gen."NMODULEC" = cov."NMODULEC"
-                                                        and     gen."NBRANCH" = cov."NBRANCH"
-                                                        and     gen."DEFFECDATE" <= cla."DOCCURDAT"
-                                                        and     (gen."DNULLDATE" is null or gen."DNULLDATE" > cla."DOCCURDAT")
-                                                        and     gen."SSTATREGT" <> '4'
-                                                        and     gen."SADDSUINI" in ('1','3')) --NO HAY '3' EN VTIME
-                                            else 	(	select	sum(cov."NCAPITAL")
-                                                        from    usvtimg01."COVER" cov
-                                                        join    usvtimg01."GEN_COVER" gen
-                                                        on      cov."SCERTYPE"  = pol."SCERTYPE" 
-                                                        and     cov."NBRANCH" = cla."NBRANCH"
-                                                        and     cov."NPRODUCT" = cla."NPRODUCT"
-                                                        and     cov."NPOLICY" = cla."NPOLICY"
-                                                        and     cov."NCERTIF" = cla."NCERTIF"
-                                                        and     cov."DEFFECDATE" <= "DOCCURDAT"
-                                                        and     (cov."DNULLDATE" is null or cov."DNULLDATE" > "DOCCURDAT")
-                                                        and     gen."NCOVER" = cov."NCOVER"
-                                                        and     gen."NPRODUCT" = cov."NPRODUCT"
-                                                        and     gen."NMODULEC" = cov."NMODULEC"
-                                                        and     gen."NBRANCH" = cov."NBRANCH"
-                                                        and     gen."DEFFECDATE" <= cla."DOCCURDAT"
-                                                        and     (gen."DNULLDATE" is null or gen."DNULLDATE" > cla."DOCCURDAT")
-                                                        and     gen."SSTATREGT" <> '4'
-                                                        and     gen."SADDSUINI" in ('1','3')) --NO HAY '3' EN VTIME
-                                            end, 0) as varchar) as VMTCAPIT,
-                                    cast (coi."NSHARE" as varchar ) as VTXQUOTA,
-                                    '' as VMTINDEM, --NOAPP
-                                    cast(cla."NPOLICY" as varchar) DNUMAPO_CSG,
-                                cast(coalesce(   coalesce((  select  max(cpl."NCURRENCY")
-                                                            from    usvtimg01."CURREN_POL" cpl
-                                                            where   cpl."SCERTYPE" = cla."SCERTYPE"
-                                                            and     cpl."NBRANCH" = cla."NBRANCH"
-                                                            and     cpl."NPRODUCT" = pol."NPRODUCT"
-                                                            and     cpl."NPOLICY" = cla."NPOLICY"
-                                                            and     cpl."NCERTIF" = cla."NCERTIF"),
-                                                        (   select  max(cpl."NCURRENCY")
-                                                            from    usvtimg01."CURREN_POL" cpl
-                                                            where   cpl."SCERTYPE" = cla."SCERTYPE"
-                                                            and     cpl."NBRANCH" = cla."NBRANCH"
-                                                            and     cpl."NPRODUCT" = pol."NPRODUCT"
-                                                            and     cpl."NPOLICY" = cla."NPOLICY")),0) as varchar) as KSCMOEDA
-                            from 	(	select  case    when    cla."SSTACLAIM" <> '6' and pol."SCERTYPE" = '2'
-                                                                    then    cla.ctid
-                                                                    else    null end CLA_ID,
-                                                case 	when 	pol."SCERTYPE" = '2' and pol."SBUSSITYP" = '1'
-                                                        then 	pol.ctid
-                                                        else	null end POL_ID
-                                        from   usvtimg01."POLICY" pol
-                                        join   usvtimg01."CLAIM" cla on cla."SCERTYPE" = pol."SCERTYPE"
-                                                                    and     cla."NPOLICY" = pol."NPOLICY"
-                                                                    and     cla."NBRANCH" = pol."NBRANCH"
-                                        join        (   select  distinct clh."NCLAIM"
-                                                    from    (   select  cast("SVALUE" as INT4) "SVALUE"
-                                                                from    usvtimg01."CONDITION_SERV" cs
-                                                                where   "NCONDITION" in (71,72,73)) csv --operaciones de reserva, ajustes o pagos
-                                                    join        usvtimg01."CLAIM_HIS" clh
-                                                    on   coalesce (clh."NCLAIM",0) > 0
-                                                    and     clh."NOPER_TYPE" = csv."SVALUE"
-                                                    and     cast (clh."DOPERDATE" as date ) >= '12/31/2015') clh
-                                        
-                                        on    clh."NCLAIM" = cla."NCLAIM") cl0
-                            join 	usvtimg01."CLAIM" cla on cla.ctid = cl0.cla_id
-                            join 	usvtimg01."POLICY" pol on pol.ctid = cl0.pol_id
-                            join 	usvtimg01."COINSURAN" coi 	on coi."SCERTYPE" = cla."SCERTYPE"
-                                                                and     coi."NBRANCH" = cla."NBRANCH"
-                                                                and     coi."NPRODUCT" = pol."NPRODUCT"
-                                                                and     coi."NPOLICY" = cla."NPOLICY"
-                                                                and 	coi."NCOMPANY" is not null
-                                                                and     coi."DEFFECDATE" <= cla."DOCCURDAT"
-                                                                and     (coi."DNULLDATE" is null or coi."DNULLDATE" > cla."DOCCURDAT")
-                           ) AS TMP
-                           '''
-    DF_LPG_NEGOCIO1_VTIME = glue_context.read.format('jdbc').options(**connection).option("fetchsize",10000).option("dbtable",LPG_NEGOCIO1_VTIME).load()
-  
-    LPG_NEGOCIO2_VTIME =  '''
-                           ( 
-                                select  'D' as INDDETREC,
-                                        'SBCOSSEG' as TABLAIFRS17,
-                                        ''/* cla."NCLAIM" || par.sep || par.cia || par.sep || 1*/ as PK,
-                                        '' as DTPREG,
-                                        '' as TIOCPROC,
-                                        CASE WHEN cla."NCERTIF" = 0 
-                                                THEN CAST(POL."DSTARTDATE"AS DATE)
-                                            ELSE 
-                                                (SELECT CAST(c."DCOMPDATE" AS DATE)
-                                                FROM  usvtimg01."CERTIFICAT" c 
-                                                WHERE c."SCERTYPE" = cla."SCERTYPE"
-                                                AND c."NBRANCH" = cla."NBRANCH"
-                                                AND c."NPRODUCT" = cla."NPRODUCT"
-                                                AND C."NPOLICY" = POL."NPOLICY"
-                                                AND c."NCERTIF" = cla."NCERTIF"
-                                                )
-                                            END
-                                            as TIOCFRM,
-                                        '' as TIOCTO,
-                                        'PVG' as KGIORIGM,
-                                        'LPG' as  DCOMPA,
-                                        '' as DMARCA,
-                                        cla."NCLAIM"  as KSBSIN,
-                                        '1' as  DCODCSG,
-                                        '' as DNUMSEQ,
-                                        '' as TDPLANO,
-                                        cast (coalesce ( case   when    cla."NBRANCH" = 21 
-                                                then    (   select  sum(cov."NCAPITAL")
-                                                            from    usvtimg01."COVER" cov
-                                                            join    usvtimg01."LIFE_COVER" gen
-                                                            on      cov."SCERTYPE"  = pol."SCERTYPE" 
-                                                            and     cov."NBRANCH" = cla."NBRANCH"
-                                                            and     cov."NPRODUCT" = cla."NPRODUCT"
-                                                            and     cov."NPOLICY" = cla."NPOLICY"
-                                                            and     cov."NCERTIF" = cla."NCERTIF"
-                                                            and     cov."DEFFECDATE" <= "DOCCURDAT"
-                                                            and     (cov."DNULLDATE" is null or cov."DNULLDATE" > "DOCCURDAT")
-                                                            and     gen."NCOVER" = cov."NCOVER"
+    VTIME_LPV = f'''
+                   (select	
+                    'D' INDDETREC,
+                    'SBCOSSEG' TABLAIFRS17,
+                    '' PK,
+                    '' DTPREG, --excluido
+                    '' TIOCPROC, --excluido
+                    cast(cl0.xxxxdate as varchar) TIOCFRM,
+                    '' TIOCTO, --excluido
+                    'PVG' KGIORIGM,
+                    'LPG' DCOMPA,
+                    '' DMARCA, --excluido
+                    cast(cl0.nclaim as varchar) KSBSIN,
+                    cast(case when cl0.sbussityp = '2' then 1 else coalesce(coi."NCOMPANY",0) end as varchar) DCODCSG,
+                    '' DNUMSEQ, --excluido
+                    '' TDPLANO, --excluido
+                    cast(cl0.ncapital as numeric(14,2)) VMTCAPIT,
+                    cast(case when cl0.sbussityp = '2' then 100 else coalesce(coi."NSHARE",0) end as numeric (9,6)) VTXQUOTA,
+                    '' VMTINDEM, --NOAPP
+                    case when cl0.sbussityp = '2' then cl0.sleadpoli else cast(cl0.npolicy as varchar) end DNUMAPO_CSG,
+                    cast(cl0.moneda_cod as varchar) KSCMOEDA
+                    from	(	select  cla."NBRANCH" nbranch,
+                                        cla."NPOLICY" npolicy,
+                                        cla."NCERTIF" ncertif,
+                                        cla."NCLAIM" nclaim,
+                                        cast(cla."DOCCURDAT" as date) doccurdat,
+                                        pol."SCERTYPE" scertype,
+                                        pol."NPRODUCT" nproduct,
+                                        pol."SLEADPOLI" sleadpoli,
+                                        pol."SBUSSITYP" sbussityp,
+                                        coalesce(
+                                            (	select  max(cpl."NCURRENCY")
+                                                from    usvtimv01."CURREN_POL" cpl
+                                                where 	cpl."SCERTYPE" = cla."SCERTYPE" and	cpl."NBRANCH" = cla."NBRANCH" 
+                                                and		cpl."NPRODUCT" = pol."NPRODUCT" and cpl."NPOLICY" = cla."NPOLICY"
+                                                and		cpl."NCERTIF" = cla."NCERTIF"),
+                                            (   select  max(cpl."NCURRENCY")
+                                                from    usvtimv01."CURREN_POL" cpl
+                                                where 	cpl."SCERTYPE" = cla."SCERTYPE" and	cpl."NBRANCH" = cla."NBRANCH" 
+                                                and		cpl."NPRODUCT" = pol."NPRODUCT" and cpl."NPOLICY" = cla."NPOLICY"),0) moneda_cod,
+                                        coalesce((	select	case	when	max(gen."SADDSUINI") = '3'
+                                                                    then	max(case when gen."SADDSUINI" = '3' then coalesce(cov."NCAPITAL",0) else 0 end)
+                                                                    else	sum(case when gen."SADDSUINI" = '1' then coalesce(cov."NCAPITAL",0) else 0 end) end
+                                                    from    usvtimv01."COVER" cov
+                                                    join	usvtimv01."LIFE_COVER" gen
+                                                            on		gen."NCOVER" = cov."NCOVER"
                                                             and     gen."NPRODUCT" = cov."NPRODUCT"
                                                             and     gen."NMODULEC" = cov."NMODULEC"
                                                             and     gen."NBRANCH" = cov."NBRANCH"
-                                                            and     gen."DEFFECDATE" <= cla."DOCCURDAT"
-                                                            and     (gen."DNULLDATE" is null or gen."DNULLDATE" > cla."DOCCURDAT")
+                                                            and     gen."DEFFECDATE" <= cast(cla."DOCCURDAT" as date)
+                                                            and     (gen."DNULLDATE" is null or gen."DNULLDATE" > cast(cla."DOCCURDAT" as date))
                                                             and     gen."SSTATREGT" <> '4'
-                                                            and     gen."SADDSUINI" in ('1','3')) --NO HAY '3' EN VTIME
-                                                else    (   select  sum(cov."NCAPITAL")
-                                                            from    usvtimg01."COVER" cov
-                                                            join    usvtimg01."GEN_COVER" gen
-                                                            on   cov."SCERTYPE"  = pol."SCERTYPE" 
-                                                            and     cov."NBRANCH" = cla."NBRANCH"
-                                                            and     cov."NPRODUCT" = cla."NPRODUCT"
-                                                            and     cov."NPOLICY" = cla."NPOLICY"
-                                                            and     cov."NCERTIF" = cla."NCERTIF"
-                                                            and     cov."DEFFECDATE" <= "DOCCURDAT"
-                                                            and     (cov."DNULLDATE" is null or cov."DNULLDATE" > "DOCCURDAT")
-                                                            and     gen."NCOVER" = cov."NCOVER"
-                                                            and     gen."NPRODUCT" = cov."NPRODUCT"
-                                                            and     gen."NMODULEC" = cov."NMODULEC"
-                                                            and     gen."NBRANCH" = cov."NBRANCH"
-                                                            and     gen."DEFFECDATE" <= cla."DOCCURDAT"
-                                                            and     (gen."DNULLDATE" is null or gen."DNULLDATE" > cla."DOCCURDAT")
-                                                            and     gen."SSTATREGT" <> '4'
-                                                            and     gen."SADDSUINI" in ('1','3')) --NO HAY '3' EN VTIME
-                                                end , 0)as varchar) as VMTCAPIT,
-                                        '100'as VTXQUOTA,
-                                        '' as  VMTINDEM,
-                                        pol."SLEADPOLI" as DNUMAPO_CSG,
-                                        cast (coalesce(   coalesce((  select  max(cpl."NCURRENCY")
-                                                                from    usvtimg01."CURREN_POL" cpl
-                                                                where   cpl."SCERTYPE" = cla."SCERTYPE"
-                                                                and     cpl."NBRANCH" = cla."NBRANCH"
-                                                                and     cpl."NPRODUCT" = pol."NPRODUCT"
-                                                                and     cpl."NPOLICY" = cla."NPOLICY"
-                                                                and     cpl."NCERTIF" = cla."NCERTIF"),
-                                                            (   select  max(cpl."NCURRENCY")
-                                                                from    usvtimg01."CURREN_POL" cpl
-                                                                where   cpl."SCERTYPE" = cla."SCERTYPE"
-                                                                and     cpl."NBRANCH" = cla."NBRANCH"
-                                                                and     cpl."NPRODUCT" = pol."NPRODUCT"
-                                                                and     cpl."NPOLICY" = cla."NPOLICY")),0)as  varchar)  as KSCMOEDA
-                                from    (   select  case    when    cla."SSTACLAIM" <> '6' and pol."SCERTYPE" = '2'
-                                                                        then    cla.ctid
-                                                                        else    null end CLA_ID,
-                                                    case    when    pol."SCERTYPE" = '2' and pol."SBUSSITYP" = '2'
-                                                            then    pol.ctid
-                                                            else    null end POL_ID
-                                            from    usvtimg01."POLICY" pol
-                                            join    usvtimg01."CLAIM" cla   on  cla."SCERTYPE" = pol."SCERTYPE"
-                                                                            and     cla."NPOLICY" = pol."NPOLICY"
-                                                                            and     cla."NBRANCH" = pol."NBRANCH"
-                                            join    (   select  distinct clh."NCLAIM"
-                                                        from    (   select  cast("SVALUE" as INT4) "SVALUE"
-                                                                    from    usvtimg01."CONDITION_SERV" cs
-                                                                    where   "NCONDITION" in (71,72,73)) csv --operaciones de reserva, ajustes o pagos
-                                                        join    usvtimg01."CLAIM_HIS" clh
-                                                        on   coalesce (clh."NCLAIM",0) > 0
-                                                        and     clh."NOPER_TYPE" = csv."SVALUE"
-                                                        and     cast (clh."DOPERDATE" as date) >= '12/31/2018') clh
-                                            on  clh."NCLAIM" = cla."NCLAIM") cl0
-                                join  usvtimg01."CLAIM" cla on cla.ctid = cl0.cla_id
-                                join  usvtimg01."POLICY" pol on pol.ctid = cl0.pol_id
-                           ) AS TMP
-                           '''
+                                                    where   cov."SCERTYPE" = pol."SCERTYPE" 
+                                                    and     cov."NBRANCH" = cla."NBRANCH"
+                                                    and     cov."NPRODUCT" = cla."NPRODUCT"
+                                                    and     cov."NPOLICY" = cla."NPOLICY"
+                                                    and     cov."NCERTIF" = cla."NCERTIF"
+                                                    and     cast(cov."DEFFECDATE" as date) <= cast(cla."DOCCURDAT" as date)
+                                                    and     (cov."DNULLDATE" is null or cast(cov."DNULLDATE" as date) > cast(cla."DOCCURDAT" as date))), 0) ncapital,
+                                        case	when	pol."SBUSSITYP" = '2'
+                                                then 	cast(cla."DOCCURDAT" as date)
+                                                else	(	select 	max(greatest(
+                                                                        case when cast(cla."DOCCURDAT" as date) <= dat.par_fin then cast(cla."DOCCURDAT" as date) else '0001-01-01'::date end,
+                                                                        case when cast(coi."DEFFECDATE" as date) <= dat.par_fin then cast(coi."DEFFECDATE" as date) else '0001-01-01'::date end,
+                                                                        case when cast(coi."DCOMPDATE" as date) <= dat.par_fin then cast(coi."DCOMPDATE" as date) else '0001-01-01'::date end))
+                                                            from	usvtimv01."COINSURAN" coi
+                                                            where	coi."SCERTYPE" = cla."SCERTYPE"
+                                                            and     coi."NBRANCH" = cla."NBRANCH"
+                                                            and     coi."NPRODUCT" = cla."NPRODUCT"
+                                                            and     coi."NPOLICY" = cla."NPOLICY"
+                                                            and 	coi."NCOMPANY" is not null
+                                                            and     cast(coi."DEFFECDATE" as date) <= cast("DOCCURDAT" as date)
+                                                            and     (coi."DNULLDATE" is null or cast(coi."DNULLDATE" as date) > cast("DOCCURDAT" as date)))
+                                                end xxxxdate
+                                from    (	select	ctid pol_id
+                                            from	usvtimv01."POLICY"
+                                            where	"SCERTYPE" = '2') po0
+                                join	(	select	cast('{p_fecha_inicio}' as date) par_ini, --ejecutar al a�o 2021 (2015 es para pruebas)
+                                                    cast('{p_fecha_fin}' as date) par_fin --limitador para la carga inicial (fecha l�mite a�o 2023, 2017 para prueba)
+                                        ) dat on 1 = 1
+                                join	usvtimv01."POLICY" pol on pol.ctid = po0.pol_id
+                                join	usvtimv01."CLAIM" cla
+                                        on		cla."SCERTYPE" = pol."SCERTYPE"
+                                        and     cla."NPOLICY" = pol."NPOLICY"
+                                        and     cla."NBRANCH" = pol."NBRANCH"
+                                        and     cla."SSTACLAIM" <> '6'
+                                        and		(cast(cla."DCOMPDATE" as date) between dat.par_ini and dat.par_fin
+                                                or	exists
+                                                    (   select  1
+                                                        from    usvtimv01."CLAIM_HIS" clh
+                                                        where	clh."NCLAIM" = cla."NCLAIM"
+                                                        and		coalesce(clh."NCASE_NUM",0) >= 0
+                                                        and     (cast(clh."DOPERDATE" as date) between dat.par_ini and dat.par_fin --se consideran siniestros con operaciones entre los rangos (limitaci�n carga inicial)
+                                                                or cast(clh."DCOMPDATE" as date) between dat.par_ini and dat.par_fin) --se consideran siniestros con modificaciones entre los rangos (limitaci�n carga inicial)
+                                                        and		clh."NOPER_TYPE" in 
+                                                                (select	cast("SVALUE" as INT4) from	usvtimv01."CONDITION_SERV" cs  where "NCONDITION" in (71,72,73)))
+                                                or	exists
+                                                    (   select  1
+                                                        from    usvtimv01."CLAIM_HIS" clh
+                                                                join	usvtimv01."CL_M_COVER" clm
+                                                                on		clm."NCLAIM" = clh."NCLAIM"
+                                                                and		clm."NCASE_NUM" = clH."NCASE_NUM"
+                                                                and		clm."NDEMAN_TYPE" = clh."NDEMAN_TYPE"
+                                                                and		clm."NTRANSAC" = clh."NTRANSAC"
+                                                                and		cast(clm."DCOMPDATE" as date) between dat.par_ini and dat.par_fin --se consideran coberturas con modificaciones entre los rangos (limitaci�n carga inicial)
+                                                        where	clh."NCLAIM" = cla."NCLAIM"
+                                                        and		coalesce(clh."NCASE_NUM",0) >= 0
+                                                        and		clh."NOPER_TYPE" in 
+                                                                (select	cast("SVALUE" as INT4) from	usvtimv01."CONDITION_SERV" cs  where "NCONDITION" in (71,72,73))))
+                                        and		(	(pol."SBUSSITYP" = '1' and exists
+                                                    (	select	1
+                                                        from	usvtimv01."COINSURAN" coi
+                                                        where	coi."SCERTYPE" = cla."SCERTYPE"
+                                                        and     coi."NBRANCH" = cla."NBRANCH"
+                                                        and     coi."NPRODUCT" = cla."NPRODUCT"
+                                                        and     coi."NPOLICY" = cla."NPOLICY"
+                                                        and 	coi."NCOMPANY" is not null
+                                                        and     cast(coi."DEFFECDATE" as date) <= cast("DOCCURDAT" as date)
+                                                        and     (coi."DNULLDATE" is null or cast(coi."DNULLDATE" as date) > cast("DOCCURDAT" as date))))
+                                                    or pol."SBUSSITYP" = '2')) cl0
+                left	join usvtimv01."COINSURAN" coi
+                    on		coi."SCERTYPE" = cl0.scertype
+                    and     coi."NBRANCH" = cl0.nbranch
+                    and     coi."NPRODUCT" = cl0.nproduct
+                    and     coi."NPOLICY" = cl0.npolicy
+                    and 	coi."NCOMPANY" is not null
+                    and     cast(coi."DEFFECDATE" as date) <= cl0.doccurdat
+                    and     (coi."DNULLDATE" is null or cast(coi."DNULLDATE" as date) > cl0.doccurdat)
+                   ) AS TMP
+                '''
 
-    DF_LPG_NEGOCIO2_VTIME = glue_context.read.format('jdbc').options(**connection).option("fetchsize",10000).option("dbtable",LPG_NEGOCIO2_VTIME).load()
-  
-    LPV_NEGOCIO1_VTIME = '''
-                           (
-                                select	'D' as INDDETREC,
-                                        'SBCOSSEG' as TABLAIFRS17,
-                                        '' /*cla."NCLAIM" || par.sep || par.cia || par.sep || coi."NCOMPANY"*/ as PK,
-                                        '' as DTPREG,
-                                        '' as TIOCPROC,
-                                        CAST(coi."DEFFECDATE" AS DATE) as TIOCFRM,
-                                        '' as TIOCTO,
-                                        'PVV' as KGIORIGM,
-                                        'LPV'  "DCOMPA",
-                                        '' as DMARCA,
-                                        cla."NCLAIM"  as KSBSIN,
-                                        cast (coi."NCOMPANY" as varchar) as DCODCSG,
-                                        ''  as DNUMSEQ,
-                                        '' as TDPLANO,
-                                        cast ( coalesce ((	select	sum(cov."NCAPITAL")
-                                            from    usvtimv01."COVER" cov
-                                            join    usvtimv01."LIFE_COVER" gen
-                                            on      cov."SCERTYPE"  = pol."SCERTYPE" 
-                                            and     cov."NBRANCH" = cla."NBRANCH"
-                                            and     cov."NPRODUCT" = cla."NPRODUCT"
-                                            and     cov."NPOLICY" = cla."NPOLICY"
-                                            and     cov."NCERTIF" = cla."NCERTIF"
-                                            and     cov."DEFFECDATE" <= "DOCCURDAT"
-                                            and     (cov."DNULLDATE" is null or cov."DNULLDATE" > "DOCCURDAT")
-                                            and     gen."NCOVER" = cov."NCOVER"
-                                            and     gen."NPRODUCT" = cov."NPRODUCT"
-                                            and     gen."NMODULEC" = cov."NMODULEC"
-                                            and     gen."NBRANCH" = cov."NBRANCH"
-                                            and     gen."DEFFECDATE" <= cla."DOCCURDAT"
-                                            and     (gen."DNULLDATE" is null or gen."DNULLDATE" > cla."DOCCURDAT")
-                                            and     gen."SSTATREGT" <> '4'
-                                            and     gen."SADDSUINI" in ('1','3')),0) as varchar) as VMTCAPIT,--NO HAY '3' EN VTIME
-                                        cast (coi."NSHARE" as varchar)  as VTXQUOTA,
-                                        '' as  VMTINDEM, --NOAPP
-                                        cast(cla."NPOLICY" as varchar)  as DNUMAPO_CSG,
-                                        cast (coalesce(   coalesce((  select  max(cpl."NCURRENCY")
-                                                                from    usvtimv01."CURREN_POL" cpl
-                                                                where   cpl."SCERTYPE" = cla."SCERTYPE"
-                                                                and     cpl."NBRANCH" = cla."NBRANCH"
-                                                                and     cpl."NPRODUCT" = pol."NPRODUCT"
-                                                                and     cpl."NPOLICY" = cla."NPOLICY"
-                                                                and     cpl."NCERTIF" = cla."NCERTIF"),
-                                                            (   select  max(cpl."NCURRENCY")
-                                                                from    usvtimv01."CURREN_POL" cpl
-                                                                where   cpl."SCERTYPE" = cla."SCERTYPE"
-                                                                and     cpl."NBRANCH" = cla."NBRANCH"
-                                                                and     cpl."NPRODUCT" = pol."NPRODUCT"
-                                                                and     cpl."NPOLICY" = cla."NPOLICY")),0) as varchar ) as  KSCMOEDA
-                                from 	(	select  case    when    cla."SSTACLAIM" <> '6' and pol."SCERTYPE" = '2'
-                                                                        then    cla.ctid
-                                                                        else    null end CLA_ID,
-                                                    case 	when 	pol."SCERTYPE" = '2' and pol."SBUSSITYP" = '1'
-                                                            then 	pol.ctid
-                                                            else	null end POL_ID
-                                            from    usvtimv01."POLICY" pol
-                                            join    usvtimv01."CLAIM" cla 	on cla."SCERTYPE" = pol."SCERTYPE"
-                                                                            and     cla."NPOLICY" = pol."NPOLICY"
-                                                                            and     cla."NBRANCH" = pol."NBRANCH"
-                                            join       (   select  distinct clh."NCLAIM"
-                                                        from    (   select  cast("SVALUE" as INT4) "SVALUE"
-                                                                    from    usvtimv01."CONDITION_SERV" cs
-                                                                    where   "NCONDITION" in (71,72,73)) csv --operaciones de reserva, ajustes o pagos
-                                                        join    usvtimv01."CLAIM_HIS" clh
-                                                        on   coalesce (clh."NCLAIM",0) > 0
-                                                        and     clh."NOPER_TYPE" = csv."SVALUE"
-                                                        and     cast (clh."DOPERDATE" as date) >= '12/31/2010') clh
-                                            on   clh."NCLAIM" = cla."NCLAIM") cl0
-                                join 	usvtimv01."CLAIM" cla on cla.ctid = cl0.cla_id
-                                join 	usvtimv01."POLICY" pol on pol.ctid = cl0.pol_id
-                                join 	usvtimv01."COINSURAN" coi  	on coi."SCERTYPE" = cla."SCERTYPE"
-                                                                    and     coi."NBRANCH" = cla."NBRANCH"
-                                                                    and     coi."NPRODUCT" = pol."NPRODUCT"
-                                                                    and     coi."NPOLICY" = cla."NPOLICY"
-                                                                    and 	coi."NCOMPANY" is not null
-                                                                    and     coi."DEFFECDATE" <= cla."DOCCURDAT"
-                                                                    and     (coi."DNULLDATE" is null or coi."DNULLDATE" > cla."DOCCURDAT")
-                           ) AS TMP
-                           '''
-
-    DF_LPV_NEGOCIO1_VTIME = glue_context.read.format('jdbc').options(**connection).option("fetchsize",10000).option("dbtable",LPV_NEGOCIO1_VTIME).load()
-   
-    LPV_NEGOCIO2_VTIME = '''
-                           (
-                                select	'D' as INDDETREC,
-                                        'SBCOSSEG' as TABLAIFRS17,
-                                        '' /*cla."NCLAIM" || par.sep || par.cia || par.sep || 1*/ as PK,
-                                        '' as DTPREG,
-                                        '' as TIOCPROC,
-                                        CASE WHEN cla."NCERTIF" = 0 
-                                                THEN CAST(POL."DSTARTDATE"AS DATE)
-                                            ELSE 
-                                                (SELECT CAST(c."DCOMPDATE" AS DATE)
-                                                FROM  usvtimg01."CERTIFICAT" c 
-                                                WHERE c."SCERTYPE" = cla."SCERTYPE"
-                                                AND c."NBRANCH" = cla."NBRANCH"
-                                                AND c."NPRODUCT" = cla."NPRODUCT"
-                                                AND C."NPOLICY" = POL."NPOLICY"
-                                                AND c."NCERTIF" = cla."NCERTIF"
-                                                )
-                                            END
-                                            as TIOCFRM,
-                                        '' as TIOCTO,
-                                        'PVV' as KGIORIGM,
-                                        'LPV' as  DCOMPA,
-                                        '' as DMARCA,
-                                        cla."NCLAIM"  as KSBSIN,
-                                        '1' as DCODCSG,
-                                        ''  as DNUMSEQ,
-                                        '' as TDPLANO,
-                                        cast ( coalesce ( (	select	sum(cov."NCAPITAL")
-                                            from    usvtimv01."COVER" cov
-                                            join	usvtimv01."LIFE_COVER" gen
-                                            on		cov."SCERTYPE"  = pol."SCERTYPE" 
-                                            and     cov."NBRANCH" = cla."NBRANCH"
-                                            and     cov."NPRODUCT" = cla."NPRODUCT"
-                                            and     cov."NPOLICY" = cla."NPOLICY"
-                                            and     cov."NCERTIF" = cla."NCERTIF"
-                                            and     cov."DEFFECDATE" <= "DOCCURDAT"
-                                            and     (cov."DNULLDATE" is null or cov."DNULLDATE" > "DOCCURDAT")
-                                            and     gen."NCOVER" = cov."NCOVER"
-                                            and     gen."NPRODUCT" = cov."NPRODUCT"
-                                            and     gen."NMODULEC" = cov."NMODULEC"
-                                            and     gen."NBRANCH" = cov."NBRANCH"
-                                            and     gen."DEFFECDATE" <= cla."DOCCURDAT"
-                                            and     (gen."DNULLDATE" is null or gen."DNULLDATE" > cla."DOCCURDAT")
-                                            and     gen."SSTATREGT" <> '4'
-                                            and     gen."SADDSUINI" in ('1','3')),0) as varchar) as VMTCAPIT,--NO HAY '3' EN VTIME
-                                        '100' as VTXQUOTA,
-                                        '' as VMTINDEM,
-                                        pol."SLEADPOLI" as  DNUMAPO_CSG,
-                                        cast ( coalesce(   coalesce((  select  max(cpl."NCURRENCY")
-                                                                from    usvtimv01."CURREN_POL" cpl
-                                                                where   cpl."SCERTYPE" = cla."SCERTYPE"
-                                                                and     cpl."NBRANCH" = cla."NBRANCH"
-                                                                and     cpl."NPRODUCT" = pol."NPRODUCT"
-                                                                and     cpl."NPOLICY" = cla."NPOLICY"
-                                                                and     cpl."NCERTIF" = cla."NCERTIF"),
-                                                            (   select  max(cpl."NCURRENCY")
-                                                                from    usvtimv01."CURREN_POL" cpl
-                                                                where   cpl."SCERTYPE" = cla."SCERTYPE"
-                                                                and     cpl."NBRANCH" = cla."NBRANCH"
-                                                                and     cpl."NPRODUCT" = pol."NPRODUCT"
-                                                                and     cpl."NPOLICY" = cla."NPOLICY")),0) as varchar) KSCMOEDA
-                                from 	(	select  case    when    cla."SSTACLAIM" <> '6' and pol."SCERTYPE" = '2'
-                                                                        then    cla.ctid
-                                                                        else    null end CLA_ID,
-                                                    case 	when 	pol."SCERTYPE" = '2' and pol."SBUSSITYP" = '2'
-                                                            then 	pol.ctid
-                                                            else	null end POL_ID
-                                            from    usvtimv01."POLICY" pol
-                                            join 	usvtimv01."CLAIM" cla  on cla."SCERTYPE" = pol."SCERTYPE"
-                                                                            and     cla."NPOLICY" = pol."NPOLICY"
-                                                                            and     cla."NBRANCH" = pol."NBRANCH"
-                                            join      (   select  distinct clh."NCLAIM"
-                                                        from    (   select  cast("SVALUE" as INT4) "SVALUE"
-                                                                    from    usvtimv01."CONDITION_SERV" cs
-                                                                    where   "NCONDITION" in (71,72,73)) csv --operaciones de reserva, ajustes o pagos
-                                                        join    usvtimv01."CLAIM_HIS" clh
-                                                        on      coalesce (clh."NCLAIM",0) > 0
-                                                        and     clh."NOPER_TYPE" = csv."SVALUE"
-                                                        and    cast (clh."DOPERDATE" as date ) >= '12/31/2021') clh
-                                            on     clh."NCLAIM" = cla."NCLAIM") cl0
-                                join 	usvtimv01."CLAIM" cla on cla.ctid = cl0.cla_id
-                                join 	usvtimv01."POLICY" pol on pol.ctid = cl0.pol_id
-                           ) AS TMP
-                           '''
-
-    DF_LPV_NEGOCIO2_VTIME = glue_context.read.format('jdbc').options(**connection).option("fetchsize",10000).option("dbtable",LPV_NEGOCIO2_VTIME).load()
+    DF_VTIME_LPV = glue_context.read.format('jdbc').options(**connection).option("fetchsize",10000).option("dbtable",VTIME_LPV).load()
                            
-    L_DF_SBCOSSEG_VTIME =  DF_LPG_NEGOCIO1_VTIME.union(DF_LPG_NEGOCIO2_VTIME).union(DF_LPV_NEGOCIO1_VTIME).union(DF_LPV_NEGOCIO2_VTIME)
-
-    L_DF_SBCOSSEG = L_DF_SBCOSSEG_INSUNIX.union(L_DF_SBCOSSEG_VTIME)
+    L_DF_SBCOSSEG =  DF_INSUNIX_LPG.union(DF_INSUNIX_LPV).union(DF_VTIME_LPG).union(DF_VTIME_LPV)
 
     return L_DF_SBCOSSEG                          
