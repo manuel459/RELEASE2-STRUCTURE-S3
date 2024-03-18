@@ -18,11 +18,11 @@ glueContext = GlueContext(sc)
 spark = glueContext.spark_session
 job = Job(glueContext)
 job.init(args["JOB_NAME"], args)
-cliente_dynamodb = boto3.client("dynamodb")
 s3r = boto3.resource('s3')
+cliente_dynamodb = boto3.client("dynamodb")
 ssm = boto3.client('ssm', 'us-east-1')
 glue_client = boto3.client('glue')
-id = 'PRODUCTOS'
+id = 'POLIZAS'
 nombre_error = '-'
 
 #EXTRACCION DE LAS CONFIGURACIONES Y RETORNARLAS EN UN DICCIONARIO DE DATOS        
@@ -54,7 +54,6 @@ def get_ssm():
                 WithDecryption=True  # Descifra el valor si es un SecureString
             )
         return response['Parameter']['Value']
-
 try:
     #-------------------------------------#
     #   EXTRAER VARIABLES DE ENTORNO
@@ -64,7 +63,7 @@ try:
     #-------------------------------------#
     #   OBTENER LA FECHA INICIO DEL JOB
     #-------------------------------------#
-    job_name = f'fndtifrs17glueproductos{env}03_test'
+    job_name = f'fndtifrs17gluepolizas{env}02'
     
     response = glue_client.get_job_runs(JobName=job_name, MaxResults=1)
     
@@ -77,11 +76,10 @@ try:
     #-------------------------------------#
     
     #CREAR UNA LISTA CON TODAS LAS CONFIGURACIONES NECESARIAS SEGUN EL DOMINIO
-    l_configuraciones = [{ "DOMINIO": "GENERAL" , "COLUMNA": "ESTRUCTURA" }, { "DOMINIO": "PRODUCTOS" , "COLUMNA": "ESTRUCTURA" }]
+    l_configuraciones = [{ "DOMINIO": "GENERAL" , "COLUMNA": "ESTRUCTURA" }, { "DOMINIO": "POLIZAS" , "COLUMNA": "ESTRUCTURA" }]
     
     #NOMBRE DE LA TABLA DE CONFIGURACIONES
-    #nombre_tabla = f'fndtifrs17dydb{env}01'
-    nombre_tabla = f'TablaTestIFRS17'
+    nombre_tabla = f'fndtifrs17dydb{env}01'
     
     #EXTRAER CONFIGURACIONES
     l_dic_config = extract_config(l_configuraciones, nombre_tabla)
@@ -115,7 +113,7 @@ try:
     #----------------------------------------------------------#
     #OBTENER LAS FUNCIONES ALMACENADAS EN S3
     structure = execute_script(l_dic_config['GENERAL']['bucket']['artifact'], l_dic_config['GENERAL']['funciones']['structure'])
-    
+
     #LLAMAR Y LANZAR LOS PARAMETROS A LA FUNCION generate_files
     structure.generate_files(l_dic_config, id)
     
@@ -126,7 +124,7 @@ try:
  
 except Exception as e:
     # Log the error for debugging purposes
-    print(f"Error Glue de Estructura del Dominio de Productos: {str(e)}")
+    print(f"Error Glue de Estructura del Dominio de Polizas: {str(e)}")
     nombre_error = str(e)
     trazabilidad.update_log(cliente_dynamodb, id, 2,2,nombre_error, last_start_time,tipo_carga)
     sys.exit(1)
